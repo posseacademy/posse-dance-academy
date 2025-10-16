@@ -1,0 +1,523 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POSSE Dance Academy 管理システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+        }
+        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; }
+        .status-tab-active { background-color: #3B82F6; color: white; }
+        .status-badge-active { background-color: #10B981; color: white; }
+        .status-badge-paused { background-color: #F59E0B; color: white; }
+        .status-badge-withdrawn { background-color: #6B7280; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp3_3UwgOKkILJuWx8usYdQhGfB_bAD34",
+            authDomain: "posse-dance-academy.firebaseapp.com",
+            projectId: "posse-dance-academy",
+            storageBucket: "posse-dance-academy.firebasestorage.app",
+            messagingSenderId: "613497046871",
+            appId: "1:613497046871:web:8a31cbc6b947617113e012"
+        };
+
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+        const ADMIN_PASSWORD = 'posse2024';
+        let isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+
+
+        class DanceStudioApp {
+            constructor() {
+                this.currentTab = 'dashboard';
+                this.statusFilter = '入会中';
+                this.customers = [];
+                this.editingId = null;
+                this.editForm = {};
+                this.showAddForm = false;
+                this.searchTerm = '';
+                this.newCustomer = this.getEmptyCustomer();
+            }
+
+
+            getEmptyCustomer() {
+                return {
+                    status: '入会中',
+                    course: '',
+                    annualFee: '',
+                    hakomonoRegistration: '',
+                    lastName: '',
+                    firstName: '',
+                    reading: '',
+                    guardianName: '',
+                    hakomonoName: '',
+                    gender: '',
+                    birthDate: '',
+                    phone1: '',
+                    phone2: '',
+                    email: '',
+                    postalCode: '',
+                    prefecture: '',
+                    city: '',
+                    address: '',
+                    building: '',
+                    joinDate: '',
+                    memo: ''
+                };
+            }
+
+
+            async init() {
+                if (!isAuthenticated) {
+                    this.renderLogin();
+                    return;
+                }
+                await this.loadCustomers();
+                this.render();
+            }
+
+
+            async loadCustomers() {
+                try {
+                    const q = query(collection(db, 'customers'), orderBy('lastName'));
+                    const querySnapshot = await getDocs(q);
+                    this.customers = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        status: doc.data().status || doc.data().active === '○' ? '入会中' : '休会中'
+                    }));
+                } catch (error) {
+                    console.error('データ読み込みエラー:', error);
+                    alert('データ読み込みエラー: ' + error.message);
+                    this.customers = [];
+                }
+            }
+
+
+            async addCustomer() {
+                if (!this.newCustomer.lastName || !this.newCustomer.firstName) {
+                    alert('氏名を入力してください');
+                    return;
+                }
+                try {
+                    await addDoc(collection(db, 'customers'), this.newCustomer);
+                    await this.loadCustomers();
+                    this.newCustomer = this.getEmptyCustomer();
+                    this.showAddForm = false;
+                    this.render();
+                    alert('登録しました');
+                } catch (error) {
+                    console.error('登録エラー:', error);
+                    alert('登録エラー: ' + error.message);
+                }
+            }
+
+
+            async saveEdit() {
+                try {
+                    const customerRef = doc(db, 'customers', this.editForm.id);
+                    const { id, ...data } = this.editForm;
+                    await updateDoc(customerRef, data);
+                    await this.loadCustomers();
+                    this.editingId = null;
+                    this.editForm = {};
+                    this.render();
+                    alert('更新しました');
+                } catch (error) {
+                    console.error('更新エラー:', error);
+                    alert('更新エラー: ' + error.message);
+                }
+            }
+
+
+            async deleteCustomer(id) {
+                if (!confirm('この顧客を削除してもよろしいですか?')) return;
+                try {
+                    await deleteDoc(doc(db, 'customers', id));
+                    await this.loadCustomers();
+                    this.render();
+                    alert('削除しました');
+                } catch (error) {
+                    console.error('削除エラー:', error);
+                    alert('削除エラー: ' + error.message);
+                }
+            }
+
+
+            handleExport() {
+                const headers = ['No', '会員ステータス', 'コース', '年会費更新日', 'ハコモノ登録', '氏名(姓)', '氏名(名)', '読み', '保護者名', 'ハコモノ登録名', '性別', '生年月日', '電話番号', '電話番号2', 'メール', '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号', '入会日', '備考'];
+                const rows = this.customers.map((c, i) => [
+                    i + 1, c.status, c.course, c.annualFee, c.hakomonoRegistration,
+                    c.lastName, c.firstName, c.reading, c.guardianName, c.hakomonoName,
+                    c.gender, c.birthDate, c.phone1, c.phone2, c.email,
+                    c.postalCode, c.prefecture, c.city, c.address, c.building,
+                    c.joinDate, c.memo
+                ].map(f => `"${f || ''}"`).join(','));
+                const csv = [headers.join(','), ...rows].join('\n');
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `顧客管理_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+
+
+            getFilteredCustomers() {
+                const s = this.searchTerm.toLowerCase();
+                return this.customers.filter(c => 
+                    c.status === this.statusFilter &&
+                    ((c.lastName || '').toLowerCase().includes(s) ||
+                    (c.firstName || '').toLowerCase().includes(s) ||
+                    (c.reading || '').toLowerCase().includes(s) ||
+                    (c.course || '').toLowerCase().includes(s) ||
+                    (c.phone1 || '').includes(s) ||
+                    (c.email || '').toLowerCase().includes(s))
+                );
+            }
+
+
+            logout() {
+                sessionStorage.removeItem('authenticated');
+                isAuthenticated = false;
+                this.renderLogin();
+            }
+
+
+            renderLogin() {
+                document.getElementById('app').innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+                            <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">POSSE Dance Academy</h1>
+                            <h2 class="text-xl text-center mb-6 text-gray-600">管理システム</h2>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-2">パスワード</label>
+                                <input type="password" id="password" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="パスワードを入力">
+                            </div>
+                            <button id="loginBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">ログイン</button>
+                            <p class="text-xs text-gray-500 text-center mt-4">※デフォルトパスワード: posse2024</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    const password = document.getElementById('password').value;
+                    if (password === ADMIN_PASSWORD) {
+                        sessionStorage.setItem('authenticated', 'true');
+                        isAuthenticated = true;
+                        this.init();
+                    } else {
+                        alert('パスワードが間違っています');
+                    }
+                });
+            }
+
+
+            render() {
+                const filteredCustomers = this.getFilteredCustomers();
+                document.getElementById('app').innerHTML = `
+                    <div class="min-h-screen">
+                        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+                            <div class="container mx-auto px-4 py-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h1 class="text-2xl font-bold">POSSE Dance Academy</h1>
+                                        <p class="text-sm opacity-90">管理システム</p>
+                                    </div>
+                                    <button id="logoutBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded transition">ログアウト</button>
+                                </div>
+                            </div>
+                        </header>
+                        <nav class="bg-white shadow">
+                            <div class="container mx-auto px-4">
+                                <div class="flex space-x-8">
+                                    <button id="dashboardTab" class="py-4 px-2 font-medium ${this.currentTab === 'dashboard' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">ダッシュボード</button>
+                                    <button id="customersTab" class="py-4 px-2 font-medium ${this.currentTab === 'customers' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">顧客管理</button>
+                                </div>
+                            </div>
+                        </nav>
+                        <main class="container mx-auto px-4 py-8">
+                            ${this.currentTab === 'dashboard' ? this.renderDashboard() : this.renderCustomers(filteredCustomers)}
+                        </main>
+                    </div>
+                `;
+
+
+                document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout());
+                document.getElementById('dashboardTab')?.addEventListener('click', () => { this.currentTab = 'dashboard'; this.render(); });
+                document.getElementById('customersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
+
+
+                if (this.currentTab === 'customers') {
+                    document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
+                    document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
+                    document.getElementById('searchInput')?.addEventListener('input', (e) => { this.searchTerm = e.target.value; this.render(); });
+                    document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
+                    document.getElementById('cancelAddBtn')?.addEventListener('click', () => { this.showAddForm = false; this.render(); });
+                    
+                    // ステータスタブ
+                    ['入会中', '休会中', '退会済み'].forEach(status => {
+                        document.getElementById(`status-${status}`)?.addEventListener('click', () => {
+                            this.statusFilter = status;
+                            this.render();
+                        });
+                    });
+
+
+                    this.setupNewCustomerForm();
+                    this.setupCustomerActions();
+                }
+            }
+
+
+            setupNewCustomerForm() {
+                ['status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'gender', 'birthDate', 'phone1', 'email', 'joinDate', 'memo'].forEach(field => {
+                    const el = document.getElementById(`new_${field}`);
+                    if (el) {
+                        el.addEventListener('change', (e) => { this.newCustomer[field] = e.target.value; });
+                        el.addEventListener('input', (e) => { this.newCustomer[field] = e.target.value; });
+                    }
+                });
+            }
+
+
+            setupCustomerActions() {
+                document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.getAttribute('data-id');
+                        this.editingId = id;
+                        this.editForm = {...this.customers.find(c => c.id === id)};
+                        this.render();
+                    });
+                });
+                document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+                    btn.addEventListener('click', () => this.deleteCustomer(btn.getAttribute('data-id')));
+                });
+                document.getElementById('saveEditBtn')?.addEventListener('click', () => this.saveEdit());
+                document.getElementById('cancelEditBtn')?.addEventListener('click', () => { this.editingId = null; this.render(); });
+                this.setupEditForm();
+            }
+
+
+            setupEditForm() {
+                if (!this.editingId) return;
+                ['status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'gender', 'birthDate', 'phone1', 'email', 'joinDate', 'memo'].forEach(field => {
+                    const el = document.getElementById(`edit_${field}`);
+                    if (el) {
+                        el.addEventListener('change', (e) => { this.editForm[field] = e.target.value; });
+                        el.addEventListener('input', (e) => { this.editForm[field] = e.target.value; });
+                    }
+                });
+            }
+
+
+            renderDashboard() {
+                const total = this.customers.length;
+                const activeCount = this.customers.filter(c => c.status === '入会中').length;
+                const pausedCount = this.customers.filter(c => c.status === '休会中').length;
+                const withdrawnCount = this.customers.filter(c => c.status === '退会済み').length;
+                const courseCounts = {};
+                this.customers.forEach(c => { if (c.course) courseCounts[c.course] = (courseCounts[c.course] || 0) + 1; });
+
+
+                return `
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">ダッシュボード</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">総顧客数</div>
+                                <div class="text-4xl font-bold text-blue-600">${total}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">入会中</div>
+                                <div class="text-4xl font-bold text-green-600">${activeCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">休会中</div>
+                                <div class="text-4xl font-bold text-orange-600">${pausedCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">退会済み</div>
+                                <div class="text-4xl font-bold text-gray-600">${withdrawnCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">コース別内訳</h3>
+                            <div class="space-y-3">
+                                ${Object.keys(courseCounts).length > 0 ? Object.entries(courseCounts).map(([course, count]) => `
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium">${course || '未設定'}</span>
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">${count}名</span>
+                                    </div>
+                                `).join('') : '<p class="text-gray-500">データがありません</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderCustomers(filteredCustomers) {
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800">顧客管理</h2>
+                            <div class="flex gap-2">
+                                <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">CSVエクスポート</button>
+                                <button id="toggleAddFormBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">${this.showAddForm ? 'フォームを閉じる' : '新規登録'}</button>
+                            </div>
+                        </div>
+
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <!-- ステータスタブ -->
+                            <div class="flex gap-2 mb-4">
+                                <button id="status-入会中" class="px-4 py-2 rounded transition ${this.statusFilter === '入会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    入会中 (${this.customers.filter(c => c.status === '入会中').length})
+                                </button>
+                                <button id="status-休会中" class="px-4 py-2 rounded transition ${this.statusFilter === '休会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    休会中 (${this.customers.filter(c => c.status === '休会中').length})
+                                </button>
+                                <button id="status-退会済み" class="px-4 py-2 rounded transition ${this.statusFilter === '退会済み' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    退会済み (${this.customers.filter(c => c.status === '退会済み').length})
+                                </button>
+                            </div>
+
+
+                            <div class="mb-4">
+                                <input type="text" id="searchInput" placeholder="氏名、コース、電話番号、メールで検索..." value="${this.searchTerm}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            ${this.showAddForm ? this.renderAddForm() : ''}
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100 border-b">
+                                            <th class="px-2 py-2 text-left font-semibold">No</th>
+                                            <th class="px-2 py-2 text-left font-semibold">会員ステータス</th>
+                                            <th class="px-2 py-2 text-left font-semibold">コース</th>
+                                            <th class="px-2 py-2 text-left font-semibold">年会費更新日</th>
+                                            <th class="px-2 py-2 text-left font-semibold">氏名(姓)</th>
+                                            <th class="px-2 py-2 text-left font-semibold">氏名(名)</th>
+                                            <th class="px-2 py-2 text-left font-semibold">読み</th>
+                                            <th class="px-2 py-2 text-left font-semibold">保護者名</th>
+                                            <th class="px-2 py-2 text-left font-semibold">性別</th>
+                                            <th class="px-2 py-2 text-left font-semibold">生年月日</th>
+                                            <th class="px-2 py-2 text-left font-semibold">電話番号</th>
+                                            <th class="px-2 py-2 text-left font-semibold">メール</th>
+                                            <th class="px-2 py-2 text-left font-semibold">入会日</th>
+                                            <th class="px-2 py-2 text-left font-semibold">備考</th>
+                                            <th class="px-2 py-2 text-left font-semibold">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${filteredCustomers.map((c, i) => this.renderCustomerRow(c, i + 1)).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-600">
+                                ${this.statusFilter}: ${filteredCustomers.length}名
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderAddForm() {
+                return `
+                    <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">新規顧客登録</h3>
+                        <div class="grid grid-cols-4 gap-3 mb-4">
+                            <div><label class="block text-sm font-medium mb-1">会員ステータス</label><select id="new_status" class="w-full border rounded px-2 py-1 text-sm"><option value="入会中">入会中</option><option value="休会中">休会中</option><option value="退会済み">退会済み</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">コース</label><select id="new_course" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択してください</option><option value="ビジター">ビジター</option><option value="１">１</option><option value="２">２</option><option value="３">３</option><option value="４">４</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">年会費更新日</label><input type="date" id="new_annualFee" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">氏名(姓) *</label><input type="text" id="new_lastName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">氏名(名) *</label><input type="text" id="new_firstName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">読み</label><input type="text" id="new_reading" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">保護者名</label><input type="text" id="new_guardianName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">性別</label><select id="new_gender" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択</option><option value="男">男</option><option value="女">女</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">生年月日</label><input type="date" id="new_birthDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">電話番号</label><input type="tel" id="new_phone1" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-2"><label class="block text-sm font-medium mb-1">メール</label><input type="email" id="new_email" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">入会日</label><input type="date" id="new_joinDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-2"><label class="block text-sm font-medium mb-1">備考</label><input type="text" id="new_memo" class="w-full border rounded px-2 py-1 text-sm"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="addCustomerBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">登録</button>
+                            <button id="cancelAddBtn" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition">キャンセル</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderCustomerRow(customer, no) {
+                const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' : customer.status === '休会中' ? 'status-badge-paused' : 'status-badge-withdrawn';
+                
+                if (this.editingId === customer.id) {
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-2 py-2">${no}</td>
+                            <td class="px-2 py-2"><select id="edit_status" class="w-full border rounded px-1 py-1"><option value="入会中" ${this.editForm.status === '入会中' ? 'selected' : ''}>入会中</option><option value="休会中" ${this.editForm.status === '休会中' ? 'selected' : ''}>休会中</option><option value="退会済み" ${this.editForm.status === '退会済み' ? 'selected' : ''}>退会済み</option></select></td>
+                            <td class="px-2 py-2"><select id="edit_course" class="w-20 border rounded px-1 py-1"><option value="">選択</option><option value="ビジター" ${this.editForm.course === 'ビジター' ? 'selected' : ''}>ビジター</option><option value="１" ${this.editForm.course === '１' ? 'selected' : ''}>１</option><option value="２" ${this.editForm.course === '２' ? 'selected' : ''}>２</option><option value="３" ${this.editForm.course === '３' ? 'selected' : ''}>３</option><option value="４" ${this.editForm.course === '４' ? 'selected' : ''}>４</option></select></td>
+                            <td class="px-2 py-2"><input type="date" id="edit_annualFee" value="${this.editForm.annualFee || ''}" class="w-32 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="text" id="edit_lastName" value="${this.editForm.lastName || ''}" class="w-20 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="text" id="edit_firstName" value="${this.editForm.firstName || ''}" class="w-20 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="text" id="edit_reading" value="${this.editForm.reading || ''}" class="w-28 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="text" id="edit_guardianName" value="${this.editForm.guardianName || ''}" class="w-24 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><select id="edit_gender" class="w-16 border rounded px-1 py-1"><option value="">-</option><option value="男" ${this.editForm.gender === '男' ? 'selected' : ''}>男</option><option value="女" ${this.editForm.gender === '女' ? 'selected' : ''}>女</option></select></td>
+                            <td class="px-2 py-2"><input type="date" id="edit_birthDate" value="${this.editForm.birthDate || ''}" class="w-28 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="tel" id="edit_phone1" value="${this.editForm.phone1 || ''}" class="w-28 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="email" id="edit_email" value="${this.editForm.email || ''}" class="w-32 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="date" id="edit_joinDate" value="${this.editForm.joinDate || ''}" class="w-28 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><input type="text" id="edit_memo" value="${this.editForm.memo || ''}" class="w-32 border rounded px-1 py-1" /></td>
+                            <td class="px-2 py-2"><div class="flex gap-1"><button id="saveEditBtn" class="text-green-600 hover:text-green-800 text-xs">保存</button><button id="cancelEditBtn" class="text-red-600 hover:text-red-800 text-xs">×</button></div></td>
+                        </tr>
+                    `;
+                }
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-2 py-2">${no}</td>
+                        <td class="px-2 py-2"><span class="px-2 py-1 rounded text-xs font-semibold ${statusBadgeClass}">${customer.status || ''}</span></td>
+                        <td class="px-2 py-2">${customer.course || ''}</td>
+                        <td class="px-2 py-2">${customer.annualFee || ''}</td>
+                        <td class="px-2 py-2 font-medium">${customer.lastName || ''}</td>
+                        <td class="px-2 py-2 font-medium">${customer.firstName || ''}</td>
+                        <td class="px-2 py-2">${customer.reading || ''}</td>
+                        <td class="px-2 py-2">${customer.guardianName || ''}</td>
+                        <td class="px-2 py-2 text-center">${customer.gender || ''}</td>
+                        <td class="px-2 py-2">${customer.birthDate || ''}</td>
+                        <td class="px-2 py-2">${customer.phone1 || ''}</td>
+                        <td class="px-2 py-2">${customer.email || ''}</td>
+                        <td class="px-2 py-2">${customer.joinDate || ''}</td>
+                        <td class="px-2 py-2">${customer.memo || ''}</td>
+                        <td class="px-2 py-2"><div class="flex gap-1"><button data-action="edit" data-id="${customer.id}" class="text-blue-600 hover:text-blue-800 text-xs">編集</button><button data-action="delete" data-id="${customer.id}" class="text-red-600 hover:text-red-800 text-xs">削除</button></div></td>
+                    </tr>
+                `;
+            }
+        }
+
+
+        const appInstance = new DanceStudioApp();
+        appInstance.init();
+    </script>
+</body>
+</html>
