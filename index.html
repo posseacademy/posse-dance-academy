@@ -1,0 +1,985 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>posse dance academy 顧客管理システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+        }
+        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; }
+        .status-tab-active { background-color: #3B82F6; color: white; }
+        .status-badge-active { background-color: #10B981; color: white; }
+        .status-badge-paused { background-color: #F59E0B; color: white; }
+        .status-badge-withdrawn { background-color: #6B7280; color: white; }
+        .gender-male { color: #2563EB; font-weight: 600; }
+        .gender-female { color: #DC2626; font-weight: 600; }
+        .sortable-header { cursor: pointer; user-select: none; }
+        .sortable-header:hover { background-color: #F3F4F6; }
+        .sort-icon { display: inline-block; margin-left: 4px; font-size: 10px; }
+        
+        table { table-layout: fixed; }
+        td, th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        td.memo-cell { 
+            white-space: normal !important;
+            word-wrap: break-word;
+            word-break: break-word;
+            line-height: 1.5;
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+            vertical-align: top;
+        }
+        
+        td.email-cell {
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* クラス別の色分け */
+        .class-red { background-color: #DC2626; }
+        .class-orange { background-color: #EA580C; }
+        .class-blue { background-color: #2563EB; }
+        .class-green { background-color: #16A34A; }
+        
+        .border-red-500 { border-color: #EF4444; }
+        .border-orange-500 { border-color: #F97316; }
+        .border-blue-500 { border-color: #3B82F6; }
+        .border-green-500 { border-color: #22C55E; }
+        
+        .text-red-600 { color: #DC2626; }
+        .text-orange-600 { color: #EA580C; }
+        .text-blue-600 { color: #2563EB; }
+        .text-green-600 { color: #16A34A; }
+        
+        .bg-red-600 { background-color: #DC2626; }
+        .bg-orange-600 { background-color: #EA580C; }
+        .bg-blue-600 { background-color: #2563EB; }
+        .bg-green-600 { background-color: #16A34A; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp3_3UwgOKkILJuWx8usYdQhGfB_bAD34",
+            authDomain: "posse-dance-academy.firebaseapp.com",
+            projectId: "posse-dance-academy",
+            storageBucket: "posse-dance-academy.firebasestorage.app",
+            messagingSenderId: "613497046871",
+            appId: "1:613497046871:web:8a31cbc6b947617113e012"
+        };
+
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+
+
+        class DanceStudioApp {
+            constructor() {
+                this.currentTab = 'dashboard';
+                this.statusFilter = '入会中';
+                this.customers = [];
+                this.editingId = null;
+                this.editForm = {};
+                this.showAddForm = false;
+                this.searchTerm = '';
+                this.sortField = 'memberNumber';
+                this.sortOrder = 'asc';
+                this.newCustomer = this.getEmptyCustomer();
+                
+                // 出席簿用
+                this.attendanceTab = 'overview';
+                this.selectedMonth = new Date().toISOString().slice(0, 7);
+                this.attendanceData = {};
+                this.classes = [
+                    { id: 'aksillet_sota', name: 'アクシレット SOTA', color: 'red' },
+                    { id: 'luxemens_akiko', name: 'ラグゼメンズ AKIKO', color: 'orange' },
+                    { id: 'flavi_haruhiko', name: 'フレイヴィ HARUHIKO', color: 'blue' },
+                    { id: 'flavi_soya', name: 'フレイヴィ SOYA', color: 'green' }
+                ];
+            }
+
+
+            getEmptyCustomer() {
+                return {
+                    memberNumber: '', status: '入会中', course: '', annualFee: '', hakomonoRegistration: '',
+                    lastName: '', firstName: '', reading: '', guardianName: '', hakomonoName: '',
+                    gender: '', birthDate: '', phone1: '', phone2: '', email: '',
+                    postalCode: '', prefecture: '', city: '', address: '', building: '',
+                    joinDate: '', memo: ''
+                };
+            }
+
+
+            calculateAge(birthDate) {
+                if (!birthDate) return '';
+                const today = new Date();
+                const birth = new Date(birthDate);
+                let age = today.getFullYear() - birth.getFullYear();
+                const monthDiff = today.getMonth() - birth.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                return age + '歳';
+            }
+
+
+            async init() {
+                await this.loadCustomers();
+                await this.loadAttendance();
+                this.render();
+            }
+
+
+            async loadCustomers() {
+                try {
+                    const querySnapshot = await getDocs(collection(db, 'customers'));
+                    this.customers = querySnapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            ...data,
+                            status: data.status || (data.active === '○' ? '入会中' : '休会中')
+                        };
+                    });
+                    // クライアント側で会員番号順にソート
+                    this.customers.sort((a, b) => {
+                        const aNum = a.memberNumber || '';
+                        const bNum = b.memberNumber || '';
+                        return aNum > bNum ? 1 : -1;
+                    });
+                } catch (error) {
+                    console.error('データ読み込みエラー:', error);
+                    this.customers = [];
+                }
+            }
+
+
+            async addCustomer() {
+                if (!this.newCustomer.lastName || !this.newCustomer.firstName) {
+                    alert('氏名を入力してください');
+                    return;
+                }
+                if (!this.newCustomer.memberNumber) {
+                    alert('会員番号を入力してください');
+                    return;
+                }
+                try {
+                    await addDoc(collection(db, 'customers'), this.newCustomer);
+                    await this.loadCustomers();
+                    this.newCustomer = this.getEmptyCustomer();
+                    this.showAddForm = false;
+                    this.render();
+                    alert('登録しました');
+                } catch (error) {
+                    console.error('登録エラー:', error);
+                    alert('登録エラー: ' + error.message);
+                }
+            }
+
+
+            async saveEdit() {
+                if (!this.editForm.id) {
+                    alert('保存エラー: IDが見つかりません');
+                    return;
+                }
+                try {
+                    const customerRef = doc(db, 'customers', this.editForm.id);
+                    const { id, ...dataToSave } = this.editForm;
+                    await updateDoc(customerRef, dataToSave);
+                    await this.loadCustomers();
+                    this.editingId = null;
+                    this.editForm = {};
+                    this.render();
+                    alert('更新しました');
+                } catch (error) {
+                    console.error('更新エラー:', error);
+                    alert('更新エラー: ' + error.message);
+                }
+            }
+
+
+            async deleteCustomer(id) {
+                if (!confirm('この顧客を削除してもよろしいですか?')) return;
+                try {
+                    await deleteDoc(doc(db, 'customers', id));
+                    await this.loadCustomers();
+                    this.render();
+                    alert('削除しました');
+                } catch (error) {
+                    console.error('削除エラー:', error);
+                    alert('削除エラー: ' + error.message);
+                }
+            }
+
+
+            startEdit(id) {
+                this.editingId = id;
+                const customer = this.customers.find(c => c.id === id);
+                if (customer) {
+                    this.editForm = { ...customer };
+                    this.render();
+                }
+            }
+
+
+            cancelEdit() {
+                this.editingId = null;
+                this.editForm = {};
+                this.render();
+            }
+
+
+            updateEditField(field, value) {
+                this.editForm[field] = value;
+            }
+
+
+            handleExport() {
+                const headers = ['No', '会員番号', '会員ステータス', 'コース', '年会費更新日', '氏名', '読み', '保護者名', 'ハコモノ登録名', '性別', '生年月日', '年齢', '電話番号', 'メール', '入会日', '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号', '備考'];
+                const rows = this.customers.map((c, i) => [
+                    i + 1, c.memberNumber || '', c.status, c.course, c.annualFee,
+                    `${c.lastName} ${c.firstName}`, c.reading, c.guardianName, c.hakomonoName, c.gender,
+                    c.birthDate, this.calculateAge(c.birthDate), c.phone1, c.email, c.joinDate,
+                    c.postalCode, c.prefecture, c.city, c.address, c.building, c.memo
+                ].map(f => `"${f || ''}"`).join(','));
+                const csv = [headers.join(','), ...rows].join('\n');
+                const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `顧客管理_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+            }
+
+
+            sortBy(field) {
+                if (this.sortField === field) {
+                    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.sortField = field;
+                    this.sortOrder = 'asc';
+                }
+                this.render();
+            }
+
+
+            getFilteredCustomers() {
+                const s = this.searchTerm.toLowerCase();
+                let filtered = this.customers.filter(c => 
+                    c.status === this.statusFilter &&
+                    ((c.lastName || '').toLowerCase().includes(s) ||
+                    (c.firstName || '').toLowerCase().includes(s) ||
+                    (c.reading || '').toLowerCase().includes(s) ||
+                    (c.course || '').toLowerCase().includes(s) ||
+                    (c.phone1 || '').includes(s) ||
+                    (c.email || '').toLowerCase().includes(s) ||
+                    (c.memberNumber || '').includes(s))
+                );
+
+
+                filtered.sort((a, b) => {
+                    let aVal = a[this.sortField] || '';
+                    let bVal = b[this.sortField] || '';
+                    if (this.sortOrder === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+
+
+                return filtered;
+            }
+
+
+            render() {
+                const filteredCustomers = this.getFilteredCustomers();
+                document.getElementById('app').innerHTML = `
+                    <div class="min-h-screen">
+                        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+                            <div class="container mx-auto px-4 py-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h1 class="text-2xl font-bold">posse dance academy</h1>
+                                        <p class="text-sm opacity-90">顧客管理システム</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </header>
+                        <nav class="bg-white shadow">
+                            <div class="container mx-auto px-4">
+                                <div class="flex space-x-8">
+                                    <button id="dashboardTab" class="py-4 px-2 font-medium ${this.currentTab === 'dashboard' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">ダッシュボード</button>
+                                    <button id="customersTab" class="py-4 px-2 font-medium ${this.currentTab === 'customers' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">顧客管理</button>
+                                    <button id="attendanceTab" class="py-4 px-2 font-medium ${this.currentTab === 'attendance' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">出席名簿</button>
+                                </div>
+                            </div>
+                        </nav>
+                        <main class="container mx-auto px-4 py-8">
+                            ${this.currentTab === 'dashboard' ? this.renderDashboard() : 
+                              this.currentTab === 'customers' ? this.renderCustomers(filteredCustomers) :
+                              this.renderAttendance()}
+                        </main>
+                    </div>
+                `;
+
+
+                document.getElementById('dashboardTab')?.addEventListener('click', () => { this.currentTab = 'dashboard'; this.render(); });
+                document.getElementById('customersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
+                document.getElementById('attendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
+
+
+                if (this.currentTab === 'customers') {
+                    this.setupCustomerPageEvents();
+                } else if (this.currentTab === 'attendance') {
+                    this.setupAttendanceEvents();
+                }
+            }
+
+
+            setupCustomerPageEvents() {
+                document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
+                document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
+                document.getElementById('searchInput')?.addEventListener('input', (e) => { this.searchTerm = e.target.value; this.render(); });
+                document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
+                document.getElementById('cancelAddBtn')?.addEventListener('click', () => { this.showAddForm = false; this.render(); });
+                
+                ['入会中', '休会中', '退会済み'].forEach(status => {
+                    document.getElementById(`status-${status}`)?.addEventListener('click', () => {
+                        this.statusFilter = status;
+                        this.render();
+                    });
+                });
+
+
+                document.querySelectorAll('.sortable-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        this.sortBy(header.getAttribute('data-field'));
+                    });
+                });
+
+
+                this.setupFormEvents();
+                this.setupEditEvents();
+            }
+
+
+            setupFormEvents() {
+                const fields = ['memberNumber', 'status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo'];
+                fields.forEach(field => {
+                    const el = document.getElementById(`new_${field}`);
+                    if (el) {
+                        el.addEventListener('change', (e) => { this.newCustomer[field] = e.target.value; });
+                        el.addEventListener('input', (e) => { this.newCustomer[field] = e.target.value; });
+                    }
+                });
+            }
+
+
+            setupEditEvents() {
+                document.querySelectorAll('[data-edit-action="start"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.startEdit(btn.getAttribute('data-id'));
+                    });
+                });
+
+
+                document.querySelectorAll('[data-edit-action="delete"]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.deleteCustomer(btn.getAttribute('data-id'));
+                    });
+                });
+
+
+                document.getElementById('saveEditBtn')?.addEventListener('click', () => this.saveEdit());
+                document.getElementById('cancelEditBtn')?.addEventListener('click', () => this.cancelEdit());
+
+
+                const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo'];
+                editFields.forEach(field => {
+                    const el = document.getElementById(`edit_${field}`);
+                    if (el) {
+                        el.addEventListener('change', (e) => { this.updateEditField(field, e.target.value); });
+                        el.addEventListener('input', (e) => { this.updateEditField(field, e.target.value); });
+                    }
+                });
+
+
+                const nameField = document.getElementById('edit_fullName');
+                if (nameField) {
+                    nameField.addEventListener('input', (e) => {
+                        const parts = e.target.value.split(' ');
+                        this.editForm.lastName = parts[0] || '';
+                        this.editForm.firstName = parts[1] || '';
+                    });
+                }
+            }
+
+
+            renderDashboard() {
+                const total = this.customers.length;
+                const activeCount = this.customers.filter(c => c.status === '入会中').length;
+                const pausedCount = this.customers.filter(c => c.status === '休会中').length;
+                const withdrawnCount = this.customers.filter(c => c.status === '退会済み').length;
+                
+                const coursePrices = {
+                    '１': 6000,
+                    '２': 10000,
+                    '３': 14400,
+                    '４': 18600
+                };
+                
+                const courseCounts = {};
+                this.customers.filter(c => c.status === '入会中').forEach(c => { 
+                    if (c.course) courseCounts[c.course] = (courseCounts[c.course] || 0) + 1; 
+                });
+                
+                let totalRevenue = 0;
+                Object.entries(courseCounts).forEach(([course, count]) => {
+                    if (coursePrices[course]) {
+                        totalRevenue += coursePrices[course] * count;
+                    }
+                });
+
+
+                return `
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">ダッシュボード</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">総顧客数</div>
+                                <div class="text-4xl font-bold text-blue-600">${total}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">入会中</div>
+                                <div class="text-4xl font-bold text-green-600">${activeCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">休会中</div>
+                                <div class="text-4xl font-bold text-orange-600">${pausedCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">退会済み</div>
+                                <div class="text-4xl font-bold text-gray-600">${withdrawnCount}</div>
+                                <div class="text-xs text-gray-500 mt-2">名</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">コース別内訳（入会中）</h3>
+                            <div class="space-y-3">
+                                ${Object.keys(courseCounts).length > 0 ? Object.entries(courseCounts).map(([course, count]) => {
+                                    const price = coursePrices[course] || 0;
+                                    const subtotal = price * count;
+                                    return `
+                                        <div class="flex justify-between items-center">
+                                            <span class="font-medium">コース${course || '未設定'}</span>
+                                            <div class="flex gap-4 items-center">
+                                                <span class="text-gray-600">¥${price.toLocaleString()} × ${count}名</span>
+                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">¥${subtotal.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('') : '<p class="text-gray-500">データがありません</p>'}
+                                ${Object.keys(courseCounts).length > 0 ? `
+                                    <div class="border-t pt-3 mt-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="font-bold text-lg">合計</span>
+                                            <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-lg font-bold">¥${totalRevenue.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderCustomers(filteredCustomers) {
+                const getSortIcon = (field) => {
+                    if (this.sortField === field) return this.sortOrder === 'asc' ? '▲' : '▼';
+                    return '⬍';
+                };
+
+
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800">顧客管理</h2>
+                            <div class="flex gap-2">
+                                <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">CSVエクスポート</button>
+                                <button id="toggleAddFormBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">${this.showAddForm ? 'フォームを閉じる' : '新規登録'}</button>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex gap-2 mb-4">
+                                <button id="status-入会中" class="px-4 py-2 rounded transition ${this.statusFilter === '入会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    入会中 (${this.customers.filter(c => c.status === '入会中').length})
+                                </button>
+                                <button id="status-休会中" class="px-4 py-2 rounded transition ${this.statusFilter === '休会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    休会中 (${this.customers.filter(c => c.status === '休会中').length})
+                                </button>
+                                <button id="status-退会済み" class="px-4 py-2 rounded transition ${this.statusFilter === '退会済み' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    退会済み (${this.customers.filter(c => c.status === '退会済み').length})
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <input type="text" id="searchInput" placeholder="会員番号、氏名、コース、電話番号、メールで検索..." value="${this.searchTerm}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            ${this.showAddForm ? this.renderAddForm() : ''}
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100 border-b">
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 50px;">No</th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="memberNumber" style="width: 80px;">会員番号<span class="sort-icon">${getSortIcon('memberNumber')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="status" style="width: 120px;">会員ステータス<span class="sort-icon">${getSortIcon('status')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="course" style="width: 80px;">コース<span class="sort-icon">${getSortIcon('course')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="annualFee" style="width: 120px;">年会費更新日<span class="sort-icon">${getSortIcon('annualFee')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="lastName" style="width: 150px;">氏名<span class="sort-icon">${getSortIcon('lastName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="reading" style="width: 150px;">読み<span class="sort-icon">${getSortIcon('reading')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="guardianName" style="width: 120px;">保護者名<span class="sort-icon">${getSortIcon('guardianName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="hakomonoName" style="width: 120px;">ハコモノ登録名<span class="sort-icon">${getSortIcon('hakomonoName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="gender" style="width: 60px;">性別<span class="sort-icon">${getSortIcon('gender')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="birthDate" style="width: 110px;">生年月日<span class="sort-icon">${getSortIcon('birthDate')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 70px;">年齢</th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="phone1" style="width: 130px;">電話番号<span class="sort-icon">${getSortIcon('phone1')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="email" style="width: 220px;">メール<span class="sort-icon">${getSortIcon('email')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="joinDate" style="width: 110px;">入会日<span class="sort-icon">${getSortIcon('joinDate')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="postalCode" style="width: 100px;">郵便番号<span class="sort-icon">${getSortIcon('postalCode')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="prefecture" style="width: 90px;">都道府県<span class="sort-icon">${getSortIcon('prefecture')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="city" style="width: 120px;">市区町村<span class="sort-icon">${getSortIcon('city')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="address" style="width: 150px;">番地<span class="sort-icon">${getSortIcon('address')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="building" style="width: 150px;">建物・部屋番号<span class="sort-icon">${getSortIcon('building')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 400px;">備考</th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 100px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${filteredCustomers.map((c, i) => this.renderCustomerRow(c, i + 1)).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 text-sm text-gray-600">
+                                ${this.statusFilter}: ${filteredCustomers.length}名
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderAddForm() {
+                return `
+                    <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">新規顧客登録</h3>
+                        <div class="grid grid-cols-4 gap-3 mb-4">
+                            <div><label class="block text-sm font-medium mb-1">会員番号 *</label><input type="text" id="new_memberNumber" class="w-full border rounded px-2 py-1 text-sm" placeholder="例: 0001"></div>
+                            <div><label class="block text-sm font-medium mb-1">会員ステータス</label><select id="new_status" class="w-full border rounded px-2 py-1 text-sm"><option value="入会中">入会中</option><option value="休会中">休会中</option><option value="退会済み">退会済み</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">コース</label><select id="new_course" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択してください</option><option value="ビジター">ビジター</option><option value="１">１</option><option value="２">２</option><option value="３">３</option><option value="４">４</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">年会費更新日</label><input type="date" id="new_annualFee" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">氏名(姓) *</label><input type="text" id="new_lastName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">氏名(名) *</label><input type="text" id="new_firstName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">読み</label><input type="text" id="new_reading" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">保護者名</label><input type="text" id="new_guardianName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">ハコモノ登録名</label><input type="text" id="new_hakomonoName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">性別</label><select id="new_gender" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択</option><option value="男">男</option><option value="女">女</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">生年月日</label><input type="date" id="new_birthDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">電話番号</label><input type="tel" id="new_phone1" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-2"><label class="block text-sm font-medium mb-1">メール</label><input type="email" id="new_email" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">入会日</label><input type="date" id="new_joinDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">郵便番号</label><input type="text" id="new_postalCode" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">都道府県</label><input type="text" id="new_prefecture" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">市区町村</label><input type="text" id="new_city" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">番地</label><input type="text" id="new_address" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">建物・部屋番号</label><input type="text" id="new_building" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-3"><label class="block text-sm font-medium mb-1">備考</label><input type="text" id="new_memo" class="w-full border rounded px-2 py-1 text-sm"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="addCustomerBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">登録</button>
+                            <button id="cancelAddBtn" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition">キャンセル</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderCustomerRow(customer, no) {
+                const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' : customer.status === '休会中' ? 'status-badge-paused' : 'status-badge-withdrawn';
+                const genderClass = customer.gender === '男' ? 'gender-male' : customer.gender === '女' ? 'gender-female' : '';
+                const age = this.calculateAge(customer.birthDate);
+                
+                if (this.editingId === customer.id) {
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-2 py-3">${no}</td>
+                            <td class="px-2 py-3"><input type="text" id="edit_memberNumber" value="${this.editForm.memberNumber || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><select id="edit_status" class="w-full border rounded px-1 py-1 text-xs"><option value="入会中" ${this.editForm.status === '入会中' ? 'selected' : ''}>入会中</option><option value="休会中" ${this.editForm.status === '休会中' ? 'selected' : ''}>休会中</option><option value="退会済み" ${this.editForm.status === '退会済み' ? 'selected' : ''}>退会済み</option></select></td>
+                            <td class="px-2 py-3"><select id="edit_course" class="w-full border rounded px-1 py-1 text-xs"><option value="">選択</option><option value="ビジター" ${this.editForm.course === 'ビジター' ? 'selected' : ''}>ビジター</option><option value="１" ${this.editForm.course === '１' ? 'selected' : ''}>１</option><option value="２" ${this.editForm.course === '２' ? 'selected' : ''}>２</option><option value="３" ${this.editForm.course === '３' ? 'selected' : ''}>３</option><option value="４" ${this.editForm.course === '４' ? 'selected' : ''}>４</option></select></td>
+                            <td class="px-2 py-3"><input type="date" id="edit_annualFee" value="${this.editForm.annualFee || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_fullName" value="${this.editForm.lastName || ''} ${this.editForm.firstName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_reading" value="${this.editForm.reading || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_guardianName" value="${this.editForm.guardianName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_hakomonoName" value="${this.editForm.hakomonoName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><select id="edit_gender" class="w-full border rounded px-1 py-1 text-xs"><option value="">-</option><option value="男" ${this.editForm.gender === '男' ? 'selected' : ''}>男</option><option value="女" ${this.editForm.gender === '女' ? 'selected' : ''}>女</option></select></td>
+                            <td class="px-2 py-3"><input type="date" id="edit_birthDate" value="${this.editForm.birthDate || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3 text-center">${this.calculateAge(this.editForm.birthDate)}</td>
+                            <td class="px-2 py-3"><input type="tel" id="edit_phone1" value="${this.editForm.phone1 || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="email" id="edit_email" value="${this.editForm.email || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="date" id="edit_joinDate" value="${this.editForm.joinDate || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_postalCode" value="${this.editForm.postalCode || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_prefecture" value="${this.editForm.prefecture || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_city" value="${this.editForm.city || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_address" value="${this.editForm.address || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3"><input type="text" id="edit_building" value="${this.editForm.building || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
+                            <td class="px-2 py-3 memo-cell"><textarea id="edit_memo" class="w-full border rounded px-1 py-1 text-xs" rows="2">${this.editForm.memo || ''}</textarea></td>
+                            <td class="px-2 py-3"><div class="flex gap-1"><button id="saveEditBtn" class="text-green-600 hover:text-green-800 text-xs">保存</button><button id="cancelEditBtn" class="text-red-600 hover:text-red-800 text-xs">×</button></div></td>
+                        </tr>
+                    `;
+                }
+
+
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-2 py-3">${no}</td>
+                        <td class="px-2 py-3 font-mono">${customer.memberNumber || ''}</td>
+                        <td class="px-2 py-3"><span class="px-2 py-1 rounded text-xs font-semibold ${statusBadgeClass}">${customer.status || ''}</span></td>
+                        <td class="px-2 py-3">${customer.course || ''}</td>
+                        <td class="px-2 py-3">${customer.annualFee || ''}</td>
+                        <td class="px-2 py-3 font-medium">${customer.lastName || ''} ${customer.firstName || ''}</td>
+                        <td class="px-2 py-3">${customer.reading || ''}</td>
+                        <td class="px-2 py-3">${customer.guardianName || ''}</td>
+                        <td class="px-2 py-3">${customer.hakomonoName || ''}</td>
+                        <td class="px-2 py-3 text-center ${genderClass}">${customer.gender || ''}</td>
+                        <td class="px-2 py-3">${customer.birthDate || ''}</td>
+                        <td class="px-2 py-3 text-center">${age}</td>
+                        <td class="px-2 py-3">${customer.phone1 || ''}</td>
+                        <td class="px-2 py-3 email-cell">${customer.email || ''}</td>
+                        <td class="px-2 py-3">${customer.joinDate || ''}</td>
+                        <td class="px-2 py-3">${customer.postalCode || ''}</td>
+                        <td class="px-2 py-3">${customer.prefecture || ''}</td>
+                        <td class="px-2 py-3">${customer.city || ''}</td>
+                        <td class="px-2 py-3">${customer.address || ''}</td>
+                        <td class="px-2 py-3">${customer.building || ''}</td>
+                        <td class="px-2 py-3 memo-cell">${customer.memo || ''}</td>
+                        <td class="px-2 py-3"><div class="flex gap-1"><button data-edit-action="start" data-id="${customer.id}" class="text-blue-600 hover:text-blue-800 text-xs">編集</button><button data-edit-action="delete" data-id="${customer.id}" class="text-red-600 hover:text-red-800 text-xs">削除</button></div></td>
+                    </tr>
+                `;
+            }
+
+
+            // 出席簿関連のメソッド
+            async loadAttendance() {
+                try {
+                    const monthKey = this.selectedMonth.replace('-', '');
+                    const querySnapshot = await getDocs(collection(db, `attendance_${monthKey}`));
+                    this.attendanceData = {};
+                    querySnapshot.docs.forEach(doc => {
+                        this.attendanceData[doc.id] = doc.data();
+                    });
+                } catch (error) {
+                    console.error('出席データ読み込みエラー:', error);
+                    this.attendanceData = {};
+                }
+            }
+
+
+            async saveAttendance(studentId, weekData) {
+                try {
+                    const monthKey = this.selectedMonth.replace('-', '');
+                    const docRef = doc(db, `attendance_${monthKey}`, studentId);
+                    await setDoc(docRef, weekData, { merge: true });
+                    await this.loadAttendance();
+                } catch (error) {
+                    console.error('出席データ保存エラー:', error);
+                }
+            }
+
+
+            toggleAttendance(studentId, week) {
+                const current = this.attendanceData[studentId]?.[week] || '';
+                const next = current === '○' ? '×' : current === '×' ? '' : '○';
+                
+                const weekData = this.attendanceData[studentId] || {};
+                weekData[week] = next;
+                this.attendanceData[studentId] = weekData;
+                
+                this.saveAttendance(studentId, weekData);
+                this.render();
+            }
+
+
+            getAttendanceRate(studentId) {
+                const data = this.attendanceData[studentId] || {};
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                const attended = weeks.filter(w => data[w] === '○').length;
+                const total = weeks.filter(w => data[w] === '○' || data[w] === '×').length;
+                return total > 0 ? Math.round((attended / total) * 100) : 0;
+            }
+
+
+            async changeMonth(direction) {
+                const [year, month] = this.selectedMonth.split('-').map(Number);
+                const date = new Date(year, month - 1 + direction, 1);
+                this.selectedMonth = date.toISOString().slice(0, 7);
+                await this.loadAttendance();
+                this.render();
+            }
+
+
+            renderAttendance() {
+                return `
+                    <div>
+                        <div class="bg-white rounded-lg shadow mb-6">
+                            <div class="border-b">
+                                <div class="flex">
+                                    <button id="attendanceOverviewTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📊 ダッシュボード</button>
+                                    <button id="attendanceRecordTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'record' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📝 出席記録</button>
+                                    <button id="attendanceArchiveTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'archive' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📂 過去の記録</button>
+                                </div>
+                            </div>
+                        </div>
+                        ${this.attendanceTab === 'overview' ? this.renderAttendanceOverview() :
+                          this.attendanceTab === 'record' ? this.renderAttendanceRecord() :
+                          this.renderAttendanceArchive()}
+                    </div>
+                `;
+            }
+
+
+            renderAttendanceOverview() {
+                const [year, month] = this.selectedMonth.split('-');
+                const activeStudents = this.customers.filter(c => c.status === '入会中');
+                
+                const classStats = this.classes.map(cls => {
+                    const students = activeStudents.filter(s => s.course && s.course !== 'ビジター');
+                    const totalRate = students.reduce((sum, s) => sum + this.getAttendanceRate(s.id), 0);
+                    return {
+                        ...cls,
+                        count: students.length,
+                        avgRate: students.length > 0 ? Math.round(totalRate / students.length) : 0
+                    };
+                });
+
+
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800">${year}年${parseInt(month)}月 出席状況</h2>
+                            <div class="flex gap-2">
+                                <button id="prevMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">◀ 前月</button>
+                                <button id="nextMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">次月 ▶</button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            ${classStats.map(cls => `
+                                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-${cls.color}-500">
+                                    <div class="text-gray-600 text-sm mb-2">${cls.name}</div>
+                                    <div class="text-3xl font-bold text-${cls.color}-600">${cls.count}名</div>
+                                    <div class="text-sm text-gray-500 mt-2">平均出席率: ${cls.avgRate}%</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">今月の概要</h3>
+                            <p class="text-gray-600">総在籍数: ${activeStudents.length}名</p>
+                            <p class="text-sm text-gray-500 mt-4">※ 詳細な出席記録は「📝 出席記録」タブから入力できます</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            renderAttendanceRecord() {
+                const [year, month] = this.selectedMonth.split('-');
+                const activeStudents = this.customers.filter(c => c.status === '入会中' && c.course && c.course !== 'ビジター');
+
+
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800">${year}年${parseInt(month)}月 出席記録</h2>
+                            <div class="flex gap-2">
+                                <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">◀ 前月</button>
+                                <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded font-medium">${year}年${parseInt(month)}月</span>
+                                <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">次月 ▶</button>
+                            </div>
+                        </div>
+
+
+                        ${this.classes.map(cls => {
+                            const students = activeStudents.filter(s => {
+                                // 仮でコース番号でクラス分け（実際はクラス情報を顧客データに追加）
+                                return true;
+                            });
+
+
+                            return `
+                                <div class="bg-white rounded-lg shadow mb-6">
+                                    <div class="bg-${cls.color}-600 text-white px-6 py-3 rounded-t-lg">
+                                        <h3 class="text-xl font-bold">${cls.name}</h3>
+                                    </div>
+                                    <div class="p-6 overflow-x-auto">
+                                        <table class="w-full text-sm">
+                                            <thead>
+                                                <tr class="bg-gray-100 border-b">
+                                                    <th class="px-4 py-3 text-left font-semibold" style="width: 150px;">氏名</th>
+                                                    <th class="px-4 py-3 text-left font-semibold" style="width: 100px;">プラン</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 80px;">第1週</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 80px;">第2週</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 80px;">第3週</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 80px;">第4週</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 80px;">第5週</th>
+                                                    <th class="px-4 py-3 text-center font-semibold" style="width: 100px;">出席率</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${students.map(student => {
+                                                    const attendance = this.attendanceData[student.id] || {};
+                                                    const rate = this.getAttendanceRate(student.id);
+                                                    return `
+                                                        <tr class="border-b hover:bg-gray-50">
+                                                            <td class="px-4 py-3">${student.lastName} ${student.firstName}</td>
+                                                            <td class="px-4 py-3">${student.course}クラス</td>
+                                                            ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => `
+                                                                <td class="px-4 py-3 text-center">
+                                                                    <button 
+                                                                        data-student="${student.id}" 
+                                                                        data-week="${week}"
+                                                                        class="attendance-btn w-10 h-10 rounded border-2 ${
+                                                                            attendance[week] === '○' ? 'bg-green-500 border-green-600 text-white' :
+                                                                            attendance[week] === '×' ? 'bg-red-500 border-red-600 text-white' :
+                                                                            'bg-gray-100 border-gray-300 text-gray-400'
+                                                                        } hover:opacity-80 transition font-bold">
+                                                                        ${attendance[week] || '-'}
+                                                                    </button>
+                                                                </td>
+                                                            `).join('')}
+                                                            <td class="px-4 py-3 text-center">
+                                                                <span class="px-3 py-1 rounded-full text-sm font-semibold ${
+                                                                    rate >= 80 ? 'bg-green-100 text-green-800' :
+                                                                    rate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-red-100 text-red-800'
+                                                                }">${rate}%</span>
+                                                            </td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+
+            renderAttendanceArchive() {
+                return `
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">過去の記録</h2>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 mb-6">
+                            <h3 class="text-lg font-bold mb-4">検索条件</h3>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">開始月</label>
+                                    <input type="month" class="w-full border rounded px-3 py-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">終了月</label>
+                                    <input type="month" class="w-full border rounded px-3 py-2" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">クラス</label>
+                                    <select class="w-full border rounded px-3 py-2">
+                                        <option>全クラス</option>
+                                        ${this.classes.map(cls => `<option>${cls.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">検索</button>
+                        </div>
+
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-bold mb-4">月別アーカイブ</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center p-4 border rounded hover:bg-gray-50">
+                                    <div>
+                                        <span class="font-medium">2024年10月</span>
+                                        <span class="text-sm text-gray-500 ml-4">総出席数: 156名</span>
+                                    </div>
+                                    <button class="text-blue-600 hover:text-blue-800">詳細を見る →</button>
+                                </div>
+                                <div class="flex justify-between items-center p-4 border rounded hover:bg-gray-50">
+                                    <div>
+                                        <span class="font-medium">2024年9月</span>
+                                        <span class="text-sm text-gray-500 ml-4">総出席数: 148名</span>
+                                    </div>
+                                    <button class="text-blue-600 hover:text-blue-800">詳細を見る →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            setupAttendanceEvents() {
+                document.getElementById('attendanceOverviewTab')?.addEventListener('click', () => {
+                    this.attendanceTab = 'overview';
+                    this.render();
+                });
+                document.getElementById('attendanceRecordTab')?.addEventListener('click', () => {
+                    this.attendanceTab = 'record';
+                    this.render();
+                });
+                document.getElementById('attendanceArchiveTab')?.addEventListener('click', () => {
+                    this.attendanceTab = 'archive';
+                    this.render();
+                });
+
+
+                document.getElementById('prevMonth')?.addEventListener('click', () => this.changeMonth(-1));
+                document.getElementById('nextMonth')?.addEventListener('click', () => this.changeMonth(1));
+                document.getElementById('prevMonthRecord')?.addEventListener('click', () => this.changeMonth(-1));
+                document.getElementById('nextMonthRecord')?.addEventListener('click', () => this.changeMonth(1));
+
+
+                document.querySelectorAll('.attendance-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const studentId = btn.getAttribute('data-student');
+                        const week = btn.getAttribute('data-week');
+                        this.toggleAttendance(studentId, week);
+                    });
+                });
+            }
+        }
+
+
+        window.app = new DanceStudioApp();
+        app.init();
+    </script>
+</body>
+</html>
