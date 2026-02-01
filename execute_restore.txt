@@ -1,0 +1,67 @@
+手動で復元する方法：
+
+1. https://posseacademy.github.io/posse-dance-academy/index-enhanced.html を開く
+2. F12キーを押して、開発者ツールを開く
+3. 「Console」タブをクリック
+4. 以下のスクリプトをコピー&ペーストして、Enterキーを押す
+
+--- ここからコピー ---
+
+async function restoreVisitorData() {
+    console.log('===== ビジター履歴復元開始 =====');
+    try {
+        const missingStudents = [];
+        Object.keys(app.attendanceData).forEach(key => {
+            const parts = key.split('_');
+            if (parts.length >= 4) {
+                const day = parts[0];
+                const location = parts[1];
+                const className = parts[2];
+                const studentName = parts.slice(3).join('_');
+                const classData = app.scheduleData[day]?.find(c => c.location === location && c.name === className);
+                if (classData) {
+                    const student = classData.students?.find(s => `${s.lastName}${s.firstName}` === studentName);
+                    if (!student) {
+                        missingStudents.push({ key, day, location, className, studentName, attendance: app.attendanceData[key] });
+                    }
+                }
+            }
+        });
+
+        if (missingStudents.length === 0) {
+            console.log('✅ すべての生徒がscheduleDataに存在しています。');
+            return;
+        }
+
+        let restoredCount = 0;
+        missingStudents.forEach(student => {
+            const lastName = student.studentName.length > 2 ? student.studentName.slice(0, -2) : student.studentName;
+            const firstName = student.studentName.length > 2 ? student.studentName.slice(-2) : '';
+            const classData = app.scheduleData[student.day]?.find(c => c.location === student.location && c.name === student.className);
+            if (classData) {
+                if (!classData.students) classData.students = [];
+                classData.students.push({ lastName, firstName, plan: 'ビジター（会員）' });
+                console.log(`✓ 復元: ${student.day} - ${student.location} - ${student.className}: ${lastName} ${firstName}`);
+                restoredCount++;
+            }
+        });
+
+        console.log(`復元された生徒数: ${restoredCount}名`);
+        await app.saveScheduleData();
+        await app.loadScheduleData();
+        await app.loadAttendance();
+        app.render();
+        alert(`✅ ビジター履歴を復元しました！\n復元された生徒数: ${restoredCount}名`);
+    } catch (error) {
+        console.error('❌ エラー:', error);
+        alert(`エラー: ${error.message}`);
+    }
+}
+
+restoreVisitorData();
+
+--- ここまでコピー ---
+
+5. スクリプトが実行され、ビジター履歴が復元されます
+6. 「✅ ビジター履歴を復元しました！」というアラートが表示されたら完了
+7. ダッシュボードタブを確認して、ビジター売上が表示されていることを確認してください
