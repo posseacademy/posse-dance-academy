@@ -1175,11 +1175,19 @@
                 }
                 const { day, location, className } = this.selectedClassForAdd;
                 const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
-                
+
                 if (classIndex !== -1) {
-                    this.scheduleData[day][classIndex].students.push({ lastName, firstName, plan });
+                    const visitorPlans = ['ビジター（会員）', 'ビジター（非会員）', '初回体験'];
+                    const newStudent = { lastName, firstName, plan };
+
+                    // ビジタープランの場合、参加月を記録
+                    if (visitorPlans.includes(plan)) {
+                        newStudent.visitorMonth = this.selectedMonth;
+                    }
+
+                    this.scheduleData[day][classIndex].students.push(newStudent);
                     this.scheduleData[day][classIndex].students = this.sortStudentsByPlan(this.scheduleData[day][classIndex].students);
-                    
+
                     // Firestoreに保存
                     await this.saveScheduleData();
                 }
@@ -1566,7 +1574,8 @@
                             classData.students.push({
                                 lastName: lastName,
                                 firstName: firstName,
-                                plan: plan
+                                plan: plan,
+                                visitorMonth: this.selectedMonth  // ビジター参加月を記録
                             });
                             await this.saveScheduleData();
                         }
@@ -1726,18 +1735,35 @@
             renderAttendanceOverview() {
                 const [year, month] = this.selectedMonth.split('-');
                 
-                // 全曜日のクラス数と生徒数を集計
+                // 全曜日のクラス数と生徒数を集計（ビジター参加者は現在の月のもののみカウント）
+                const visitorPlans = ['ビジター（会員）', 'ビジター（非会員）', '初回体験'];
                 let totalClasses = 0;
                 let totalStudents = 0;
                 Object.keys(this.scheduleData).forEach(day => {
                     totalClasses += this.scheduleData[day].length;
                     this.scheduleData[day].forEach(cls => {
-                        totalStudents += cls.students.length;
+                        const filteredStudents = cls.students.filter(student => {
+                            if (visitorPlans.includes(student.plan)) {
+                                // visitorMonthがない場合（既存データ）は常に表示、ある場合は現在の月と一致する場合のみ表示
+                                return !student.visitorMonth || student.visitorMonth === this.selectedMonth;
+                            }
+                            return true;
+                        });
+                        totalStudents += filteredStudents.length;
                     });
                 });
                 const dayStats = Object.keys(this.scheduleData).map(day => {
                     const classes = this.scheduleData[day];
-                    const studentCount = classes.reduce((sum, cls) => sum + cls.students.length, 0);
+                    const studentCount = classes.reduce((sum, cls) => {
+                        const filteredStudents = cls.students.filter(student => {
+                            if (visitorPlans.includes(student.plan)) {
+                                // visitorMonthがない場合（既存データ）は常に表示、ある場合は現在の月と一致する場合のみ表示
+                                return !student.visitorMonth || student.visitorMonth === this.selectedMonth;
+                            }
+                            return true;
+                        });
+                        return sum + filteredStudents.length;
+                    }, 0);
                     return { day, classCount: classes.length, studentCount };
                 });
                 const visitorRevenue = this.calculateVisitorRevenue();
@@ -1892,7 +1918,17 @@
                         </div>
                         ${this.showAddStudentForm ? this.renderAddStudentForm() : ''}
                         ${dayClasses.map((classInfo, idx) => {
-                            const sortedStudents = this.sortStudentsByPlan([...classInfo.students]);
+                            // 現在の月に該当する生徒のみ表示（ビジター参加者は参加月のみ表示）
+                            const visitorPlans = ['ビジター（会員）', 'ビジター（非会員）', '初回体験'];
+                            const filteredStudents = classInfo.students.filter(student => {
+                                if (visitorPlans.includes(student.plan)) {
+                                    // visitorMonthがない場合（既存データ）は常に表示、ある場合は現在の月と一致する場合のみ表示
+                                    return !student.visitorMonth || student.visitorMonth === this.selectedMonth;
+                                }
+                                // 通常の会員は常に表示
+                                return true;
+                            });
+                            const sortedStudents = this.sortStudentsByPlan(filteredStudents);
                             return `
                                 <div class="bg-white rounded-lg shadow mb-3">
                                     <div class="bg-${classInfo.color}-600 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
