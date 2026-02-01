@@ -1629,49 +1629,19 @@
                 const recorded = weeks.filter(w => data[w] === '○' || data[w] === '×').length; // 休講を除外
                 return recorded > 0 ? Math.round((attended / recorded) * 100) : 0;
             }
-            // ビジター参加者を削除（翌月への移行を防ぐ）
-            async removeVisitorStudentsFromSchedule() {
-                const visitorPlans = ['ビジター（会員）', 'ビジター（非会員）', '初回体験'];
-                let removedCount = 0;
-
-                // 全ての曜日とクラスをループ
-                Object.keys(this.scheduleData).forEach(day => {
-                    this.scheduleData[day].forEach(classInfo => {
-                        if (classInfo.students && classInfo.students.length > 0) {
-                            const originalLength = classInfo.students.length;
-                            // ビジタープラン以外の生徒のみ残す
-                            classInfo.students = classInfo.students.filter(student =>
-                                !visitorPlans.includes(student.plan)
-                            );
-                            removedCount += originalLength - classInfo.students.length;
-                        }
-                    });
-                });
-
-                if (removedCount > 0) {
-                    console.log(`${removedCount}名のビジター参加者を削除しました`);
-                    // Firestoreに保存
-                    await this.saveScheduleData();
-                }
-
-                return removedCount;
-            }
             // 月切り替え機能を修正
             async changeMonth(direction) {
                 this.isLoading = true;
                 this.render();
-
+                
                 try {
-                    // 月が変わる前に、現在の月のビジター参加者を削除
-                    await this.removeVisitorStudentsFromSchedule();
-
                     // 現在の年月を取得
                     const [currentYear, currentMonth] = this.selectedMonth.split('-').map(Number);
-
+                    
                     // 新しい年月を計算
                     let newYear = currentYear;
                     let newMonth = currentMonth + direction;
-
+                    
                     // 月の範囲チェックと年の調整
                     if (newMonth > 12) {
                         newMonth = 1;
@@ -1680,10 +1650,10 @@
                         newMonth = 12;
                         newYear--;
                     }
-
+                    
                     // YYYY-MM形式に変換（月は2桁にゼロパディング）
                     this.selectedMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
-
+                    
                     await this.loadAttendance();
                     await this.loadEventAttendance();
                 } catch (error) {
@@ -1696,15 +1666,12 @@
             // 月を直接選択
             async selectMonth(monthValue) {
                 if (!monthValue) return;
-
+                
                 this.isLoading = true;
+                this.selectedMonth = monthValue;
                 this.render();
-
+                
                 try {
-                    // 月が変わる前に、現在の月のビジター参加者を削除
-                    await this.removeVisitorStudentsFromSchedule();
-
-                    this.selectedMonth = monthValue;
                     await this.loadAttendance();
                     await this.loadEventAttendance();
                 } catch (error) {
