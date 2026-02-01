@@ -1411,6 +1411,82 @@
                 this.render();
             }
 
+            // 誤って復元された生徒データをクリーンアップ
+            async cleanupDuplicateStudents() {
+                try {
+                    // 1. 顧客マスターを取得
+                    const customerNames = new Set();
+                    this.customers.forEach(customer => {
+                        const fullName = `${customer.lastName}${customer.firstName}`;
+                        customerNames.add(fullName);
+                    });
+
+                    // 2. scheduleDataから顧客マスターに存在しない「ビジター（会員）」プランの生徒を抽出
+                    const studentsToDelete = [];
+                    Object.keys(this.scheduleData).forEach(day => {
+                        this.scheduleData[day].forEach(classInfo => {
+                            if (classInfo.students && classInfo.students.length > 0) {
+                                classInfo.students.forEach((student, index) => {
+                                    const fullName = `${student.lastName}${student.firstName}`;
+                                    if (student.plan === 'ビジター（会員）' && !customerNames.has(fullName)) {
+                                        studentsToDelete.push({
+                                            day, location: classInfo.location, className: classInfo.name,
+                                            lastName: student.lastName, firstName: student.firstName,
+                                            plan: student.plan, index
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+
+                    if (studentsToDelete.length === 0) {
+                        alert('✅ 削除する必要のある生徒は見つかりませんでした');
+                        return;
+                    }
+
+                    const proceed = confirm(`${studentsToDelete.length}名の誤って復元された生徒が見つかりました。\n\n顧客マスターに存在しない名前の生徒です。\n\n削除しますか？`);
+                    if (!proceed) return;
+
+                    // 3. 削除処理
+                    const groupedByDay = {};
+                    studentsToDelete.forEach(s => {
+                        if (!groupedByDay[s.day]) groupedByDay[s.day] = {};
+                        const classKey = `${s.location}_${s.className}`;
+                        if (!groupedByDay[s.day][classKey]) groupedByDay[s.day][classKey] = [];
+                        groupedByDay[s.day][classKey].push(s);
+                    });
+
+                    let deletedCount = 0;
+                    Object.keys(groupedByDay).forEach(day => {
+                        Object.keys(groupedByDay[day]).forEach(classKey => {
+                            const students = groupedByDay[day][classKey];
+                            const [location, ...classNameParts] = classKey.split('_');
+                            const className = classNameParts.join('_');
+                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
+                            if (classData && classData.students) {
+                                students.sort((a, b) => b.index - a.index);
+                                students.forEach(student => {
+                                    classData.students.splice(student.index, 1);
+                                    deletedCount++;
+                                });
+                            }
+                        });
+                    });
+
+                    await this.saveScheduleData();
+                    await this.loadScheduleData();
+                    await this.loadAttendance();
+
+                    alert(`✅ ${deletedCount}名の誤った生徒データを削除しました！\n\nダッシュボードでビジター売上を確認してください。`);
+                    this.currentTab = 'dashboard';
+                    this.render();
+                } catch (error) {
+                    console.error('クリーンアップエラー:', error);
+                    alert('エラーが発生しました: ' + error.message);
+                }
+            }
+
             // ビジター履歴を復元
             async restoreVisitorHistory() {
                 try {
@@ -1802,6 +1878,7 @@
                                 />
                                 <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
                                 <button id="restoreVisitorBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-4">🔄 ビジター履歴を復元</button>
+                                <button id="cleanupStudentsBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🧹 誤った生徒を削除</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow mb-4">
@@ -2486,6 +2563,11 @@
                 // ビジター履歴復元ボタン
                 document.getElementById('restoreVisitorBtn')?.addEventListener('click', () => {
                     this.restoreVisitorHistory();
+                });
+
+                // 誤った生徒削除ボタン
+                document.getElementById('cleanupStudentsBtn')?.addEventListener('click', () => {
+                    this.cleanupDuplicateStudents();
                 });
             }
         }
