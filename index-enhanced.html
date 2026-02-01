@@ -1411,6 +1411,62 @@
                 this.render();
             }
 
+            // ビジター履歴を復元
+            async restoreVisitorHistory() {
+                try {
+                    const missingStudents = [];
+                    Object.keys(this.attendanceData).forEach(key => {
+                        const parts = key.split('_');
+                        if (parts.length >= 4) {
+                            const day = parts[0], location = parts[1], className = parts[2], studentName = parts.slice(3).join('_');
+                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
+                            if (classData) {
+                                const student = classData.students?.find(s => `${s.lastName}${s.firstName}` === studentName);
+                                if (!student) {
+                                    const attendance = this.attendanceData[key];
+                                    const hasAttendance = Object.values(attendance).some(v => v === '○');
+                                    if (hasAttendance) {
+                                        missingStudents.push({ key, day, location, className, studentName, attendance });
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    if (missingStudents.length === 0) {
+                        alert('✅ すべての生徒がscheduleDataに存在しています。復元の必要はありません。');
+                        return;
+                    }
+
+                    const proceed = confirm(`${missingStudents.length}名の生徒が見つかりました。\n\nこれらを「ビジター（会員）」プランで復元しますか？\n\n※復元後、必要に応じて出席記録画面から個別にプランを編集できます。`);
+                    if (!proceed) return;
+
+                    let restoredCount = 0;
+                    missingStudents.forEach(student => {
+                        const lastName = student.studentName.length > 2 ? student.studentName.slice(0, -2) : student.studentName;
+                        const firstName = student.studentName.length > 2 ? student.studentName.slice(-2) : '';
+                        const classData = this.scheduleData[student.day]?.find(c => c.location === student.location && c.name === student.className);
+                        if (classData) {
+                            if (!classData.students) classData.students = [];
+                            classData.students.push({ lastName, firstName, plan: 'ビジター（会員）' });
+                            restoredCount++;
+                        }
+                    });
+
+                    await this.saveScheduleData();
+                    await this.loadScheduleData();
+                    await this.loadAttendance();
+
+                    alert(`✅ ${restoredCount}名のビジター履歴を復元しました！\n\n※プランは全て「ビジター（会員）- ¥2,000」です。\n実際のプランが異なる場合は、出席記録画面から編集してください。`);
+
+                    this.currentTab = 'dashboard';
+                    this.render();
+                } catch (error) {
+                    console.error('復元エラー:', error);
+                    alert('エラーが発生しました: ' + error.message);
+                }
+            }
+
             // ビジター参加者を追加
             async addVisitorParticipant() {
                 const { day, location, className, lastName, firstName, plan, weeks } = this.visitorData;
@@ -1738,13 +1794,14 @@
                             <h2 class="text-2xl font-bold text-gray-800">出席記録</h2>
                             <div class="flex gap-2 items-center">
                                 <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>◀ 前月</button>
-                                <input 
-                                    type="month" 
-                                    id="monthSelector" 
-                                    value="${this.selectedMonth}" 
+                                <input
+                                    type="month"
+                                    id="monthSelector"
+                                    value="${this.selectedMonth}"
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
+                                <button id="restoreVisitorBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-4">🔄 ビジター履歴を復元</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow mb-4">
@@ -2424,6 +2481,11 @@
                         const className = btn.dataset.visitorClass;
                         this.openVisitorModal(day, location, className);
                     });
+                });
+
+                // ビジター履歴復元ボタン
+                document.getElementById('restoreVisitorBtn')?.addEventListener('click', () => {
+                    this.restoreVisitorHistory();
                 });
             }
         }
