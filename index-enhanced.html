@@ -557,10 +557,66 @@
                             </div>
                         </nav>
                         <main class="container mx-auto px-4 py-8">
-                            ${this.currentTab === 'dashboard' ? this.renderDashboard() : 
+                            ${this.currentTab === 'dashboard' ? this.renderDashboard() :
                               this.currentTab === 'customers' ? this.renderCustomers(filteredCustomers) :
                               this.renderAttendance()}
                         </main>
+                        ${this.showVisitorModal ? `
+                            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="z-index: 9999;" onclick="if(event.target === this) app.closeVisitorModal()">
+                                <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onclick="event.stopPropagation()">
+                                    <h2 class="text-2xl font-bold mb-4 text-gray-800">💰 ビジター参加者を追加</h2>
+                                    <div class="space-y-4">
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <p class="text-sm font-medium text-blue-800">${this.visitorData.day} - ${this.visitorData.location}</p>
+                                            <p class="text-xs text-blue-600">${this.visitorData.className}</p>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-sm font-semibold mb-2 text-gray-700">姓 *</label>
+                                                <input type="text" id="visitor_lastName" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" placeholder="山田">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-semibold mb-2 text-gray-700">名 *</label>
+                                                <input type="text" id="visitor_firstName" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none" placeholder="太郎">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-2 text-gray-700">プラン *</label>
+                                            <select id="visitor_plan" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none">
+                                                <option value="ビジター（会員）">ビジター（会員） - ¥2,000</option>
+                                                <option value="ビジター（非会員）">ビジター（非会員） - ¥2,300</option>
+                                                <option value="ビジター1.5h（会員）">ビジター1.5h（会員） - ¥2,200</option>
+                                                <option value="ビジター1.5h（非会員）">ビジター1.5h（非会員） - ¥2,500</option>
+                                                <option value="初回体験">初回体験 - ¥1,000</option>
+                                                <option value="初回無料">初回無料 - ¥0</option>
+                                                <option value="月謝クラス振替">月謝クラス振替 - ¥1,000</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold mb-2 text-gray-700">出席する週 * （複数選択可）</label>
+                                            <div class="grid grid-cols-5 gap-2">
+                                                ${['week1', 'week2', 'week3', 'week4', 'week5'].map((week, idx) => `
+                                                    <label class="flex items-center justify-center border-2 border-gray-300 rounded-lg px-2 py-2 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition">
+                                                        <input type="checkbox" value="${week}" class="visitor-week-checkbox mr-1" />
+                                                        <span class="text-xs font-medium">${idx + 1}週</span>
+                                                    </label>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-3 pt-4">
+                                            <button onclick="app.closeVisitorModal()" class="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">キャンセル</button>
+                                            <button onclick="
+                                                app.visitorData.lastName = document.getElementById('visitor_lastName').value;
+                                                app.visitorData.firstName = document.getElementById('visitor_firstName').value;
+                                                app.visitorData.plan = document.getElementById('visitor_plan').value;
+                                                app.visitorData.weeks = Array.from(document.querySelectorAll('.visitor-week-checkbox:checked')).map(cb => cb.value);
+                                                app.addVisitorParticipant()
+                                            " class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md">追加する</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
                 document.getElementById('dashboardTab')?.addEventListener('click', () => { this.currentTab = 'dashboard'; this.render(); });
@@ -2264,10 +2320,6 @@
                         } else {
                             this.studentSearchResults = [];
                             this.selectedCustomerForStudent = null;
-                
-                // ビジター追加用
-                this.showVisitorModal = false;
-                this.visitorData = {};
                         }
                         // 検索結果のみを更新（フォーカスを維持）
                         this.updateSearchResults();
@@ -2294,10 +2346,6 @@
                 // 顧客選択解除（初期レンダリング時）
                 document.getElementById('clearSelectedCustomer')?.addEventListener('click', () => {
                     this.selectedCustomerForStudent = null;
-                
-                // ビジター追加用
-                this.showVisitorModal = false;
-                this.visitorData = {};
                     this.studentSearchTerm = '';
                     this.studentSearchResults = [];
                     this.updateSelectedCustomerInfo();
@@ -2363,13 +2411,19 @@
                     this.showAddStudentForm = false;
                     this.selectedClassForAdd = null;
                     this.selectedCustomerForStudent = null;
-                
-                // ビジター追加用
-                this.showVisitorModal = false;
-                this.visitorData = {};
                     this.studentSearchTerm = '';
                     this.studentSearchResults = [];
                     this.render();
+                });
+
+                // ビジター追加ボタン
+                document.querySelectorAll('.add-visitor-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const day = btn.dataset.visitorDay;
+                        const location = btn.dataset.visitorLocation;
+                        const className = btn.dataset.visitorClass;
+                        this.openVisitorModal(day, location, className);
+                    });
                 });
             }
         }
