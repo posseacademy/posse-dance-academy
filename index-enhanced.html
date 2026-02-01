@@ -6,15 +6,8 @@
     <title>posse dance academy 顧客管理システム</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
         body {
             font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -27,178 +20,30 @@
             min-height: 100vh;
         }
 
-        /* ヘッダースタイル改善 */
+        /* ヘッダー */
         .app-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             box-shadow: 0 10px 30px -10px rgba(102, 126, 234, 0.3);
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
-        .app-title {
-            font-weight: 900;
-            font-size: 1.75rem;
-            letter-spacing: -0.5px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
+        /* タブ */
+        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; }
+        .status-tab-active { background-color: #3B82F6; color: white; }
 
-        /* タブスタイル改善 */
-        .tab-button {
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 600;
-            padding: 1rem 1.5rem;
-        }
-
-        .tab-button:hover {
-            transform: translateY(-2px);
-            color: #60a5fa;
-        }
-
-        .tab-active {
-            border-bottom: 3px solid #3B82F6;
-            color: #3B82F6;
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        /* カードデザイン改善 */
-        .card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        .card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: translateY(-2px);
-        }
-
-        .card-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        /* ステータスバッジ */
-        .status-tab-active {
-            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
-        }
-
-        .status-badge-active {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-        }
-
-        .status-badge-paused {
-            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-        }
-
-        .status-badge-withdrawn {
-            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(107, 114, 128, 0.3);
-        }
-
+        /* バッジ */
+        .status-badge-active { background-color: #10B981; color: white; }
+        .status-badge-paused { background-color: #F59E0B; color: white; }
+        .status-badge-withdrawn { background-color: #6B7280; color: white; }
         .gender-male { color: #2563EB; font-weight: 600; }
         .gender-female { color: #DC2626; font-weight: 600; }
 
-        /* ボタンスタイル改善 */
-        .btn-primary {
-            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
-            border: none;
-            cursor: pointer;
-        }
+        /* テーブル */
+        .sortable-header { cursor: pointer; user-select: none; }
+        .sortable-header:hover { background-color: #F3F4F6; }
+        .sort-icon { display: inline-block; margin-left: 4px; font-size: 10px; }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.4);
-        }
-
-        /* テーブルスタイル */
-        .sortable-header {
-            cursor: pointer;
-            user-select: none;
-            transition: background-color 0.2s ease;
-            font-weight: 600;
-        }
-
-        .sortable-header:hover {
-            background-color: #F3F4F6;
-        }
-
-        .sort-icon {
-            display: inline-block;
-            margin-left: 4px;
-            font-size: 10px;
-            transition: transform 0.2s ease;
-        }
-
-        table {
-            table-layout: fixed;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        td, th {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        tbody tr:hover {
-            background-color: #F9FAFB;
-            transform: scale(1.01);
-        }
+        table { table-layout: fixed; }
+        td, th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         td.memo-cell {
             white-space: normal !important;
@@ -217,11 +62,11 @@
         }
 
         /* クラス別の色分け */
-        .class-red { background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%); }
-        .class-orange { background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%); }
-        .class-blue { background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); }
-        .class-green { background: linear-gradient(135deg, #16A34A 0%, #15803D 100%); }
-        .class-purple { background: linear-gradient(135deg, #9333EA 0%, #7E22CE 100%); }
+        .class-red { background-color: #DC2626; }
+        .class-orange { background-color: #EA580C; }
+        .class-blue { background-color: #2563EB; }
+        .class-green { background-color: #16A34A; }
+        .class-purple { background-color: #9333EA; }
 
         .border-red-500 { border-color: #EF4444; }
         .border-orange-500 { border-color: #F97316; }
@@ -245,132 +90,25 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
         .animate-spin {
             animation: spin 1s linear infinite;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        /* フォーム要素 */
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="date"],
-        input[type="number"],
-        select,
-        textarea {
-            border: 2px solid #E5E7EB;
-            border-radius: 8px;
-            padding: 0.75rem;
-            transition: all 0.3s ease;
-            font-size: 0.875rem;
-        }
-
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="tel"]:focus,
-        input[type="date"]:focus,
-        input[type="number"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        /* 検索バー */
-        .search-input {
-            border: 2px solid #E5E7EB;
-            border-radius: 12px;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .student-search-results {
             max-height: 300px;
             overflow-y: auto;
             z-index: 10;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .select-customer-btn:hover {
             background-color: #EFF6FF;
         }
 
-        /* グラフコンテナ */
+        /* グラフ用 */
         .chart-container {
             position: relative;
             height: 300px;
             margin: 1rem 0;
-        }
-
-        /* ダッシュボード統計カード */
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            border-left: 4px solid;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-card.blue {
-            border-left-color: #3B82F6;
-        }
-
-        .stat-card.green {
-            border-left-color: #10B981;
-        }
-
-        .stat-card.orange {
-            border-left-color: #F59E0B;
-        }
-
-        .stat-card.gray {
-            border-left-color: #6B7280;
-        }
-
-        /* レスポンシブ対応 */
-        @media (max-width: 768px) {
-            .app-title {
-                font-size: 1.25rem;
-            }
-
-            .tab-button {
-                padding: 0.75rem 1rem;
-                font-size: 0.875rem;
-            }
-
-            .stat-card {
-                margin-bottom: 1rem;
-            }
         }
     </style>
 </head>
@@ -644,177 +382,6 @@
                 
                 this.render();
             }
-            initDashboardCharts() {
-                // 既存のチャートを破棄
-                if (this.charts) {
-                    Object.values(this.charts).forEach(chart => {
-                        if (chart && typeof chart.destroy === 'function') {
-                            chart.destroy();
-                        }
-                    });
-                }
-                this.charts = {};
-
-                // データ準備
-                const activeCustomers = this.customers.filter(c => c.status === '入会中');
-                const courseCounts = {};
-                const coursePrices = {
-                    '１': 6000,
-                    '２': 10000,
-                    '３': 14400,
-                    '４': 18600
-                };
-
-                activeCustomers.forEach(c => {
-                    if (c.course) courseCounts[c.course] = (courseCounts[c.course] || 0) + 1;
-                });
-
-                // コース別分布円グラフ
-                const courseCtx = document.getElementById('courseDistributionChart');
-                if (courseCtx) {
-                    this.charts.courseDistribution = new Chart(courseCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(courseCounts).map(c => `コース${c}`),
-                            datasets: [{
-                                data: Object.values(courseCounts),
-                                backgroundColor: [
-                                    'rgba(59, 130, 246, 0.8)',
-                                    'rgba(16, 185, 129, 0.8)',
-                                    'rgba(245, 158, 11, 0.8)',
-                                    'rgba(239, 68, 68, 0.8)'
-                                ],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        font: { size: 12 }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // 会員ステータス分布円グラフ
-                const statusCtx = document.getElementById('statusDistributionChart');
-                if (statusCtx) {
-                    const statusData = {
-                        '入会中': this.customers.filter(c => c.status === '入会中').length,
-                        '休会中': this.customers.filter(c => c.status === '休会中').length,
-                        '退会済み': this.customers.filter(c => c.status === '退会済み').length
-                    };
-
-                    this.charts.statusDistribution = new Chart(statusCtx, {
-                        type: 'pie',
-                        data: {
-                            labels: Object.keys(statusData),
-                            datasets: [{
-                                data: Object.values(statusData),
-                                backgroundColor: [
-                                    'rgba(16, 185, 129, 0.8)',
-                                    'rgba(245, 158, 11, 0.8)',
-                                    'rgba(107, 114, 128, 0.8)'
-                                ],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        font: { size: 12 }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // 売上棒グラフ
-                const revenueCtx = document.getElementById('revenueChart');
-                if (revenueCtx) {
-                    const revenueData = Object.entries(courseCounts).map(([course, count]) => ({
-                        course: `コース${course}`,
-                        count: count,
-                        price: coursePrices[course] || 0,
-                        revenue: (coursePrices[course] || 0) * count
-                    }));
-
-                    this.charts.revenue = new Chart(revenueCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: revenueData.map(d => d.course),
-                            datasets: [
-                                {
-                                    label: '人数',
-                                    data: revenueData.map(d => d.count),
-                                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                                    borderRadius: 8,
-                                    yAxisID: 'y'
-                                },
-                                {
-                                    label: '売上（円）',
-                                    data: revenueData.map(d => d.revenue),
-                                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                                    borderRadius: 8,
-                                    yAxisID: 'y1'
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: {
-                                mode: 'index',
-                                intersect: false,
-                            },
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    labels: {
-                                        padding: 15,
-                                        font: { size: 12 }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    type: 'linear',
-                                    position: 'left',
-                                    title: {
-                                        display: true,
-                                        text: '人数'
-                                    }
-                                },
-                                y1: {
-                                    type: 'linear',
-                                    position: 'right',
-                                    title: {
-                                        display: true,
-                                        text: '売上（円）'
-                                    },
-                                    grid: {
-                                        drawOnChartArea: false
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-
             async loadCustomers() {
                 try {
                     const querySnapshot = await getDocs(collection(db, 'customers'));
@@ -1113,74 +680,39 @@
                         totalRevenue += coursePrices[course] * count;
                     }
                 });
-                
-                // Chart.jsのインスタンスを保存
-                this.charts = this.charts || {};
-
                 return `
-                    <div class="fade-in">
+                    <div>
                         <h2 class="text-3xl font-bold mb-6 text-gray-800">ダッシュボード</h2>
-
-                        <!-- 統計カード -->
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                            <div class="stat-card blue">
-                                <div class="text-gray-600 text-sm mb-2 font-semibold">総顧客数</div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">総顧客数</div>
                                 <div class="text-4xl font-bold text-blue-600">${total}</div>
                                 <div class="text-xs text-gray-500 mt-2">名</div>
                             </div>
-                            <div class="stat-card green">
-                                <div class="text-gray-600 text-sm mb-2 font-semibold">入会中</div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">入会中</div>
                                 <div class="text-4xl font-bold text-green-600">${activeCount}</div>
                                 <div class="text-xs text-gray-500 mt-2">名</div>
                             </div>
-                            <div class="stat-card orange">
-                                <div class="text-gray-600 text-sm mb-2 font-semibold">休会中</div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">休会中</div>
                                 <div class="text-4xl font-bold text-orange-600">${pausedCount}</div>
                                 <div class="text-xs text-gray-500 mt-2">名</div>
                             </div>
-                            <div class="stat-card gray">
-                                <div class="text-gray-600 text-sm mb-2 font-semibold">退会済み</div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="text-gray-600 text-sm mb-2">退会済み</div>
                                 <div class="text-4xl font-bold text-gray-600">${withdrawnCount}</div>
                                 <div class="text-xs text-gray-500 mt-2">名</div>
                             </div>
                         </div>
-
-                        <!-- グラフセクション -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <!-- コース別分布グラフ -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold mb-4 text-gray-800">📊 コース別会員分布</h3>
-                                <div class="chart-container">
-                                    <canvas id="courseDistributionChart"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- 会員ステータス分布 -->
-                            <div class="card p-6">
-                                <h3 class="text-xl font-bold mb-4 text-gray-800">👥 会員ステータス</h3>
-                                <div class="chart-container">
-                                    <canvas id="statusDistributionChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 売上グラフ -->
-                        <div class="card p-6 mb-8">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">💰 コース別売上内訳</h3>
-                            <div class="chart-container" style="height: 400px;">
-                                <canvas id="revenueChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- コース別内訳テーブル -->
-                        <div class="card p-6">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">📋 コース別内訳（入会中）</h3>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">コース別内訳（入会中）</h3>
                             <div class="space-y-3">
                                 ${Object.keys(courseCounts).length > 0 ? Object.entries(courseCounts).map(([course, count]) => {
                                     const price = coursePrices[course] || 0;
                                     const subtotal = price * count;
                                     return `
-                                        <div class="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition">
+                                        <div class="flex justify-between items-center">
                                             <span class="font-medium">コース${course || '未設定'}</span>
                                             <div class="flex gap-4 items-center">
                                                 <span class="text-gray-600">¥${price.toLocaleString()} × ${count}名</span>
@@ -1188,19 +720,6 @@
                                             </div>
                                         </div>
                                     `;
-                                }).join('') : '<p class="text-gray-500">データがありません</p>'}
-                                ${Object.keys(courseCounts).length > 0 ? `
-                                    <div class="border-t pt-3 mt-3">
-                                        <div class="flex justify-between items-center">
-                                            <span class="font-bold text-lg">合計</span>
-                                            <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-lg font-bold">¥${totalRevenue.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
                                 }).join('') : '<p class="text-gray-500">データがありません</p>'}
                                 ${Object.keys(courseCounts).length > 0 ? `
                                     <div class="border-t pt-3 mt-3">
