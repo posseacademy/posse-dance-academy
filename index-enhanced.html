@@ -1419,6 +1419,40 @@
                 this.render();
             }
 
+            // データをバックアップ
+            async downloadBackup() {
+                try {
+                    const backup = {
+                        timestamp: new Date().toISOString(),
+                        description: 'posse dance academy データバックアップ',
+                        version: '1.0',
+                        selectedMonth: this.selectedMonth,
+                        data: {
+                            scheduleData: JSON.parse(JSON.stringify(this.scheduleData)),
+                            attendanceData: JSON.parse(JSON.stringify(this.attendanceData)),
+                            customers: JSON.parse(JSON.stringify(this.customers)),
+                            eventAttendanceData: JSON.parse(JSON.stringify(this.eventAttendanceData))
+                        }
+                    };
+
+                    const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    a.download = `firebase_backup_${dateStr}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    alert('バックアップファイルをダウンロードしました');
+                } catch (error) {
+                    console.error('バックアップエラー:', error);
+                    alert('バックアップに失敗しました: ' + error.message);
+                }
+            }
+
             // 誤って復元された生徒データをクリーンアップ
             async cleanupDuplicateStudents() {
                 try {
@@ -1903,7 +1937,8 @@
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
-                                <button id="restoreVisitorBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-4">🔄 ビジター履歴を復元</button>
+                                <button id="downloadBackupBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-4">💾 データバックアップ</button>
+                                <button id="restoreVisitorBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🔄 ビジター履歴を復元</button>
                                 <button id="cleanupStudentsBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🧹 誤った生徒を削除</button>
                             </div>
                         </div>
@@ -2594,6 +2629,11 @@
                         const className = btn.dataset.visitorClass;
                         this.openVisitorModal(day, location, className);
                     });
+                });
+
+                // データバックアップボタン
+                document.getElementById('downloadBackupBtn')?.addEventListener('click', () => {
+                    this.downloadBackup();
                 });
 
                 // ビジター履歴復元ボタン
