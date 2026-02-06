@@ -1453,6 +1453,96 @@
                 }
             }
 
+            // ビジターデータをクリーンアップ
+            async cleanupVisitors() {
+                if (!confirm('1月のビジターを全て削除し、2月のビジターは第1週に○がある会員のみ残します。よろしいですか？')) {
+                    return;
+                }
+
+                try {
+                    const visitorPlans = ['ビジター（会員）', 'ビジター（非会員）', '初回体験'];
+                    let deletedCount = 0;
+
+                    // 1月の出席データを読み込み
+                    const jan2026AttendanceSnapshot = await getDocs(collection(db, 'attendance_202601'));
+                    const jan2026Attendance = {};
+                    jan2026AttendanceSnapshot.docs.forEach(doc => {
+                        jan2026Attendance[doc.id] = doc.data();
+                    });
+
+                    // 2月の出席データを読み込み（現在のthis.attendanceDataを使用）
+                    const feb2026Attendance = this.attendanceData;
+
+                    // scheduleDataをクリーンアップ
+                    Object.keys(this.scheduleData).forEach(day => {
+                        this.scheduleData[day].forEach((classInfo, classIndex) => {
+                            const studentsToKeep = [];
+
+                            classInfo.students.forEach(student => {
+                                const isVisitor = visitorPlans.includes(student.plan);
+
+                                if (!isVisitor) {
+                                    // ビジターでない場合は保持
+                                    studentsToKeep.push(student);
+                                } else if (student.visitorMonth === '2026-02') {
+                                    // 2月のビジター：第1週に○があるかチェック
+                                    const studentKey = `${day}_${classIndex}_${student.lastName}_${student.firstName}`;
+                                    const attendance = feb2026Attendance[studentKey];
+
+                                    if (attendance && attendance['第1週'] === '○') {
+                                        // 第1週に○がある場合は保持
+                                        studentsToKeep.push(student);
+                                    } else {
+                                        // 第1週に○がない場合は削除
+                                        deletedCount++;
+                                        console.log(`削除: ${student.lastName} ${student.firstName} (2月ビジター、第1週に○なし)`);
+                                    }
+                                } else if (student.visitorMonth === '2026-01') {
+                                    // 1月のビジターは全て削除
+                                    deletedCount++;
+                                    console.log(`削除: ${student.lastName} ${student.firstName} (1月ビジター)`);
+                                } else {
+                                    // visitorMonthが設定されていないビジター（古いデータ）
+                                    // 2月の第1週に○があるかチェック
+                                    const studentKey = `${day}_${classIndex}_${student.lastName}_${student.firstName}`;
+                                    const attendance = feb2026Attendance[studentKey];
+
+                                    if (attendance && attendance['第1週'] === '○') {
+                                        // 第1週に○がある場合は保持
+                                        studentsToKeep.push(student);
+                                    } else {
+                                        // 第1週に○がない場合は削除
+                                        deletedCount++;
+                                        console.log(`削除: ${student.lastName} ${student.firstName} (古いビジターデータ、第1週に○なし)`);
+                                    }
+                                }
+                            });
+
+                            classInfo.students = studentsToKeep;
+                        });
+                    });
+
+                    // Firestoreに保存
+                    await this.saveScheduleData();
+
+                    // 1月の出席データを削除
+                    const jan2026Keys = Object.keys(jan2026Attendance);
+                    for (const key of jan2026Keys) {
+                        await deleteDoc(doc(db, 'attendance_202601', key));
+                    }
+
+                    alert(`クリーンアップ完了：${deletedCount}名のビジターを削除しました\n1月の出席データ: ${jan2026Keys.length}件削除`);
+
+                    // データを再読み込み
+                    await this.loadScheduleData();
+                    await this.loadAttendance();
+                    this.render();
+                } catch (error) {
+                    console.error('クリーンアップエラー:', error);
+                    alert('クリーンアップに失敗しました: ' + error.message);
+                }
+            }
+
             // 誤って復元された生徒データをクリーンアップ
             async cleanupDuplicateStudents() {
                 try {
@@ -1938,8 +2028,7 @@
                                 />
                                 <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
                                 <button id="downloadBackupBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-4">💾 データバックアップ</button>
-                                <button id="restoreVisitorBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🔄 ビジター履歴を復元</button>
-                                <button id="cleanupStudentsBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🧹 誤った生徒を削除</button>
+                                <button id="cleanupVisitorsBtn" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded transition text-sm font-semibold ml-2">🗑️ ビジター整理</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow mb-4">
@@ -2636,14 +2725,9 @@
                     this.downloadBackup();
                 });
 
-                // ビジター履歴復元ボタン
-                document.getElementById('restoreVisitorBtn')?.addEventListener('click', () => {
-                    this.restoreVisitorHistory();
-                });
-
-                // 誤った生徒削除ボタン
-                document.getElementById('cleanupStudentsBtn')?.addEventListener('click', () => {
-                    this.cleanupDuplicateStudents();
+                // ビジター整理ボタン
+                document.getElementById('cleanupVisitorsBtn')?.addEventListener('click', () => {
+                    this.cleanupVisitors();
                 });
             }
         }
