@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>posse dance academy 顧客管理システム</title>
+    <title>posse dance academy é¡§å®¢ç®¡çã·ã¹ãã </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
@@ -41,7 +41,7 @@
             text-overflow: ellipsis;
         }
         
-        /* クラス別の色分け */
+        /* ã¯ã©ã¹å¥ã®è²åã */
         .class-red { background-color: #DC2626; }
         .class-orange { background-color: #EA580C; }
         .class-blue { background-color: #2563EB; }
@@ -102,7 +102,7 @@
         class DanceStudioApp {
             constructor() {
                 this.currentTab = 'dashboard';
-                this.statusFilter = '入会中';
+                this.statusFilter = 'å¥ä¼ä¸­';
                 this.customers = [];
                 this.editingId = null;
                 this.editForm = {};
@@ -112,217 +112,217 @@
                 this.sortOrder = 'asc';
                 this.newCustomer = this.getEmptyCustomer();
                 
-                // 出席簿用
+                // åºå¸­ç°¿ç¨
                 this.attendanceTab = 'overview';
                 this.selectedMonth = new Date().toISOString().slice(0, 7);
-                this.selectedDay = '月曜日';
+                this.selectedDay = 'æææ¥';
                 this.attendanceData = {};
-                this.eventAttendanceData = []; // イベント専用データ
+                this.eventAttendanceData = []; // ã¤ãã³ãå°ç¨ãã¼ã¿
                 this.showAddStudentForm = false;
                 this.selectedClassForAdd = null;
                 this.isLoading = false;
-                this.editingStudent = null; // 編集中の生徒情報
-                this.studentSearchTerm = ''; // 生徒検索用
-                this.studentSearchResults = []; // 検索結果
-                this.selectedCustomerForStudent = null; // 選択された顧客情報
+                this.editingStudent = null; // ç·¨éä¸­ã®çå¾æå ±
+                this.studentSearchTerm = ''; // çå¾æ¤ç´¢ç¨
+                this.studentSearchResults = []; // æ¤ç´¢çµæ
+                this.selectedCustomerForStudent = null; // é¸æãããé¡§å®¢æå ±
                 
                 this.pricing = {
-                    '4クラス': 18600,
-                    '４クラス': 18600,
-                    '3クラス': 14400,
-                    '３クラス': 14400,
-                    '2クラス': 10000,
-                    '２クラス': 10000,
-                    '1クラス': 6000,
-                    '１クラス': 6000,
-                    '1.5hクラス': 6600,
-                    '初回体験': 1000,
-                    '初回無料': 0,
-                    'ビジター（会員）': 2000,
-                    'ビジター（非会員）': 2300,
-                    'ビジター1.5h（会員）': 2200,
-                    'ビジター1.5h（非会員）': 2500,
-                    '月謝クラス振替': 1000,
-                    '練習会': 500
+                    '4ã¯ã©ã¹': 18600,
+                    'ï¼ã¯ã©ã¹': 18600,
+                    '3ã¯ã©ã¹': 14400,
+                    'ï¼ã¯ã©ã¹': 14400,
+                    '2ã¯ã©ã¹': 10000,
+                    'ï¼ã¯ã©ã¹': 10000,
+                    '1ã¯ã©ã¹': 6000,
+                    'ï¼ã¯ã©ã¹': 6000,
+                    '1.5hã¯ã©ã¹': 6600,
+                    'ååä½é¨': 1000,
+                    'ååç¡æ': 0,
+                    'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': 2000,
+                    'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': 2300,
+                    'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼': 2200,
+                    'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼': 2500,
+                    'æè¬ã¯ã©ã¹æ¯æ¿': 1000,
+                    'ç·´ç¿ä¼': 500
                 };
                 this.planOrder = {
-                    '4クラス': 1,
-                    '４クラス': 1,
-                    '3クラス': 2,
-                    '３クラス': 2,
-                    '2クラス': 3,
-                    '２クラス': 3,
-                    '1クラス': 4,
-                    '１クラス': 4,
-                    '1.5hクラス': 5,
-                    'ビジター（会員）': 6,
-                    'ビジター（非会員）': 7,
-                    'ビジター（振替）': 8,
-                    '初回体験': 9,
-                    '初回無料': 10
+                    '4ã¯ã©ã¹': 1,
+                    'ï¼ã¯ã©ã¹': 1,
+                    '3ã¯ã©ã¹': 2,
+                    'ï¼ã¯ã©ã¹': 2,
+                    '2ã¯ã©ã¹': 3,
+                    'ï¼ã¯ã©ã¹': 3,
+                    '1ã¯ã©ã¹': 4,
+                    'ï¼ã¯ã©ã¹': 4,
+                    '1.5hã¯ã©ã¹': 5,
+                    'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': 6,
+                    'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': 7,
+                    'ãã¸ã¿ã¼ï¼æ¯æ¿ï¼': 8,
+                    'ååä½é¨': 9,
+                    'ååç¡æ': 10
                 };
                 this.scheduleData = {
-                    '月曜日': [
-                        { location: '天神', name: 'アクロバット SOYA', color: 'red', students: [
-                            { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
-                            { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
-                            { lastName: '四井', firstName: '陽音', plan: '３クラス' },
-                            { lastName: '津留', firstName: '創真', plan: '２クラス' },
-                            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-                            { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' },
-                            { lastName: '嶋川', firstName: '陽大', plan: '３クラス' },
-                            { lastName: '', firstName: '大空', plan: '３クラス' }
+                    'æææ¥': [
+                        { location: 'å¤©ç¥', name: 'ã¢ã¯ã­ããã SOYA', color: 'red', students: [
+                            { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ´¥ç', firstName: 'åµç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ã²ããã', firstName: 'ããã', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'å¶å·', firstName: 'é½å¤§', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'ブレイキン入門 SOYA', color: 'orange', students: [
-                            { lastName: '津留', firstName: '創真', plan: '２クラス' },
-                            { lastName: '榊', firstName: '花梨', plan: '２クラス' },
-                            { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' }
+                        { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'orange', students: [
+                            { lastName: 'æ´¥ç', firstName: 'åµç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¦', firstName: 'è±æ¢¨', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ã²ããã', firstName: 'ããã', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'トップロック フットワーク DAZ', color: 'blue', students: [
-                            { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
-                            { lastName: '四井', firstName: '陽音', plan: '３クラス' },
-                            { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
-                            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-                            { lastName: '戸田', firstName: '唯斗', plan: '1クラス' },
-                            { lastName: '森脇', firstName: '鳳仁', plan: '1クラス' },
-                            { lastName: '嶋川', firstName: '陽大', plan: '２クラス' },
-                            { lastName: '', firstName: '大空', plan: '３クラス' }
+                        { location: 'å¤©ç¥', name: 'ãããã­ãã¯ ãããã¯ã¼ã¯ DAZ', color: 'blue', students: [
+                            { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¸ç°', firstName: 'å¯æ', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ£®è', firstName: 'é³³ä»', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å¶å·', firstName: 'é½å¤§', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'K-POP AI', color: 'green', students: [
-                            { lastName: '平嶋', firstName: '彩佳', plan: '1クラス' },
-                            { lastName: '杉村', firstName: '早紀', plan: '1クラス' },
-                            { lastName: '石原', firstName: '美黎', plan: '２クラス' },
-                            { lastName: '田代', firstName: '杏奈', plan: '1クラス' },
-                            { lastName: '唯野', firstName: '萌維', plan: '1クラス' }
+                        { location: 'å¤©ç¥', name: 'K-POP AI', color: 'green', students: [
+                            { lastName: 'å¹³å¶', firstName: 'å½©ä½³', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ææ', firstName: 'æ©ç´', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ç³å', firstName: 'ç¾é»', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ç°ä»£', firstName: 'æå¥', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å¯é', firstName: 'èç¶­', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'hiphop HIMEKA', color: 'purple', students: [
-                            { lastName: '石原', firstName: '美黎', plan: '1クラス' },
-                            { lastName: '中川', firstName: '凛音', plan: '２クラス' }
+                        { location: 'å¤©ç¥', name: 'hiphop HIMEKA', color: 'purple', students: [
+                            { lastName: 'ç³å', firstName: 'ç¾é»', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¸­å·', firstName: 'åé³', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '大橋', name: 'hiphop HIMEKA', color: 'purple', students: [
-                            { lastName: '清水', firstName: 'くるみ', plan: '1クラス' }
+                        { location: 'å¤§æ©', name: 'hiphop HIMEKA', color: 'purple', students: [
+                            { lastName: 'æ¸æ°´', firstName: 'ããã¿', plan: '1ã¯ã©ã¹' }
                         ]}
                     ],
-                    '火曜日': [
-                        { location: '大橋', name: 'キッズダンス AYANO', color: 'red', students: [
-                            { lastName: '古賀', firstName: '文人', plan: '1クラス' },
-                            { lastName: '古賀', firstName: '卯月妃', plan: '1クラス' },
-                            { lastName: '原口', firstName: '省吾', plan: '1クラス' },
-                            { lastName: 'わたなべ', firstName: 'いとし', plan: '1クラス' },
-                            { lastName: '富井', firstName: '藍', plan: '1クラス' }
+                    'ç«ææ¥': [
+                        { location: 'å¤§æ©', name: 'ã­ããºãã³ã¹ AYANO', color: 'red', students: [
+                            { lastName: 'å¤è³', firstName: 'æäºº', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å¤è³', firstName: 'å¯æå¦', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åå£', firstName: 'çå¾', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ãããªã¹', firstName: 'ãã¨ã', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å¯äº', firstName: 'è', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
-                            { lastName: '愛甲', firstName: '大輪', plan: '1クラス' }
+                        { location: 'å¤§æ©', name: 'Bgirlã¯ã©ã¹ AYANO HARUHIKO', color: 'orange', students: [
+                            { lastName: 'æç²', firstName: 'å¤§è¼ª', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '照葉', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
-                            { lastName: '西園', firstName: '千晃', plan: '1クラス' },
-                            { lastName: '榊', firstName: '花梨', plan: '２クラス' }
+                        { location: 'ç§è', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'blue', students: [
+                            { lastName: 'è¥¿å', firstName: 'åæ', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ¦', firstName: 'è±æ¢¨', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '照葉', name: 'アクロ＆パワー SOYA', color: 'green', students: [
-                            { lastName: '堤', firstName: '勇仁', plan: '1クラス' },
-                            { lastName: '吉武', firstName: '凛保', plan: '３クラス' }
+                        { location: 'ç§è', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'green', students: [
+                            { lastName: 'å ¤', firstName: 'åä»', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åæ­¦', firstName: 'åä¿', plan: 'ï¼ã¯ã©ã¹' }
                         ]}
                     ],
-                    '水曜日': [
-                        { location: '天神', name: 'ブレイキン初級 HARUHIKO', color: 'red', students: [
-                            { lastName: '田島', firstName: '渚', plan: '1クラス' },
-                            { lastName: '吉田', firstName: '智幸', plan: '1クラス' },
-                            { lastName: '本橋', firstName: '廉士', plan: '1クラス' },
-                            { lastName: '酒井', firstName: '天優', plan: '1クラス' },
-                            { lastName: '新藤', firstName: '大希', plan: '1クラス' },
-                            { lastName: '荒巻', firstName: '大和', plan: '1クラス' },
-                            { lastName: 'しん', firstName: 'よしと', plan: '1クラス' },
-                            { lastName: '藤野', firstName: '蒼士', plan: '1クラス' }
+                    'æ°´ææ¥': [
+                        { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³åç´ HARUHIKO', color: 'red', students: [
+                            { lastName: 'ç°å³¶', firstName: 'æ¸', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åç°', firstName: 'æºå¹¸', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ¬æ©', firstName: 'å»å£«', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'éäº', firstName: 'å¤©åª', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ°è¤', firstName: 'å¤§å¸', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'èå·»', firstName: 'å¤§å', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ãã', firstName: 'ããã¨', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'è¤é', firstName: 'è¼å£«', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'ブレイキン中上級 HARUHIKO', color: 'orange', students: [
-                            { lastName: '森田', firstName: '翔真', plan: '1クラス' },
-                            { lastName: '中山', firstName: '結愛', plan: '1クラス' },
-                            { lastName: '', firstName: '大空', plan: '３クラス' },
-                            { lastName: '迫田', firstName: 'りりあ', plan: '1クラス' }
+                        { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³ä¸­ä¸ç´ HARUHIKO', color: 'orange', students: [
+                            { lastName: 'æ£®ç°', firstName: 'ç¿ç', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¸­å±±', firstName: 'çµæ', plan: '1ã¯ã©ã¹' },
+                            { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¿«ç°', firstName: 'ããã', plan: '1ã¯ã©ã¹' }
                         ]}
                     ],
-                    '木曜日': [
-                        { location: '大橋', name: 'ブレイキン入門 SOYA', color: 'red', students: [
-                            { lastName: '豊福', firstName: '悠成', plan: '1クラス' },
-                            { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
-                            { lastName: '池田', firstName: '全', plan: '1クラス' },
-                            { lastName: '澤江', firstName: '悠', plan: '1クラス' },
-                            { lastName: '原口', firstName: '賢伸', plan: '２クラス' },
-                            { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
-                            { lastName: '藤田', firstName: '将舞', plan: '２クラス' },
-                            { lastName: '藤田', firstName: '凌羽', plan: '２クラス' },
-                            { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
-                            { lastName: '山下', firstName: '幸四郎', plan: '1クラス' }
+                    'æ¨ææ¥': [
+                        { location: 'å¤§æ©', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'red', students: [
+                            { lastName: 'è±ç¦', firstName: 'æ æ', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åæ', firstName: 'å¤ªå£±', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ± ç°', firstName: 'å¨', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ¾¤æ±', firstName: 'æ ', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'åå£', firstName: 'è³¢ä¼¸', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¸¡é', firstName: 'åµå¤ª', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤ç°', firstName: 'å°è', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤ç°', firstName: 'åç¾½', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'å°æ³', firstName: 'åé½', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'å±±ä¸', firstName: 'å¹¸åé', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '大橋', name: 'アクロ＆パワー SOYA', color: 'orange', students: [
-                            { lastName: '中山', firstName: '結愛', plan: '２クラス' },
-                            { lastName: '豊福', firstName: '悠成', plan: '２クラス' },
-                            { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
-                            { lastName: '原口', firstName: '賢伸', plan: '２クラス' },
-                            { lastName: '四井', firstName: '陽音', plan: '２クラス' },
-                            { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
-                            { lastName: '萩原', firstName: '聖香', plan: '1クラス' },
-                            { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
-                            { lastName: '澤江', firstName: '悠', plan: '1クラス' }
+                        { location: 'å¤§æ©', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'orange', students: [
+                            { lastName: 'ä¸­å±±', firstName: 'çµæ', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è±ç¦', firstName: 'æ æ', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'åæ', firstName: 'å¤ªå£±', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'åå£', firstName: 'è³¢ä¼¸', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¸¡é', firstName: 'åµå¤ª', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è©å', firstName: 'èé¦', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å°æ³', firstName: 'åé½', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¾¤æ±', firstName: 'æ ', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '照葉', name: 'ブレイキン入門 リュウセイ', color: 'blue', students: [
-                            { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
-                            { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
-                            { lastName: 'しぎょう', firstName: 'とうま', plan: '1クラス' },
-                            { lastName: 'しぎょう', firstName: 'ゆうま', plan: '1クラス' },
-                            { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
-                            { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
-                            { lastName: '長谷川', firstName: '丈', plan: '２クラス' }
+                        { location: 'ç§è', name: 'ãã¬ã¤ã­ã³å¥é ãªã¥ã¦ã»ã¤', color: 'blue', students: [
+                            { lastName: 'æ¥', firstName: 'ãã³ãã§ã³ã¨ã¤ãã³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¥', firstName: 'ã¨ã¯ã½', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ãããã', firstName: 'ã¨ãã¾', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ãããã', firstName: 'ããã¾', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'æ¢é', firstName: 'å£®å¤§', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¢é', firstName: 'çµ¢é³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'é·è°·å·', firstName: 'ä¸', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '照葉', name: 'アクロ＆パワー リュウセイ', color: 'green', students: [
-                            { lastName: '吉武', firstName: '凛保', plan: '２クラス' },
-                            { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
-                            { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
-                            { lastName: '工藤', firstName: '大地', plan: '２クラス' },
-                            { lastName: '長谷川', firstName: '丈', plan: '２クラス' },
-                            { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
-                            { lastName: '梅野', firstName: '絢音', plan: '２クラス' }
+                        { location: 'ç§è', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ ãªã¥ã¦ã»ã¤', color: 'green', students: [
+                            { lastName: 'åæ­¦', firstName: 'åä¿', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¥', firstName: 'ãã³ãã§ã³ã¨ã¤ãã³', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¥', firstName: 'ã¨ã¯ã½', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'å·¥è¤', firstName: 'å¤§å°', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'é·è°·å·', firstName: 'ä¸', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¢é', firstName: 'å£®å¤§', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'æ¢é', firstName: 'çµ¢é³', plan: 'ï¼ã¯ã©ã¹' }
                         ]}
                     ],
-                    '金曜日': [
-                        { location: '天神', name: 'アクロ＆パワー SOYA', color: 'red', students: [
-                            { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
-                            { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
-                            { lastName: '藤野', firstName: '蒼士', plan: '1クラス' },
-                            { lastName: '中山', firstName: '隼', plan: '1クラス' },
-                            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-                            { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' }
+                    'éææ¥': [
+                        { location: 'å¤©ç¥', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'red', students: [
+                            { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤é', firstName: 'è¼å£«', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¸­å±±', firstName: 'é¼', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ãããã¾', firstName: 'ãã', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '天神', name: 'ブレイキン初中級 HARUHIKO', color: 'orange', students: [
-                            { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
-                            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-                            { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' },
-                            { lastName: '伊藤', firstName: '和馬', plan: '３クラス' }
+                        { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³åä¸­ç´ HARUHIKO', color: 'orange', students: [
+                            { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ãããã¾', firstName: 'ãã', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: 'ï¼ã¯ã©ã¹' }
                         ]},
-                        { location: '大橋', name: 'ブレイキン入門 HARUHIKO', color: 'blue', students: [
-                            { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
-                            { lastName: '矢野', firstName: '新', plan: '1クラス' },
-                            { lastName: '伊豆永', firstName: '晄逢', plan: '1クラス' },
-                            { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
-                            { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
-                            { lastName: '三重野', firstName: 'かな', plan: '２クラス' },
-                            { lastName: '久保田', firstName: '朱里', plan: '1クラス' },
-                            { lastName: '古賀', firstName: '心太郎', plan: '1クラス' }
+                        { location: 'å¤§æ©', name: 'ãã¬ã¤ã­ã³å¥é HARUHIKO', color: 'blue', students: [
+                            { lastName: 'è©å°¾', firstName: 'éæµ·', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ç¢é', firstName: 'æ°', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'ä¼è±æ°¸', firstName: 'æé¢', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'è¤å·', firstName: 'æ å©', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤å·', firstName: 'æå©', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'ããª', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¹ä¿ç°', firstName: 'æ±é', plan: '1ã¯ã©ã¹' },
+                            { lastName: 'å¤è³', firstName: 'å¿å¤ªé', plan: '1ã¯ã©ã¹' }
                         ]},
-                        { location: '大橋', name: 'アクロ＆パワー ryusei', color: 'green', students: [
-                            { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
-                            { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
-                            { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
-                            { lastName: '三重野', firstName: 'かな', plan: '２クラス' },
-                            { lastName: '児玉', firstName: '蛍斗', plan: '1クラス' }
+                        { location: 'å¤§æ©', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ ryusei', color: 'green', students: [
+                            { lastName: 'è©å°¾', firstName: 'éæµ·', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤å·', firstName: 'æ å©', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'è¤å·', firstName: 'æå©', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'ä¸éé', firstName: 'ããª', plan: 'ï¼ã¯ã©ã¹' },
+                            { lastName: 'åç', firstName: 'èæ', plan: '1ã¯ã©ã¹' }
                         ]}
                     ],
-                    'イベント': []
+                    'ã¤ãã³ã': []
                 };
             }
             getEmptyCustomer() {
                 return {
-                    memberNumber: '', status: '入会中', course: '', annualFee: '', hakomonoRegistration: '',
+                    memberNumber: '', status: 'å¥ä¼ä¸­', course: '', annualFee: '', hakomonoRegistration: '',
                     lastName: '', firstName: '', reading: '', guardianName: '', hakomonoName: '',
                     gender: '', birthDate: '', phone1: '', phone2: '', email: '',
                     postalCode: '', prefecture: '', city: '', address: '', building: '',
@@ -338,7 +338,7 @@
                 if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
                     age--;
                 }
-                return age + '歳';
+                return age + 'æ­³';
             }
             async init() {
                 await this.loadCustomers();
@@ -346,7 +346,7 @@
                 await this.loadAttendance();
                 await this.loadEventAttendance();
                 
-                // 全クラスの生徒をプラン順にソート
+                // å¨ã¯ã©ã¹ã®çå¾ããã©ã³é ã«ã½ã¼ã
                 Object.keys(this.scheduleData).forEach(day => {
                     this.scheduleData[day].forEach(classInfo => {
                         classInfo.students = this.sortStudentsByPlan(classInfo.students);
@@ -363,17 +363,17 @@
                         return {
                             id: doc.id,
                             ...data,
-                            status: data.status || (data.active === '○' ? '入会中' : '休会中')
+                            status: data.status || (data.active === 'â' ? 'å¥ä¼ä¸­' : 'ä¼ä¼ä¸­')
                         };
                     });
-                    // クライアント側で会員番号順にソート
+                    // ã¯ã©ã¤ã¢ã³ãå´ã§ä¼å¡çªå·é ã«ã½ã¼ã
                     this.customers.sort((a, b) => {
                         const aNum = a.memberNumber || '';
                         const bNum = b.memberNumber || '';
                         return aNum > bNum ? 1 : -1;
                     });
                 } catch (error) {
-                    console.error('データ読み込みエラー:', error);
+                    console.error('ãã¼ã¿èª­ã¿è¾¼ã¿ã¨ã©ã¼:', error);
                     this.customers = [];
                 }
             }
@@ -381,29 +381,29 @@
                 try {
                     const querySnapshot = await getDocs(collection(db, 'schedule'));
                     if (querySnapshot.empty) {
-                        // Firestoreにデータがない場合は初期データを保存
-                        console.log('スケジュールデータが見つかりません。初期データを保存します。');
+                        // Firestoreã«ãã¼ã¿ããªãå ´åã¯åæãã¼ã¿ãä¿å­
+                        console.log('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿ãè¦ã¤ããã¾ãããåæãã¼ã¿ãä¿å­ãã¾ãã');
                         await this.saveScheduleData();
                     } else {
-                        // Firestoreからデータを読み込み
+                        // Firestoreãããã¼ã¿ãèª­ã¿è¾¼ã¿
                         const loadedData = {};
                         querySnapshot.docs.forEach(doc => {
                             loadedData[doc.id] = doc.data().classes || [];
                         });
                         
-                        // 読み込んだデータでscheduleDataを更新
+                        // èª­ã¿è¾¼ãã ãã¼ã¿ã§scheduleDataãæ´æ°
                         if (Object.keys(loadedData).length > 0) {
                             this.scheduleData = loadedData;
                         }
                     }
                 } catch (error) {
-                    console.error('スケジュールデータ読み込みエラー:', error);
-                    // エラーの場合は初期データを使用
+                    console.error('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿èª­ã¿è¾¼ã¿ã¨ã©ã¼:', error);
+                    // ã¨ã©ã¼ã®å ´åã¯åæãã¼ã¿ãä½¿ç¨
                 }
             }
             async saveScheduleData() {
                 try {
-                    // 各曜日のデータをFirestoreに保存
+                    // åææ¥ã®ãã¼ã¿ãFirestoreã«ä¿å­
                     for (const day of Object.keys(this.scheduleData)) {
                         const docRef = doc(db, 'schedule', day);
                         await setDoc(docRef, {
@@ -411,16 +411,16 @@
                         });
                     }
                 } catch (error) {
-                    console.error('スケジュールデータ保存エラー:', error);
+                    console.error('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿ä¿å­ã¨ã©ã¼:', error);
                 }
             }
             async addCustomer() {
                 if (!this.newCustomer.lastName || !this.newCustomer.firstName) {
-                    alert('氏名を入力してください');
+                    alert('æ°åãå¥åãã¦ãã ãã');
                     return;
                 }
                 if (!this.newCustomer.memberNumber) {
-                    alert('会員番号を入力してください');
+                    alert('ä¼å¡çªå·ãå¥åãã¦ãã ãã');
                     return;
                 }
                 try {
@@ -429,15 +429,15 @@
                     this.newCustomer = this.getEmptyCustomer();
                     this.showAddForm = false;
                     this.render();
-                    alert('登録しました');
+                    alert('ç»é²ãã¾ãã');
                 } catch (error) {
-                    console.error('登録エラー:', error);
-                    alert('登録エラー: ' + error.message);
+                    console.error('ç»é²ã¨ã©ã¼:', error);
+                    alert('ç»é²ã¨ã©ã¼: ' + error.message);
                 }
             }
             async saveEdit() {
                 if (!this.editForm.id) {
-                    alert('保存エラー: IDが見つかりません');
+                    alert('ä¿å­ã¨ã©ã¼: IDãè¦ã¤ããã¾ãã');
                     return;
                 }
                 try {
@@ -448,22 +448,22 @@
                     this.editingId = null;
                     this.editForm = {};
                     this.render();
-                    alert('更新しました');
+                    alert('æ´æ°ãã¾ãã');
                 } catch (error) {
-                    console.error('更新エラー:', error);
-                    alert('更新エラー: ' + error.message);
+                    console.error('æ´æ°ã¨ã©ã¼:', error);
+                    alert('æ´æ°ã¨ã©ã¼: ' + error.message);
                 }
             }
             async deleteCustomer(id) {
-                if (!confirm('この顧客を削除してもよろしいですか?')) return;
+                if (!confirm('ãã®é¡§å®¢ãåé¤ãã¦ãããããã§ãã?')) return;
                 try {
                     await deleteDoc(doc(db, 'customers', id));
                     await this.loadCustomers();
                     this.render();
-                    alert('削除しました');
+                    alert('åé¤ãã¾ãã');
                 } catch (error) {
-                    console.error('削除エラー:', error);
-                    alert('削除エラー: ' + error.message);
+                    console.error('åé¤ã¨ã©ã¼:', error);
+                    alert('åé¤ã¨ã©ã¼: ' + error.message);
                 }
             }
             startEdit(id) {
@@ -483,7 +483,7 @@
                 this.editForm[field] = value;
             }
             handleExport() {
-                const headers = ['No', '会員番号', '会員ステータス', 'コース', '年会費更新日', '氏名', '読み', '保護者名', 'ハコモノ登録名', '性別', '生年月日', '年齢', '電話番号', 'メール', '入会日', '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号', '備考'];
+                const headers = ['No', 'ä¼å¡çªå·', 'ä¼å¡ã¹ãã¼ã¿ã¹', 'ã³ã¼ã¹', 'å¹´ä¼è²»æ´æ°æ¥', 'æ°å', 'èª­ã¿', 'ä¿è­·èå', 'ãã³ã¢ãç»é²å', 'æ§å¥', 'çå¹´ææ¥', 'å¹´é½¢', 'é»è©±çªå·', 'ã¡ã¼ã«', 'å¥ä¼æ¥', 'éµä¾¿çªå·', 'é½éåºç', 'å¸åºçºæ', 'çªå°', 'å»ºç©ã»é¨å±çªå·', 'åè'];
                 const rows = this.customers.map((c, i) => [
                     i + 1, c.memberNumber || '', c.status, c.course, c.annualFee,
                     `${c.lastName} ${c.firstName}`, c.reading, c.guardianName, c.hakomonoName, c.gender,
@@ -494,7 +494,7 @@
                 const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `顧客管理_${new Date().toISOString().split('T')[0]}.csv`;
+                link.download = `é¡§å®¢ç®¡ç_${new Date().toISOString().split('T')[0]}.csv`;
                 link.click();
             }
             sortBy(field) {
@@ -538,7 +538,7 @@
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <h1 class="text-2xl font-bold">posse dance academy</h1>
-                                        <p class="text-sm opacity-90">顧客管理システム</p>
+                                        <p class="text-sm opacity-90">é¡§å®¢ç®¡çã·ã¹ãã </p>
                                     </div>
                                 </div>
                             </div>
@@ -546,9 +546,9 @@
                         <nav class="bg-white shadow">
                             <div class="container mx-auto px-4">
                                 <div class="flex space-x-8">
-                                    <button id="dashboardTab" class="py-4 px-2 font-medium ${this.currentTab === 'dashboard' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">ダッシュボード</button>
-                                    <button id="customersTab" class="py-4 px-2 font-medium ${this.currentTab === 'customers' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">顧客管理</button>
-                                    <button id="attendanceTab" class="py-4 px-2 font-medium ${this.currentTab === 'attendance' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">出席名簿</button>
+                                    <button id="dashboardTab" class="py-4 px-2 font-medium ${this.currentTab === 'dashboard' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">ããã·ã¥ãã¼ã</button>
+                                    <button id="customersTab" class="py-4 px-2 font-medium ${this.currentTab === 'customers' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">é¡§å®¢ç®¡ç</button>
+                                    <button id="attendanceTab" class="py-4 px-2 font-medium ${this.currentTab === 'attendance' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">åºå¸­åç°¿</button>
                                 </div>
                             </div>
                         </nav>
@@ -575,7 +575,7 @@
                 document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
                 document.getElementById('cancelAddBtn')?.addEventListener('click', () => { this.showAddForm = false; this.render(); });
                 
-                ['入会中', '休会中', '退会済み'].forEach(status => {
+                ['å¥ä¼ä¸­', 'ä¼ä¼ä¸­', 'éä¼æ¸ã¿'].forEach(status => {
                     document.getElementById(`status-${status}`)?.addEventListener('click', () => {
                         this.statusFilter = status;
                         this.render();
@@ -631,19 +631,19 @@
             }
             renderDashboard() {
                 const total = this.customers.length;
-                const activeCount = this.customers.filter(c => c.status === '入会中').length;
-                const pausedCount = this.customers.filter(c => c.status === '休会中').length;
-                const withdrawnCount = this.customers.filter(c => c.status === '退会済み').length;
+                const activeCount = this.customers.filter(c => c.status === 'å¥ä¼ä¸­').length;
+                const pausedCount = this.customers.filter(c => c.status === 'ä¼ä¼ä¸­').length;
+                const withdrawnCount = this.customers.filter(c => c.status === 'éä¼æ¸ã¿').length;
                 
                 const coursePrices = {
-                    '１': 6000,
-                    '２': 10000,
-                    '３': 14400,
-                    '４': 18600
+                    'ï¼': 6000,
+                    'ï¼': 10000,
+                    'ï¼': 14400,
+                    'ï¼': 18600
                 };
                 
                 const courseCounts = {};
-                this.customers.filter(c => c.status === '入会中').forEach(c => { 
+                this.customers.filter(c => c.status === 'å¥ä¼ä¸­').forEach(c => { 
                     if (c.course) courseCounts[c.course] = (courseCounts[c.course] || 0) + 1; 
                 });
                 
@@ -655,50 +655,50 @@
                 });
                 return `
                     <div>
-                        <h2 class="text-3xl font-bold mb-6 text-gray-800">ダッシュボード</h2>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">ããã·ã¥ãã¼ã</h2>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">総顧客数</div>
+                                <div class="text-gray-600 text-sm mb-2">ç·é¡§å®¢æ°</div>
                                 <div class="text-4xl font-bold text-blue-600">${total}</div>
-                                <div class="text-xs text-gray-500 mt-2">名</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">入会中</div>
+                                <div class="text-gray-600 text-sm mb-2">å¥ä¼ä¸­</div>
                                 <div class="text-4xl font-bold text-green-600">${activeCount}</div>
-                                <div class="text-xs text-gray-500 mt-2">名</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">休会中</div>
+                                <div class="text-gray-600 text-sm mb-2">ä¼ä¼ä¸­</div>
                                 <div class="text-4xl font-bold text-orange-600">${pausedCount}</div>
-                                <div class="text-xs text-gray-500 mt-2">名</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">退会済み</div>
+                                <div class="text-gray-600 text-sm mb-2">éä¼æ¸ã¿</div>
                                 <div class="text-4xl font-bold text-gray-600">${withdrawnCount}</div>
-                                <div class="text-xs text-gray-500 mt-2">名</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow p-6">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">コース別内訳（入会中）</h3>
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">ã³ã¼ã¹å¥åè¨³ï¼å¥ä¼ä¸­ï¼</h3>
                             <div class="space-y-3">
                                 ${Object.keys(courseCounts).length > 0 ? Object.entries(courseCounts).map(([course, count]) => {
                                     const price = coursePrices[course] || 0;
                                     const subtotal = price * count;
                                     return `
                                         <div class="flex justify-between items-center">
-                                            <span class="font-medium">コース${course || '未設定'}</span>
+                                            <span class="font-medium">ã³ã¼ã¹${course || 'æªè¨­å®'}</span>
                                             <div class="flex gap-4 items-center">
-                                                <span class="text-gray-600">¥${price.toLocaleString()} × ${count}名</span>
-                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">¥${subtotal.toLocaleString()}</span>
+                                                <span class="text-gray-600">Â¥${price.toLocaleString()} Ã ${count}å</span>
+                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">Â¥${subtotal.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     `;
-                                }).join('') : '<p class="text-gray-500">データがありません</p>'}
+                                }).join('') : '<p class="text-gray-500">ãã¼ã¿ãããã¾ãã</p>'}
                                 ${Object.keys(courseCounts).length > 0 ? `
                                     <div class="border-t pt-3 mt-3">
                                         <div class="flex justify-between items-center">
-                                            <span class="font-bold text-lg">合計</span>
-                                            <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-lg font-bold">¥${totalRevenue.toLocaleString()}</span>
+                                            <span class="font-bold text-lg">åè¨</span>
+                                            <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-lg font-bold">Â¥${totalRevenue.toLocaleString()}</span>
                                         </div>
                                     </div>
                                 ` : ''}
@@ -709,32 +709,32 @@
             }
             renderCustomers(filteredCustomers) {
                 const getSortIcon = (field) => {
-                    if (this.sortField === field) return this.sortOrder === 'asc' ? '▲' : '▼';
-                    return '⬍';
+                    if (this.sortField === field) return this.sortOrder === 'asc' ? 'â²' : 'â¼';
+                    return 'â¬';
                 };
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-3xl font-bold text-gray-800">顧客管理</h2>
+                            <h2 class="text-3xl font-bold text-gray-800">é¡§å®¢ç®¡ç</h2>
                             <div class="flex gap-2">
-                                <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">CSVエクスポート</button>
-                                <button id="toggleAddFormBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">${this.showAddForm ? 'フォームを閉じる' : '新規登録'}</button>
+                                <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">CSVã¨ã¯ã¹ãã¼ã</button>
+                                <button id="toggleAddFormBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">${this.showAddForm ? 'ãã©ã¼ã ãéãã' : 'æ°è¦ç»é²'}</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow p-6">
                             <div class="flex gap-2 mb-4">
-                                <button id="status-入会中" class="px-4 py-2 rounded transition ${this.statusFilter === '入会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
-                                    入会中 (${this.customers.filter(c => c.status === '入会中').length})
+                                <button id="status-å¥ä¼ä¸­" class="px-4 py-2 rounded transition ${this.statusFilter === 'å¥ä¼ä¸­' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    å¥ä¼ä¸­ (${this.customers.filter(c => c.status === 'å¥ä¼ä¸­').length})
                                 </button>
-                                <button id="status-休会中" class="px-4 py-2 rounded transition ${this.statusFilter === '休会中' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
-                                    休会中 (${this.customers.filter(c => c.status === '休会中').length})
+                                <button id="status-ä¼ä¼ä¸­" class="px-4 py-2 rounded transition ${this.statusFilter === 'ä¼ä¼ä¸­' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    ä¼ä¼ä¸­ (${this.customers.filter(c => c.status === 'ä¼ä¼ä¸­').length})
                                 </button>
-                                <button id="status-退会済み" class="px-4 py-2 rounded transition ${this.statusFilter === '退会済み' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
-                                    退会済み (${this.customers.filter(c => c.status === '退会済み').length})
+                                <button id="status-éä¼æ¸ã¿" class="px-4 py-2 rounded transition ${this.statusFilter === 'éä¼æ¸ã¿' ? 'status-tab-active' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}">
+                                    éä¼æ¸ã¿ (${this.customers.filter(c => c.status === 'éä¼æ¸ã¿').length})
                                 </button>
                             </div>
                             <div class="mb-4">
-                                <input type="text" id="searchInput" placeholder="会員番号、氏名、コース、電話番号、メールで検索..." value="${this.searchTerm}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <input type="text" id="searchInput" placeholder="ä¼å¡çªå·ãæ°åãã³ã¼ã¹ãé»è©±çªå·ãã¡ã¼ã«ã§æ¤ç´¢..." value="${this.searchTerm}" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                             ${this.showAddForm ? this.renderAddForm() : ''}
                             <div class="overflow-x-auto">
@@ -742,27 +742,27 @@
                                     <thead>
                                         <tr class="bg-gray-100 border-b">
                                             <th class="px-2 py-3 text-left font-semibold" style="width: 50px;">No</th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="memberNumber" style="width: 80px;">会員番号<span class="sort-icon">${getSortIcon('memberNumber')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="status" style="width: 120px;">会員ステータス<span class="sort-icon">${getSortIcon('status')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="course" style="width: 80px;">コース<span class="sort-icon">${getSortIcon('course')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="annualFee" style="width: 120px;">年会費更新日<span class="sort-icon">${getSortIcon('annualFee')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="lastName" style="width: 150px;">氏名<span class="sort-icon">${getSortIcon('lastName')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="reading" style="width: 150px;">読み<span class="sort-icon">${getSortIcon('reading')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="guardianName" style="width: 120px;">保護者名<span class="sort-icon">${getSortIcon('guardianName')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="hakomonoName" style="width: 120px;">ハコモノ登録名<span class="sort-icon">${getSortIcon('hakomonoName')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="gender" style="width: 60px;">性別<span class="sort-icon">${getSortIcon('gender')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="birthDate" style="width: 110px;">生年月日<span class="sort-icon">${getSortIcon('birthDate')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold" style="width: 70px;">年齢</th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="phone1" style="width: 130px;">電話番号<span class="sort-icon">${getSortIcon('phone1')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="email" style="width: 220px;">メール<span class="sort-icon">${getSortIcon('email')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="joinDate" style="width: 110px;">入会日<span class="sort-icon">${getSortIcon('joinDate')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="postalCode" style="width: 100px;">郵便番号<span class="sort-icon">${getSortIcon('postalCode')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="prefecture" style="width: 90px;">都道府県<span class="sort-icon">${getSortIcon('prefecture')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="city" style="width: 120px;">市区町村<span class="sort-icon">${getSortIcon('city')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="address" style="width: 150px;">番地<span class="sort-icon">${getSortIcon('address')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="building" style="width: 150px;">建物・部屋番号<span class="sort-icon">${getSortIcon('building')}</span></th>
-                                            <th class="px-2 py-3 text-left font-semibold" style="width: 400px;">備考</th>
-                                            <th class="px-2 py-3 text-left font-semibold" style="width: 100px;">操作</th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="memberNumber" style="width: 80px;">ä¼å¡çªå·<span class="sort-icon">${getSortIcon('memberNumber')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="status" style="width: 120px;">ä¼å¡ã¹ãã¼ã¿ã¹<span class="sort-icon">${getSortIcon('status')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="course" style="width: 80px;">ã³ã¼ã¹<span class="sort-icon">${getSortIcon('course')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="annualFee" style="width: 120px;">å¹´ä¼è²»æ´æ°æ¥<span class="sort-icon">${getSortIcon('annualFee')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="lastName" style="width: 150px;">æ°å<span class="sort-icon">${getSortIcon('lastName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="reading" style="width: 150px;">èª­ã¿<span class="sort-icon">${getSortIcon('reading')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="guardianName" style="width: 120px;">ä¿è­·èå<span class="sort-icon">${getSortIcon('guardianName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="hakomonoName" style="width: 120px;">ãã³ã¢ãç»é²å<span class="sort-icon">${getSortIcon('hakomonoName')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="gender" style="width: 60px;">æ§å¥<span class="sort-icon">${getSortIcon('gender')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="birthDate" style="width: 110px;">çå¹´ææ¥<span class="sort-icon">${getSortIcon('birthDate')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 70px;">å¹´é½¢</th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="phone1" style="width: 130px;">é»è©±çªå·<span class="sort-icon">${getSortIcon('phone1')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="email" style="width: 220px;">ã¡ã¼ã«<span class="sort-icon">${getSortIcon('email')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="joinDate" style="width: 110px;">å¥ä¼æ¥<span class="sort-icon">${getSortIcon('joinDate')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="postalCode" style="width: 100px;">éµä¾¿çªå·<span class="sort-icon">${getSortIcon('postalCode')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="prefecture" style="width: 90px;">é½éåºç<span class="sort-icon">${getSortIcon('prefecture')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="city" style="width: 120px;">å¸åºçºæ<span class="sort-icon">${getSortIcon('city')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="address" style="width: 150px;">çªå°<span class="sort-icon">${getSortIcon('address')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold sortable-header" data-field="building" style="width: 150px;">å»ºç©ã»é¨å±çªå·<span class="sort-icon">${getSortIcon('building')}</span></th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 400px;">åè</th>
+                                            <th class="px-2 py-3 text-left font-semibold" style="width: 100px;">æä½</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -771,7 +771,7 @@
                                 </table>
                             </div>
                             <div class="mt-4 text-sm text-gray-600">
-                                ${this.statusFilter}: ${filteredCustomers.length}名
+                                ${this.statusFilter}: ${filteredCustomers.length}å
                             </div>
                         </div>
                     </div>
@@ -780,39 +780,39 @@
             renderAddForm() {
                 return `
                     <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-                        <h3 class="text-lg font-semibold mb-4 text-gray-800">新規顧客登録</h3>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">æ°è¦é¡§å®¢ç»é²</h3>
                         <div class="grid grid-cols-4 gap-3 mb-4">
-                            <div><label class="block text-sm font-medium mb-1">会員番号 *</label><input type="text" id="new_memberNumber" class="w-full border rounded px-2 py-1 text-sm" placeholder="例: 0001"></div>
-                            <div><label class="block text-sm font-medium mb-1">会員ステータス</label><select id="new_status" class="w-full border rounded px-2 py-1 text-sm"><option value="入会中">入会中</option><option value="休会中">休会中</option><option value="退会済み">退会済み</option></select></div>
-                            <div><label class="block text-sm font-medium mb-1">コース</label><select id="new_course" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択してください</option><option value="ビジター">ビジター</option><option value="１">１</option><option value="２">２</option><option value="３">３</option><option value="４">４</option></select></div>
-                            <div><label class="block text-sm font-medium mb-1">年会費更新日</label><input type="date" id="new_annualFee" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">氏名(姓) *</label><input type="text" id="new_lastName" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">氏名(名) *</label><input type="text" id="new_firstName" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">読み</label><input type="text" id="new_reading" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">保護者名</label><input type="text" id="new_guardianName" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">ハコモノ登録名</label><input type="text" id="new_hakomonoName" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">性別</label><select id="new_gender" class="w-full border rounded px-2 py-1 text-sm"><option value="">選択</option><option value="男">男</option><option value="女">女</option></select></div>
-                            <div><label class="block text-sm font-medium mb-1">生年月日</label><input type="date" id="new_birthDate" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">電話番号</label><input type="tel" id="new_phone1" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div class="col-span-2"><label class="block text-sm font-medium mb-1">メール</label><input type="email" id="new_email" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">入会日</label><input type="date" id="new_joinDate" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">郵便番号</label><input type="text" id="new_postalCode" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">都道府県</label><input type="text" id="new_prefecture" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">市区町村</label><input type="text" id="new_city" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">番地</label><input type="text" id="new_address" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div><label class="block text-sm font-medium mb-1">建物・部屋番号</label><input type="text" id="new_building" class="w-full border rounded px-2 py-1 text-sm"></div>
-                            <div class="col-span-3"><label class="block text-sm font-medium mb-1">備考</label><input type="text" id="new_memo" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">ä¼å¡çªå· *</label><input type="text" id="new_memberNumber" class="w-full border rounded px-2 py-1 text-sm" placeholder="ä¾: 0001"></div>
+                            <div><label class="block text-sm font-medium mb-1">ä¼å¡ã¹ãã¼ã¿ã¹</label><select id="new_status" class="w-full border rounded px-2 py-1 text-sm"><option value="å¥ä¼ä¸­">å¥ä¼ä¸­</option><option value="ä¼ä¼ä¸­">ä¼ä¼ä¸­</option><option value="éä¼æ¸ã¿">éä¼æ¸ã¿</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">ã³ã¼ã¹</label><select id="new_course" class="w-full border rounded px-2 py-1 text-sm"><option value="">é¸æãã¦ãã ãã</option><option value="ãã¸ã¿ã¼">ãã¸ã¿ã¼</option><option value="ï¼">ï¼</option><option value="ï¼">ï¼</option><option value="ï¼">ï¼</option><option value="ï¼">ï¼</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">å¹´ä¼è²»æ´æ°æ¥</label><input type="date" id="new_annualFee" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">æ°å(å§) *</label><input type="text" id="new_lastName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">æ°å(å) *</label><input type="text" id="new_firstName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">èª­ã¿</label><input type="text" id="new_reading" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">ä¿è­·èå</label><input type="text" id="new_guardianName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">ãã³ã¢ãç»é²å</label><input type="text" id="new_hakomonoName" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">æ§å¥</label><select id="new_gender" class="w-full border rounded px-2 py-1 text-sm"><option value="">é¸æ</option><option value="ç·">ç·</option><option value="å¥³">å¥³</option></select></div>
+                            <div><label class="block text-sm font-medium mb-1">çå¹´ææ¥</label><input type="date" id="new_birthDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">é»è©±çªå·</label><input type="tel" id="new_phone1" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-2"><label class="block text-sm font-medium mb-1">ã¡ã¼ã«</label><input type="email" id="new_email" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">å¥ä¼æ¥</label><input type="date" id="new_joinDate" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">éµä¾¿çªå·</label><input type="text" id="new_postalCode" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">é½éåºç</label><input type="text" id="new_prefecture" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">å¸åºçºæ</label><input type="text" id="new_city" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">çªå°</label><input type="text" id="new_address" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div><label class="block text-sm font-medium mb-1">å»ºç©ã»é¨å±çªå·</label><input type="text" id="new_building" class="w-full border rounded px-2 py-1 text-sm"></div>
+                            <div class="col-span-3"><label class="block text-sm font-medium mb-1">åè</label><input type="text" id="new_memo" class="w-full border rounded px-2 py-1 text-sm"></div>
                         </div>
                         <div class="flex gap-2">
-                            <button id="addCustomerBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">登録</button>
-                            <button id="cancelAddBtn" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition">キャンセル</button>
+                            <button id="addCustomerBtn" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">ç»é²</button>
+                            <button id="cancelAddBtn" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition">ã­ã£ã³ã»ã«</button>
                         </div>
                     </div>
                 `;
             }
             renderCustomerRow(customer, no) {
-                const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' : customer.status === '休会中' ? 'status-badge-paused' : 'status-badge-withdrawn';
-                const genderClass = customer.gender === '男' ? 'gender-male' : customer.gender === '女' ? 'gender-female' : '';
+                const statusBadgeClass = customer.status === 'å¥ä¼ä¸­' ? 'status-badge-active' : customer.status === 'ä¼ä¼ä¸­' ? 'status-badge-paused' : 'status-badge-withdrawn';
+                const genderClass = customer.gender === 'ç·' ? 'gender-male' : customer.gender === 'å¥³' ? 'gender-female' : '';
                 const age = this.calculateAge(customer.birthDate);
                 
                 if (this.editingId === customer.id) {
@@ -820,14 +820,14 @@
                         <tr class="border-b hover:bg-gray-50">
                             <td class="px-2 py-3">${no}</td>
                             <td class="px-2 py-3"><input type="text" id="edit_memberNumber" value="${this.editForm.memberNumber || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
-                            <td class="px-2 py-3"><select id="edit_status" class="w-full border rounded px-1 py-1 text-xs"><option value="入会中" ${this.editForm.status === '入会中' ? 'selected' : ''}>入会中</option><option value="休会中" ${this.editForm.status === '休会中' ? 'selected' : ''}>休会中</option><option value="退会済み" ${this.editForm.status === '退会済み' ? 'selected' : ''}>退会済み</option></select></td>
-                            <td class="px-2 py-3"><select id="edit_course" class="w-full border rounded px-1 py-1 text-xs"><option value="">選択</option><option value="ビジター" ${this.editForm.course === 'ビジター' ? 'selected' : ''}>ビジター</option><option value="１" ${this.editForm.course === '１' ? 'selected' : ''}>１</option><option value="２" ${this.editForm.course === '２' ? 'selected' : ''}>２</option><option value="３" ${this.editForm.course === '３' ? 'selected' : ''}>３</option><option value="４" ${this.editForm.course === '４' ? 'selected' : ''}>４</option></select></td>
+                            <td class="px-2 py-3"><select id="edit_status" class="w-full border rounded px-1 py-1 text-xs"><option value="å¥ä¼ä¸­" ${this.editForm.status === 'å¥ä¼ä¸­' ? 'selected' : ''}>å¥ä¼ä¸­</option><option value="ä¼ä¼ä¸­" ${this.editForm.status === 'ä¼ä¼ä¸­' ? 'selected' : ''}>ä¼ä¼ä¸­</option><option value="éä¼æ¸ã¿" ${this.editForm.status === 'éä¼æ¸ã¿' ? 'selected' : ''}>éä¼æ¸ã¿</option></select></td>
+                            <td class="px-2 py-3"><select id="edit_course" class="w-full border rounded px-1 py-1 text-xs"><option value="">é¸æ</option><option value="ãã¸ã¿ã¼" ${this.editForm.course === 'ãã¸ã¿ã¼' ? 'selected' : ''}>ãã¸ã¿ã¼</option><option value="ï¼" ${this.editForm.course === 'ï¼' ? 'selected' : ''}>ï¼</option><option value="ï¼" ${this.editForm.course === 'ï¼' ? 'selected' : ''}>ï¼</option><option value="ï¼" ${this.editForm.course === 'ï¼' ? 'selected' : ''}>ï¼</option><option value="ï¼" ${this.editForm.course === 'ï¼' ? 'selected' : ''}>ï¼</option></select></td>
                             <td class="px-2 py-3"><input type="date" id="edit_annualFee" value="${this.editForm.annualFee || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3"><input type="text" id="edit_fullName" value="${this.editForm.lastName || ''} ${this.editForm.firstName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3"><input type="text" id="edit_reading" value="${this.editForm.reading || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3"><input type="text" id="edit_guardianName" value="${this.editForm.guardianName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3"><input type="text" id="edit_hakomonoName" value="${this.editForm.hakomonoName || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
-                            <td class="px-2 py-3"><select id="edit_gender" class="w-full border rounded px-1 py-1 text-xs"><option value="">-</option><option value="男" ${this.editForm.gender === '男' ? 'selected' : ''}>男</option><option value="女" ${this.editForm.gender === '女' ? 'selected' : ''}>女</option></select></td>
+                            <td class="px-2 py-3"><select id="edit_gender" class="w-full border rounded px-1 py-1 text-xs"><option value="">-</option><option value="ç·" ${this.editForm.gender === 'ç·' ? 'selected' : ''}>ç·</option><option value="å¥³" ${this.editForm.gender === 'å¥³' ? 'selected' : ''}>å¥³</option></select></td>
                             <td class="px-2 py-3"><input type="date" id="edit_birthDate" value="${this.editForm.birthDate || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3 text-center">${this.calculateAge(this.editForm.birthDate)}</td>
                             <td class="px-2 py-3"><input type="tel" id="edit_phone1" value="${this.editForm.phone1 || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
@@ -839,7 +839,7 @@
                             <td class="px-2 py-3"><input type="text" id="edit_address" value="${this.editForm.address || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3"><input type="text" id="edit_building" value="${this.editForm.building || ''}" class="w-full border rounded px-1 py-1 text-xs" /></td>
                             <td class="px-2 py-3 memo-cell"><textarea id="edit_memo" class="w-full border rounded px-1 py-1 text-xs" rows="2">${this.editForm.memo || ''}</textarea></td>
-                            <td class="px-2 py-3"><div class="flex flex-col gap-1"><button id="saveEditBtn" class="text-green-600 hover:text-green-800 text-xs">保存</button><button id="cancelEditBtn" class="text-gray-600 hover:text-gray-800 text-xs">キャンセル</button><button data-edit-action="delete" data-id="${customer.id}" class="text-red-600 hover:text-red-800 text-xs">削除</button></div></td>
+                            <td class="px-2 py-3"><div class="flex flex-col gap-1"><button id="saveEditBtn" class="text-green-600 hover:text-green-800 text-xs">ä¿å­</button><button id="cancelEditBtn" class="text-gray-600 hover:text-gray-800 text-xs">ã­ã£ã³ã»ã«</button><button data-edit-action="delete" data-id="${customer.id}" class="text-red-600 hover:text-red-800 text-xs">åé¤</button></div></td>
                         </tr>
                     `;
                 }
@@ -866,15 +866,15 @@
                         <td class="px-2 py-3">${customer.address || ''}</td>
                         <td class="px-2 py-3">${customer.building || ''}</td>
                         <td class="px-2 py-3 memo-cell">${customer.memo || ''}</td>
-                        <td class="px-2 py-3"><button data-edit-action="start" data-id="${customer.id}" class="text-blue-600 hover:text-blue-800 text-xs">編集</button></td>
+                        <td class="px-2 py-3"><button data-edit-action="start" data-id="${customer.id}" class="text-blue-600 hover:text-blue-800 text-xs">ç·¨é</button></td>
                     </tr>
                 `;
             }
             sortStudentsByPlan(students) {
                 return students.sort((a, b) => {
-                    // プラン名を正規化（全角数字を半角に変換）
+                    // ãã©ã³åãæ­£è¦åï¼å¨è§æ°å­ãåè§ã«å¤æï¼
                     const normalizePlan = (plan) => {
-                        return plan.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+                        return plan.replace(/[ï¼-ï¼]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
                     };
                     
                     const planA = normalizePlan(a.plan);
@@ -885,7 +885,7 @@
                     return orderA - orderB;
                 });
             }
-            // 選択された顧客情報の表示のみを更新
+            // é¸æãããé¡§å®¢æå ±ã®è¡¨ç¤ºã®ã¿ãæ´æ°
             updateSelectedCustomerInfo() {
                 const selectedInfoContainer = document.getElementById('selectedCustomerInfo');
                 const planSelect = document.getElementById('new_student_plan');
@@ -899,70 +899,70 @@
                         <div class="mb-3 p-3 bg-green-50 border-2 border-green-400 rounded text-sm">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <div class="font-bold text-green-800">✓ 選択中: ${this.selectedCustomerForStudent.lastName} ${this.selectedCustomerForStudent.firstName}</div>
+                                    <div class="font-bold text-green-800">â é¸æä¸­: ${this.selectedCustomerForStudent.lastName} ${this.selectedCustomerForStudent.firstName}</div>
                                     <div class="text-xs text-gray-700 mt-1">
-                                        ${this.selectedCustomerForStudent.memberNumber ? `会員番号: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}
-                                        ${this.selectedCustomerForStudent.reading ? `読み: ${this.selectedCustomerForStudent.reading} | ` : ''}
-                                        コース: ${this.selectedCustomerForStudent.course || 'なし'}
+                                        ${this.selectedCustomerForStudent.memberNumber ? `ä¼å¡çªå·: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}
+                                        ${this.selectedCustomerForStudent.reading ? `èª­ã¿: ${this.selectedCustomerForStudent.reading} | ` : ''}
+                                        ã³ã¼ã¹: ${this.selectedCustomerForStudent.course || 'ãªã'}
                                     </div>
                                 </div>
                                 <button 
                                     id="clearSelectedCustomer"
                                     class="text-red-600 hover:text-red-800 text-xs underline">
-                                    選択解除
+                                    é¸æè§£é¤
                                 </button>
                             </div>
                         </div>
                     `;
                     
-                    // 姓名入力欄を非表示
+                    // å§åå¥åæ¬ãéè¡¨ç¤º
                     if (nameInputContainer) {
                         nameInputContainer.classList.add('hidden');
                         nameInputContainer.classList.remove('col-span-2', 'grid', 'grid-cols-2', 'gap-3');
                     }
                     
-                    // プランセレクトのスタイルを調整
+                    // ãã©ã³ã»ã¬ã¯ãã®ã¹ã¿ã¤ã«ãèª¿æ´
                     if (planSelectContainer) {
                         planSelectContainer.classList.add('col-span-3');
                     }
                     
-                    // 選択解除ボタンのイベントを再設定
+                    // é¸æè§£é¤ãã¿ã³ã®ã¤ãã³ããåè¨­å®
                     document.getElementById('clearSelectedCustomer')?.addEventListener('click', () => {
                         this.selectedCustomerForStudent = null;
                         this.studentSearchTerm = '';
                         this.studentSearchResults = [];
                         this.updateSelectedCustomerInfo();
-                        // 検索入力欄をクリア
+                        // æ¤ç´¢å¥åæ¬ãã¯ãªã¢
                         const searchInput = document.getElementById('student_search_input');
                         if (searchInput) searchInput.value = '';
-                        // 検索結果をクリア
+                        // æ¤ç´¢çµæãã¯ãªã¢
                         this.updateSearchResults();
-                        // プランをリセット
+                        // ãã©ã³ããªã»ãã
                         if (planSelect) planSelect.value = '';
                     });
                     
-                    // プランを自動設定
+                    // ãã©ã³ãèªåè¨­å®
                     if (planSelect && this.selectedCustomerForStudent.course) {
-                        const courseMap = {'１': '１クラス', '２': '２クラス', '３': '３クラス', '４': '４クラス'};
+                        const courseMap = {'ï¼': 'ï¼ã¯ã©ã¹', 'ï¼': 'ï¼ã¯ã©ã¹', 'ï¼': 'ï¼ã¯ã©ã¹', 'ï¼': 'ï¼ã¯ã©ã¹'};
                         const planValue = courseMap[this.selectedCustomerForStudent.course] || '';
                         if (planValue) planSelect.value = planValue;
                     }
                 } else {
                     selectedInfoContainer.innerHTML = '';
                     
-                    // 姓名入力欄を表示
+                    // å§åå¥åæ¬ãè¡¨ç¤º
                     if (nameInputContainer) {
                         nameInputContainer.classList.remove('hidden');
                         nameInputContainer.classList.add('col-span-2', 'grid', 'grid-cols-2', 'gap-3');
                     }
                     
-                    // プランセレクトのスタイルを元に戻す
+                    // ãã©ã³ã»ã¬ã¯ãã®ã¹ã¿ã¤ã«ãåã«æ»ã
                     if (planSelectContainer) {
                         planSelectContainer.classList.remove('col-span-3');
                     }
                 }
             }
-            // 検索結果のみを更新（フォーカスを維持）
+            // æ¤ç´¢çµæã®ã¿ãæ´æ°ï¼ãã©ã¼ã«ã¹ãç¶­æï¼
             updateSearchResults() {
                 const resultsContainer = document.getElementById('searchResultsContainer');
                 if (!resultsContainer) return;
@@ -978,16 +978,16 @@
                                         ${customer.memberNumber ? `<span class="text-xs text-gray-500 ml-2">[${customer.memberNumber}]</span>` : ''}
                                     </div>
                                     <div class="text-xs text-gray-600 mt-1">
-                                        ${customer.reading ? `読み: ${customer.reading}` : ''}
+                                        ${customer.reading ? `èª­ã¿: ${customer.reading}` : ''}
                                         ${customer.reading && customer.course ? ' | ' : ''}
-                                        ${customer.course ? `コース: ${customer.course}` : ''}
+                                        ${customer.course ? `ã³ã¼ã¹: ${customer.course}` : ''}
                                     </div>
                                 </div>
                             `).join('')}
                         </div>
                     `;
                     
-                    // 検索結果のクリックイベントを再設定
+                    // æ¤ç´¢çµæã®ã¯ãªãã¯ã¤ãã³ããåè¨­å®
                     resultsContainer.querySelectorAll('.select-customer-btn').forEach(btn => {
                         btn.addEventListener('click', () => {
                             const customerId = btn.getAttribute('data-select-customer-id');
@@ -1000,54 +1000,54 @@
                 } else if (this.studentSearchTerm.trim()) {
                     resultsContainer.innerHTML = `
                         <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                            ⚠️ 該当する顧客が見つかりませんでした
+                            â ï¸ è©²å½ããé¡§å®¢ãè¦ã¤ããã¾ããã§ãã
                         </div>
                     `;
                 } else {
                     resultsContainer.innerHTML = '';
                 }
             }
-            // ひらがな→カタカナ変換
+            // ã²ãããªâã«ã¿ã«ãå¤æ
             hiraganaToKatakana(str) {
                 return str.replace(/[\u3041-\u3096]/g, (match) => {
                     const chr = match.charCodeAt(0) + 0x60;
                     return String.fromCharCode(chr);
                 });
             }
-            // カタカナ→ひらがな変換
+            // ã«ã¿ã«ãâã²ãããªå¤æ
             katakanaToHiragana(str) {
                 return str.replace(/[\u30a1-\u30f6]/g, (match) => {
                     const chr = match.charCodeAt(0) - 0x60;
                     return String.fromCharCode(chr);
                 });
             }
-            // 顧客検索機能（強化版）
+            // é¡§å®¢æ¤ç´¢æ©è½ï¼å¼·åçï¼
             searchCustomerByName(searchTerm) {
                 const term = searchTerm.toLowerCase().trim();
                 if (!term) {
                     return [];
                 }
                 
-                // ひらがな・カタカナ両方で検索できるように
+                // ã²ãããªã»ã«ã¿ã«ãä¸¡æ¹ã§æ¤ç´¢ã§ããããã«
                 const termHiragana = this.katakanaToHiragana(term);
                 const termKatakana = this.hiraganaToKatakana(term);
                 
                 return this.customers.filter(c => {
-                    // 氏名（姓名別々・フルネーム）
+                    // æ°åï¼å§åå¥ãã»ãã«ãã¼ã ï¼
                     const lastName = (c.lastName || '').toLowerCase();
                     const firstName = (c.firstName || '').toLowerCase();
                     const fullName = `${lastName}${firstName}`;
                     const fullNameWithSpace = `${lastName} ${firstName}`;
                     
-                    // 読み（ひらがな・カタカナ両対応）
+                    // èª­ã¿ï¼ã²ãããªã»ã«ã¿ã«ãä¸¡å¯¾å¿ï¼
                     const reading = (c.reading || '').toLowerCase();
                     const readingHiragana = this.katakanaToHiragana(reading);
                     const readingKatakana = this.hiraganaToKatakana(reading);
                     
-                    // 会員番号
+                    // ä¼å¡çªå·
                     const memberNumber = (c.memberNumber || '').toLowerCase();
                     
-                    // 複数の条件で検索
+                    // è¤æ°ã®æ¡ä»¶ã§æ¤ç´¢
                     return lastName.includes(term) ||
                            firstName.includes(term) ||
                            fullName.includes(term) ||
@@ -1060,24 +1060,24 @@
                            readingKatakana.includes(term) ||
                            readingKatakana.includes(termKatakana) ||
                            memberNumber.includes(term);
-                }).slice(0, 10); // 最大10件まで表示
+                }).slice(0, 10); // æå¤§10ä»¶ã¾ã§è¡¨ç¤º
             }
-            // 顧客を選択して生徒情報を自動入力
+            // é¡§å®¢ãé¸æãã¦çå¾æå ±ãèªåå¥å
             selectCustomerForStudent(customer) {
                 this.selectedCustomerForStudent = customer;
                 this.studentSearchResults = [];
                 this.studentSearchTerm = `${customer.lastName} ${customer.firstName}`;
                 
-                // 検索入力欄を更新
+                // æ¤ç´¢å¥åæ¬ãæ´æ°
                 const searchInput = document.getElementById('student_search_input');
                 if (searchInput) {
                     searchInput.value = this.studentSearchTerm;
                 }
                 
-                // 検索結果をクリア
+                // æ¤ç´¢çµæãã¯ãªã¢
                 this.updateSearchResults();
                 
-                // 選択された顧客情報を表示
+                // é¸æãããé¡§å®¢æå ±ãè¡¨ç¤º
                 this.updateSelectedCustomerInfo();
             }
             async addStudentToClass(day, location, className) {
@@ -1091,7 +1091,7 @@
             async saveNewStudent() {
                 let lastName, firstName, plan;
                 
-                // 顧客が選択されている場合
+                // é¡§å®¢ãé¸æããã¦ããå ´å
                 if (this.selectedCustomerForStudent) {
                     lastName = this.selectedCustomerForStudent.lastName;
                     firstName = this.selectedCustomerForStudent.firstName;
@@ -1102,7 +1102,7 @@
                     plan = document.getElementById('new_student_plan')?.value || '';
                 }
                 if (!lastName || !firstName || !plan) {
-                    alert('姓名とプランを入力してください');
+                    alert('å§åã¨ãã©ã³ãå¥åãã¦ãã ãã');
                     return;
                 }
                 const { day, location, className } = this.selectedClassForAdd;
@@ -1112,7 +1112,7 @@
                     this.scheduleData[day][classIndex].students.push({ lastName, firstName, plan });
                     this.scheduleData[day][classIndex].students = this.sortStudentsByPlan(this.scheduleData[day][classIndex].students);
                     
-                    // Firestoreに保存
+                    // Firestoreã«ä¿å­
                     await this.saveScheduleData();
                 }
                 this.showAddStudentForm = false;
@@ -1121,18 +1121,18 @@
                 this.studentSearchTerm = '';
                 this.studentSearchResults = [];
                 this.render();
-                alert('生徒を追加しました');
+                alert('çå¾ãè¿½å ãã¾ãã');
             }
-            // 生徒の編集を開始
+            // çå¾ã®ç·¨éãéå§
             startEditStudent(day, location, className, lastName, firstName) {
                 this.editingStudent = { day, location, className, lastName, firstName };
                 this.render();
             }
-            // 生徒情報の保存
+            // çå¾æå ±ã®ä¿å­
             async saveEditStudent() {
                 const newPlan = document.getElementById('edit_student_plan')?.value;
                 if (!newPlan) {
-                    alert('プランを選択してください');
+                    alert('ãã©ã³ãé¸æãã¦ãã ãã');
                     return;
                 }
                 const { day, location, className, lastName, firstName } = this.editingStudent;
@@ -1147,17 +1147,17 @@
                         this.scheduleData[day][classIndex].students[studentIndex].plan = newPlan;
                         this.scheduleData[day][classIndex].students = this.sortStudentsByPlan(this.scheduleData[day][classIndex].students);
                         
-                        // Firestoreに保存
+                        // Firestoreã«ä¿å­
                         await this.saveScheduleData();
                     }
                 }
                 this.editingStudent = null;
                 this.render();
-                alert('生徒情報を更新しました');
+                alert('çå¾æå ±ãæ´æ°ãã¾ãã');
             }
-            // 生徒の削除
+            // çå¾ã®åé¤
             async deleteStudent(day, location, className, lastName, firstName) {
-                if (!confirm(`${lastName} ${firstName} を削除してもよろしいですか？`)) {
+                if (!confirm(`${lastName} ${firstName} ãåé¤ãã¦ãããããã§ããï¼`)) {
                     return;
                 }
                 const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
@@ -1167,20 +1167,20 @@
                         s => !(s.lastName === lastName && s.firstName === firstName)
                     );
                     
-                    // Firestoreに保存
+                    // Firestoreã«ä¿å­
                     await this.saveScheduleData();
                 }
-                // 出席データも削除
+                // åºå¸­ãã¼ã¿ãåé¤
                 const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
                 const monthKey = this.selectedMonth.replace('-', '');
                 try {
                     await deleteDoc(doc(db, `attendance_${monthKey}`, studentKey));
                 } catch (error) {
-                    console.log('出席データの削除エラー（データが存在しない可能性があります）');
+                    console.log('åºå¸­ãã¼ã¿ã®åé¤ã¨ã©ã¼ï¼ãã¼ã¿ãå­å¨ããªãå¯è½æ§ãããã¾ãï¼');
                 }
                 await this.loadAttendance();
                 this.render();
-                alert('生徒を削除しました');
+                alert('çå¾ãåé¤ãã¾ãã');
             }
             calculateVisitorRevenue() {
                 let revenue = 0;
@@ -1191,8 +1191,8 @@
                     const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
                     
                     weeks.forEach(week => {
-                        if (attendance[week] === '○') {
-                            // keyからプラン情報を取得する必要があるため、scheduleDataから検索
+                        if (attendance[week] === 'â') {
+                            // keyãããã©ã³æå ±ãåå¾ããå¿è¦ããããããscheduleDataããæ¤ç´¢
                             const parts = key.split('_');
                             const day = parts[0];
                             const location = parts[1];
@@ -1202,8 +1202,8 @@
                             const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
                             const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
                             
-                            // ビジター、体験、無料プランのみ売上に計上
-                            if (student && (student.plan.includes('ビジター') || student.plan.includes('体験') || student.plan.includes('無料'))) {
+                            // ãã¸ã¿ã¼ãä½é¨ãç¡æãã©ã³ã®ã¿å£²ä¸ã«è¨ä¸
+                            if (student && (student.plan.includes('ãã¸ã¿ã¼') || student.plan.includes('ä½é¨') || student.plan.includes('ç¡æ'))) {
                                 if (this.pricing[student.plan]) {
                                     revenue += this.pricing[student.plan];
                                 }
@@ -1214,13 +1214,13 @@
                 
                 return revenue;
             }
-            // 練習会の売上計算
+            // ç·´ç¿ä¼ã®å£²ä¸è¨ç®
             calculatePracticeRevenue() {
                 let totalParticipants = 0;
                 const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
                 const details = {};
-                ['月曜日', '木曜日'].forEach(day => {
-                    const key = `練習会_${day}`;
+                ['æææ¥', 'æ¨ææ¥'].forEach(day => {
+                    const key = `ç·´ç¿ä¼_${day}`;
                     const data = this.attendanceData[key];
                     let dayTotal = 0;
                     if (data) {
@@ -1234,28 +1234,28 @@
                 });
                 return { participants: totalParticipants, revenue: totalParticipants * 500, details };
             }
-            // 詳細売上計算（全カテゴリ別）
+            // è©³ç´°å£²ä¸è¨ç®ï¼å¨ã«ãã´ãªå¥ï¼
             calculateDetailedRevenue() {
                 const categories = {
-                    '練習会': { count: 0, revenue: 0 },
-                    'ビジター（会員）': { count: 0, revenue: 0 },
-                    'ビジター（非会員）': { count: 0, revenue: 0 },
-                    'ビジター1.5h（会員）': { count: 0, revenue: 0 },
-                    'ビジター1.5h（非会員）': { count: 0, revenue: 0 },
-                    '月謝クラス振替': { count: 0, revenue: 0 },
-                    '初回体験': { count: 0, revenue: 0 },
-                    '初回無料': { count: 0, revenue: 0 }
+                    'ç·´ç¿ä¼': { count: 0, revenue: 0 },
+                    'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': { count: 0, revenue: 0 },
+                    'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': { count: 0, revenue: 0 },
+                    'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼': { count: 0, revenue: 0 },
+                    'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼': { count: 0, revenue: 0 },
+                    'æè¬ã¯ã©ã¹æ¯æ¿': { count: 0, revenue: 0 },
+                    'ååä½é¨': { count: 0, revenue: 0 },
+                    'ååç¡æ': { count: 0, revenue: 0 }
                 };
-                // 練習会
+                // ç·´ç¿ä¼
                 const practice = this.calculatePracticeRevenue();
-                categories['練習会'] = { count: practice.participants, revenue: practice.revenue };
-                // ビジター・体験系
+                categories['ç·´ç¿ä¼'] = { count: practice.participants, revenue: practice.revenue };
+                // ãã¸ã¿ã¼ã»ä½é¨ç³»
                 const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
                 Object.keys(this.attendanceData).forEach(key => {
-                    if (key.startsWith('練習会_')) return; // 練習会は別処理済み
+                    if (key.startsWith('ç·´ç¿ä¼_')) return; // ç·´ç¿ä¼ã¯å¥å¦çæ¸ã¿
                     const attendance = this.attendanceData[key];
                     weeks.forEach(week => {
-                        if (attendance[week] === '○') {
+                        if (attendance[week] === 'â') {
                             const parts = key.split('_');
                             const day = parts[0];
                             const location = parts[1];
@@ -1273,145 +1273,24 @@
                 });
                 return categories;
             }
-            // 練習会の売上計算
-            calculatePracticeRevenue() {
-                let totalParticipants = 0;
-                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-                const details = {};
-                ['月曜日', '木曜日'].forEach(day => {
-                    const key = `練習会_${day}`;
-                    const data = this.attendanceData[key];
-                    let dayTotal = 0;
-                    if (data) {
-                        weeks.forEach(week => {
-                            const count = parseInt(data[week]) || 0;
-                            dayTotal += count;
-                        });
-                    }
-                    details[day] = dayTotal;
-                    totalParticipants += dayTotal;
-                });
-                return { participants: totalParticipants, revenue: totalParticipants * 500, details };
-            }
-            // 詳細売上計算（全カテゴリ別）
-            calculateDetailedRevenue() {
-                const categories = {
-                    '練習会': { count: 0, revenue: 0 },
-                    'ビジター（会員）': { count: 0, revenue: 0 },
-                    'ビジター（非会員）': { count: 0, revenue: 0 },
-                    'ビジター1.5h（会員）': { count: 0, revenue: 0 },
-                    'ビジター1.5h（非会員）': { count: 0, revenue: 0 },
-                    '月謝クラス振替': { count: 0, revenue: 0 },
-                    '初回体験': { count: 0, revenue: 0 },
-                    '初回無料': { count: 0, revenue: 0 }
-                };
-                const practice = this.calculatePracticeRevenue();
-                categories['練習会'] = { count: practice.participants, revenue: practice.revenue };
-                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-                Object.keys(this.attendanceData).forEach(key => {
-                    if (key.startsWith('練習会_')) return;
-                    const attendance = this.attendanceData[key];
-                    weeks.forEach(week => {
-                        if (attendance[week] === '○') {
-                            const parts = key.split('_');
-                            const day = parts[0];
-                            const location = parts[1];
-                            const className = parts[2];
-                            const studentName = parts.slice(3).join('_');
-                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
-                            const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
-                            if (student && categories[student.plan] !== undefined) {
-                                const price = this.pricing[student.plan] || 0;
-                                categories[student.plan].count++;
-                                categories[student.plan].revenue += price;
-                            }
-                        }
-                    });
-                });
-                return categories;
-            }
-            // 出席簿関連のメソッド
-            async loadAttendance() {
-                try {
-                    const monthKey = this.selectedMonth.replace('-', '');
-                    const querySnapshot = await getDocs(collection(db, `attendance_${monthKey}`));
-                    this.attendanceData = {};
-                    querySnapshot.docs.forEach(doc => {
-                        this.attendanceData[doc.id] = doc.data();
-                    });
-                } catch (error) {
-                    console.error('出席データ読み込みエラー:', error);
-                    this.attendanceData = {};
-                }
-            }
-            // イベント専用の出席データ読み込み
-            async loadEventAttendance() {
-                try {
-                    const monthKey = this.selectedMonth.replace('-', '');
-                    const querySnapshot = await getDocs(collection(db, `event_attendance_${monthKey}`));
-                    this.eventAttendanceData = [];
-                    querySnapshot.docs.forEach(doc => {
-                        const data = doc.data();
-                        this.eventAttendanceData.push({
-                            id: doc.id,
-                            isMember: data.isMember || false,
-                            ...data
-                        });
-                    });
-                    // 並び順を保持するため、indexでソート
-                    this.eventAttendanceData.sort((a, b) => (a.index || 0) - (b.index || 0));
-                } catch (error) {
-                    console.error('イベント出席データ読み込みエラー:', error);
-                    this.eventAttendanceData = [];
-                }
-            }
-            // イベント出席データを保存
-            async saveEventAttendance() {
-                try {
-                    const monthKey = this.selectedMonth.replace('-', '');
-                    // 全データを保存（indexを追加）
-                    for (let i = 0; i < this.eventAttendanceData.length; i++) {
-                        const data = this.eventAttendanceData[i];
-                        const docId = data.id || `event_${Date.now()}_${i}`;
-                        const docRef = doc(db, `event_attendance_${monthKey}`, docId);
-                        await setDoc(docRef, {
-                            isMember: data.isMember || false,
-                            lastName: data.lastName || '',
-                            firstName: data.firstName || '',
-                            week1: data.week1 || '×',
-                            week2: data.week2 || '×',
-                            week3: data.week3 || '×',
-                            fee: data.fee || 0,
-                            memo: data.memo || '',
-                            index: i
-                        });
-                        if (!data.id) {
-                            this.eventAttendanceData[i].id = docId;
-                        }
-                    }
-                    await this.loadEventAttendance();
-                } catch (error) {
-                    console.error('イベント出席データ保存エラー:', error);
-                }
-            }
-            // イベント参加者を追加
+            // ç·´ç¿ä¼ã®å£²ä¸è¨ç®
             addEventParticipant() {
                 this.eventAttendanceData.push({
                     id: null,
                     isMember: false,
                     lastName: '',
                     firstName: '',
-                    week1: '×',
-                    week2: '×',
-                    week3: '×',
+                    week1: 'Ã',
+                    week2: 'Ã',
+                    week3: 'Ã',
                     fee: 0,
                     memo: ''
                 });
                 this.render();
             }
-            // イベント参加者を削除
+            // ã¤ãã³ãåå èãåé¤
             async deleteEventParticipant(index) {
-                if (!confirm('この参加者を削除してもよろしいですか？')) {
+                if (!confirm('ãã®åå èãåé¤ãã¦ãããããã§ããï¼')) {
                     return;
                 }
                 
@@ -1421,7 +1300,7 @@
                         const monthKey = this.selectedMonth.replace('-', '');
                         await deleteDoc(doc(db, `event_attendance_${monthKey}`, participant.id));
                     } catch (error) {
-                        console.error('削除エラー:', error);
+                        console.error('åé¤ã¨ã©ã¼:', error);
                     }
                 }
                 
@@ -1429,7 +1308,7 @@
                 await this.saveEventAttendance();
                 this.render();
             }
-            // イベントの合計金額を計算
+            // ã¤ãã³ãã®åè¨éé¡ãè¨ç®
             calculateEventTotal() {
                 return this.eventAttendanceData.reduce((sum, p) => sum + (parseFloat(p.fee) || 0), 0);
             }
@@ -1440,12 +1319,12 @@
                     await setDoc(docRef, weekData, { merge: true });
                     await this.loadAttendance();
                 } catch (error) {
-                    console.error('出席データ保存エラー:', error);
+                    console.error('åºå¸­ãã¼ã¿ä¿å­ã¨ã©ã¼:', error);
                 }
             }
             toggleAttendance(classId, week) {
                 const current = this.attendanceData[classId]?.[week] || '';
-                const next = current === '○' ? '×' : current === '×' ? '休講' : current === '休講' ? '' : '○';
+                const next = current === 'â' ? 'Ã' : current === 'Ã' ? 'ä¼è¬' : current === 'ä¼è¬' ? '' : 'â';
                 
                 if (!this.attendanceData[classId]) {
                     this.attendanceData[classId] = {};
@@ -1457,25 +1336,25 @@
             }
             getAttendanceRate(classId) {
                 const data = this.attendanceData[classId] || {};
-                const weeks = ['week1', 'week2', 'week3', 'week4']; // 予備週を除外
-                const attended = weeks.filter(w => data[w] === '○').length;
-                const recorded = weeks.filter(w => data[w] === '○' || data[w] === '×').length; // 休講を除外
+                const weeks = ['week1', 'week2', 'week3', 'week4']; // äºåé±ãé¤å¤
+                const attended = weeks.filter(w => data[w] === 'â').length;
+                const recorded = weeks.filter(w => data[w] === 'â' || data[w] === 'Ã').length; // ä¼è¬ãé¤å¤
                 return recorded > 0 ? Math.round((attended / recorded) * 100) : 0;
             }
-            // 月切り替え機能を修正
+            // æåãæ¿ãæ©è½ãä¿®æ­£
             async changeMonth(direction) {
                 this.isLoading = true;
                 this.render();
                 
                 try {
-                    // 現在の年月を取得
+                    // ç¾å¨ã®å¹´æãåå¾
                     const [currentYear, currentMonth] = this.selectedMonth.split('-').map(Number);
                     
-                    // 新しい年月を計算
+                    // æ°ããå¹´æãè¨ç®
                     let newYear = currentYear;
                     let newMonth = currentMonth + direction;
                     
-                    // 月の範囲チェックと年の調整
+                    // æã®ç¯å²ãã§ãã¯ã¨å¹´ã®èª¿æ´
                     if (newMonth > 12) {
                         newMonth = 1;
                         newYear++;
@@ -1484,19 +1363,19 @@
                         newYear--;
                     }
                     
-                    // YYYY-MM形式に変換（月は2桁にゼロパディング）
+                    // YYYY-MMå½¢å¼ã«å¤æï¼æã¯2æ¡ã«ã¼ã­ããã£ã³ã°ï¼
                     this.selectedMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
                     
                     await this.loadAttendance();
                     await this.loadEventAttendance();
                 } catch (error) {
-                    console.error('月切り替えエラー:', error);
+                    console.error('æåãæ¿ãã¨ã©ã¼:', error);
                 } finally {
                     this.isLoading = false;
                     this.render();
                 }
             }
-            // 月を直接選択
+            // æãç´æ¥é¸æ
             async selectMonth(monthValue) {
                 if (!monthValue) return;
                 
@@ -1508,38 +1387,38 @@
                     await this.loadAttendance();
                     await this.loadEventAttendance();
                 } catch (error) {
-                    console.error('月選択エラー:', error);
+                    console.error('æé¸æã¨ã©ã¼:', error);
                 } finally {
                     this.isLoading = false;
                     this.render();
                 }
             }
-            // イベントクラス追加機能
+            // ã¤ãã³ãã¯ã©ã¹è¿½å æ©è½
             addClassToEvent() {
                 this.showAddClassForm = true;
                 this.render();
             }
             async saveNewClass() {
                 const className = document.getElementById('new_class_name')?.value || '';
-                const location = document.getElementById('new_class_location')?.value || '天神';
+                const location = document.getElementById('new_class_location')?.value || 'å¤©ç¥';
                 const color = document.getElementById('new_class_color')?.value || 'red';
                 if (!className) {
-                    alert('クラス名を入力してください');
+                    alert('ã¯ã©ã¹åãå¥åãã¦ãã ãã');
                     return;
                 }
-                this.scheduleData['イベント'].push({
+                this.scheduleData['ã¤ãã³ã'].push({
                     location,
                     name: className,
                     color,
                     students: []
                 });
                 
-                // Firestoreに保存
+                // Firestoreã«ä¿å­
                 await this.saveScheduleData();
                 
                 this.showAddClassForm = false;
                 this.render();
-                alert('クラスを追加しました');
+                alert('ã¯ã©ã¹ãè¿½å ãã¾ãã');
             }
             renderAttendance() {
                 return `
@@ -1547,8 +1426,8 @@
                         <div class="bg-white rounded-lg shadow mb-6">
                             <div class="border-b">
                                 <div class="flex">
-                                    <button id="attendanceOverviewTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📊 ダッシュボード</button>
-                                    <button id="attendanceRecordTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'record' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📝 出席記録</button>
+                                    <button id="attendanceOverviewTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">ð ããã·ã¥ãã¼ã</button>
+                                    <button id="attendanceRecordTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'record' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">ð åºå¸­è¨é²</button>
                                 </div>
                             </div>
                         </div>
@@ -1559,7 +1438,7 @@
             renderAttendanceOverview() {
                 const [year, month] = this.selectedMonth.split('-');
 
-                // 全曜日のクラス数と生徒数を集計
+                // å¨ææ¥ã®ã¯ã©ã¹æ°ã¨çå¾æ°ãéè¨
                 let totalClasses = 0;
                 let totalStudents = 0;
                 Object.keys(this.scheduleData).forEach(day => {
@@ -1574,79 +1453,79 @@
                     return { day, classCount: classes.length, studentCount };
                 });
 
-                // 詳細売上計算
+                // è©³ç´°å£²ä¸è¨ç®
                 const detailed = this.calculateDetailedRevenue();
                 const visitorRevenue = this.calculateVisitorRevenue();
-                const practiceRevenue = detailed['練習会'].revenue;
+                const practiceRevenue = detailed['ç·´ç¿ä¼'].revenue;
                 const totalExtraRevenue = Object.values(detailed).reduce((sum, d) => sum + d.revenue, 0);
 
-                // 表示順序を定義
-                const displayOrder = ['練習会', 'ビジター（会員）', 'ビジター（非会員）', 'ビジター1.5h（会員）', 'ビジター1.5h（非会員）', '月謝クラス振替', '初回体験', '初回無料'];
+                // è¡¨ç¤ºé åºãå®ç¾©
+                const displayOrder = ['ç·´ç¿ä¼', 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼', 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼', 'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼', 'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼', 'æè¬ã¯ã©ã¹æ¯æ¿', 'ååä½é¨', 'ååç¡æ'];
 
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-3xl font-bold text-gray-800">出席状況</h2>
+                            <h2 class="text-3xl font-bold text-gray-800">åºå¸­ç¶æ³</h2>
                             <div class="flex gap-2 items-center">
-                                <button id="prevMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">◀ 前月</button>
+                                <button id="prevMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">â åæ</button>
                                 <input
                                     type="month"
                                     id="monthSelectorOverview"
                                     value="${this.selectedMonth}"
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
-                                <button id="nextMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">次月 ▶</button>
+                                <button id="nextMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">æ¬¡æ â¶</button>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">総クラス数</div>
+                                <div class="text-gray-600 text-sm mb-2">ç·ã¯ã©ã¹æ°</div>
                                 <div class="text-4xl font-bold text-blue-600">${totalClasses}</div>
-                                <div class="text-xs text-gray-500 mt-2">クラス</div>
+                                <div class="text-xs text-gray-500 mt-2">ã¯ã©ã¹</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <div class="text-gray-600 text-sm mb-2">総生徒数（延べ）</div>
+                                <div class="text-gray-600 text-sm mb-2">ç·çå¾æ°ï¼å»¶ã¹ï¼</div>
                                 <div class="text-4xl font-bold text-green-600">${totalStudents}</div>
-                                <div class="text-xs text-gray-500 mt-2">名</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-                                <div class="text-gray-600 text-sm mb-2">ビジター売上</div>
-                                <div class="text-4xl font-bold text-yellow-600">¥${visitorRevenue.toLocaleString()}</div>
-                                <div class="text-xs text-gray-500 mt-2">円</div>
+                                <div class="text-gray-600 text-sm mb-2">ãã¸ã¿ã¼å£²ä¸</div>
+                                <div class="text-4xl font-bold text-yellow-600">Â¥${visitorRevenue.toLocaleString()}</div>
+                                <div class="text-xs text-gray-500 mt-2">å</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
-                                <div class="text-gray-600 text-sm mb-2">練習会売上</div>
-                                <div class="text-4xl font-bold text-purple-600">¥${practiceRevenue.toLocaleString()}</div>
-                                <div class="text-xs text-gray-500 mt-2">${detailed['練習会'].count}名参加</div>
+                                <div class="text-gray-600 text-sm mb-2">ç·´ç¿ä¼å£²ä¸</div>
+                                <div class="text-4xl font-bold text-purple-600">Â¥${practiceRevenue.toLocaleString()}</div>
+                                <div class="text-xs text-gray-500 mt-2">${detailed['ç·´ç¿ä¼'].count}ååå </div>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow p-6 mb-8">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">売上内訳（受講人数・売上）</h3>
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">å£²ä¸åè¨³ï¼åè¬äººæ°ã»å£²ä¸ï¼</h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="bg-gray-100 border-b">
-                                            <th class="px-4 py-3 text-left font-semibold">カテゴリ</th>
-                                            <th class="px-4 py-3 text-center font-semibold">単価</th>
-                                            <th class="px-4 py-3 text-center font-semibold">受講人数</th>
-                                            <th class="px-4 py-3 text-right font-semibold">売上</th>
+                                            <th class="px-4 py-3 text-left font-semibold">ã«ãã´ãª</th>
+                                            <th class="px-4 py-3 text-center font-semibold">åä¾¡</th>
+                                            <th class="px-4 py-3 text-center font-semibold">åè¬äººæ°</th>
+                                            <th class="px-4 py-3 text-right font-semibold">å£²ä¸</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         ${displayOrder.map(plan => {
                                             const data = detailed[plan] || { count: 0, revenue: 0 };
                                             const price = this.pricing[plan] || 0;
-                                            const bgColor = plan === '練習会' ? 'bg-purple-50' : data.count > 0 ? 'bg-yellow-50' : '';
+                                            const bgColor = plan === 'ç·´ç¿ä¼' ? 'bg-purple-50' : data.count > 0 ? 'bg-yellow-50' : '';
                                             return `
                                                 <tr class="border-b ${bgColor}">
                                                     <td class="px-4 py-3 font-medium">${plan}</td>
-                                                    <td class="px-4 py-3 text-center text-gray-600">¥${price.toLocaleString()}</td>
+                                                    <td class="px-4 py-3 text-center text-gray-600">Â¥${price.toLocaleString()}</td>
                                                     <td class="px-4 py-3 text-center">
-                                                        ${data.count > 0 ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${data.count}${plan === '練習会' ? '名' : '回'}</span>` : '<span class="text-gray-400">-</span>'}
+                                                        ${data.count > 0 ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${data.count}${plan === 'ç·´ç¿ä¼' ? 'å' : 'å'}</span>` : '<span class="text-gray-400">-</span>'}
                                                     </td>
                                                     <td class="px-4 py-3 text-right font-semibold ${data.revenue > 0 ? 'text-green-700' : 'text-gray-400'}">
-                                                        ${data.revenue > 0 ? '¥' + data.revenue.toLocaleString() : '-'}
+                                                        ${data.revenue > 0 ? 'Â¥' + data.revenue.toLocaleString() : '-'}
                                                     </td>
                                                 </tr>
                                             `;
@@ -1654,84 +1533,53 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="bg-blue-50 border-t-2 border-blue-300">
-                                            <td class="px-4 py-3 font-bold" colspan="3">合計</td>
-                                            <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">¥${totalExtraRevenue.toLocaleString()}</td>
+                                            <td class="px-4 py-3 font-bold" colspan="3">åè¨</td>
+                                            <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">Â¥${totalExtraRevenue.toLocaleString()}</td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
-                        </div>
-                        <div class="bg-white rounded-lg shadow p-6 mb-8">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">売上内訳（受講人数・売上）</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead><tr class="bg-gray-100 border-b">
-                                        <th class="px-4 py-3 text-left font-semibold">カテゴリ</th>
-                                        <th class="px-4 py-3 text-center font-semibold">単価</th>
-                                        <th class="px-4 py-3 text-center font-semibold">受講人数</th>
-                                        <th class="px-4 py-3 text-right font-semibold">売上</th>
-                                    </tr></thead>
-                                    <tbody>
-                                        ${displayOrder.map(plan => {
-                                            const data = detailed[plan] || { count: 0, revenue: 0 };
-                                            const price = this.pricing[plan] || 0;
-                                            const bgColor = plan === '練習会' ? 'bg-purple-50' : data.count > 0 ? 'bg-yellow-50' : '';
-                                            return `<tr class="border-b ${bgColor}">
-                                                <td class="px-4 py-3 font-medium">${plan}</td>
-                                                <td class="px-4 py-3 text-center text-gray-600">¥${price.toLocaleString()}</td>
-                                                <td class="px-4 py-3 text-center">${data.count > 0 ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${data.count}${plan === '練習会' ? '名' : '回'}</span>` : '<span class="text-gray-400">-</span>'}</td>
-                                                <td class="px-4 py-3 text-right font-semibold ${data.revenue > 0 ? 'text-green-700' : 'text-gray-400'}">${data.revenue > 0 ? '¥' + data.revenue.toLocaleString() : '-'}</td>
-                                            </tr>`;
-                                        }).join('')}
-                                    </tbody>
-                                    <tfoot><tr class="bg-blue-50 border-t-2 border-blue-300">
-                                        <td class="px-4 py-3 font-bold" colspan="3">合計</td>
-                                        <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">¥${totalExtraRevenue.toLocaleString()}</td>
-                                    </tr></tfoot>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        </div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-xl font-bold mb-4 text-gray-800">曜日別クラス数</h3>
+                                <h3 class="text-xl font-bold mb-4 text-gray-800">ææ¥å¥ã¯ã©ã¹æ°</h3>
                                 <div class="space-y-3">
                                     ${dayStats.map(stat => `
                                         <div class="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
                                             <span class="font-medium">${stat.day}</span>
                                             <div class="flex gap-4">
-                                                <span class="text-gray-600">${stat.classCount}クラス</span>
-                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">${stat.studentCount}名</span>
+                                                <span class="text-gray-600">${stat.classCount}ã¯ã©ã¹</span>
+                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">${stat.studentCount}å</span>
                                             </div>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-xl font-bold mb-4 text-gray-800">バックアップ</h3>
+                                <h3 class="text-xl font-bold mb-4 text-gray-800">ããã¯ã¢ãã</h3>
                                 <div class="space-y-3">
-                                    <p class="text-sm text-gray-600">データの安全のため、定期的にバックアップを取得してください。</p>
+                                    <p class="text-sm text-gray-600">ãã¼ã¿ã®å®å¨ã®ãããå®æçã«ããã¯ã¢ãããåå¾ãã¦ãã ããã</p>
                                     <button id="backupBtn" class="w-full bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 transition font-medium">
-                                        📦 バックアップを取得
+                                        ð¦ ããã¯ã¢ãããåå¾
                                     </button>
                                     <div id="backupStatus" class="text-xs text-gray-500 text-center"></div>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow p-6">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">使い方</h3>
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">ä½¿ãæ¹</h3>
                             <div class="space-y-2 text-gray-600">
-                                <p>• 「📝 出席記録」タブから各曜日のクラスの出席を記録できます</p>
-                                <p>• ボタンをクリックで <span class="text-green-600 font-bold">○</span> → <span class="text-red-600 font-bold">×</span> → <span class="text-gray-600 font-bold">休</span> → <span class="text-gray-400 font-bold">-</span> と切り替わります</p>
-                                <p>• 月曜日・木曜日には「練習会」欄があり、参加人数を入力できます（¥500/人）</p>
-                                <p>• 各クラスに「生徒追加」ボタンから新規生徒を追加できます</p>
+                                <p>â¢ ãð åºå¸­è¨é²ãã¿ãããåææ¥ã®ã¯ã©ã¹ã®åºå¸­ãè¨é²ã§ãã¾ã</p>
+                                <p>â¢ ãã¿ã³ãã¯ãªãã¯ã§ <span class="text-green-600 font-bold">â</span> â <span class="text-red-600 font-bold">Ã</span> â <span class="text-gray-600 font-bold">ä¼</span> â <span class="text-gray-400 font-bold">-</span> ã¨åãæ¿ããã¾ã</p>
+                                <p>â¢ æææ¥ã»æ¨ææ¥ã«ã¯ãç·´ç¿ä¼ãæ¬ããããåå äººæ°ãå¥åã§ãã¾ãï¼Â¥500/äººï¼</p>
+                                <p>â¢ åã¯ã©ã¹ã«ãçå¾è¿½å ããã¿ã³ããæ°è¦çå¾ãè¿½å ã§ãã¾ã</p>
                             </div>
                         </div>
                     </div>
                 `;
             }
             renderAttendanceRecord() {
-                // イベントタブは専用のレンダリング
-                if (this.selectedDay === 'イベント') {
+                // ã¤ãã³ãã¿ãã¯å°ç¨ã®ã¬ã³ããªã³ã°
+                if (this.selectedDay === 'ã¤ãã³ã') {
                     return this.renderEventRecord();
                 }
                 const [year, month] = this.selectedMonth.split('-');
@@ -1741,7 +1589,7 @@
                         <div class="flex items-center justify-center h-96">
                             <div class="text-center">
                                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                                <p class="text-gray-600">読み込み中...</p>
+                                <p class="text-gray-600">èª­ã¿è¾¼ã¿ä¸­...</p>
                             </div>
                         </div>
                     `;
@@ -1749,21 +1597,21 @@
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">出席記録</h2>
+                            <h2 class="text-2xl font-bold text-gray-800">åºå¸­è¨é²</h2>
                             <div class="flex gap-2 items-center">
-                                <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>◀ 前月</button>
+                                <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>â åæ</button>
                                 <input 
                                     type="month" 
                                     id="monthSelector" 
                                     value="${this.selectedMonth}" 
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
-                                <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
+                                <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>æ¬¡æ â¶</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow mb-4">
                             <div class="flex border-b overflow-x-auto">
-                                ${['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', 'イベント'].map(day => `
+                                ${['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥', 'ã¤ãã³ã'].map(day => `
                                     <button id="day-${day}" class="px-4 py-2 text-sm font-medium whitespace-nowrap ${this.selectedDay === day ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'}">
                                         ${day}
                                     </button>
@@ -1778,13 +1626,13 @@
                                     <div class="bg-${classInfo.color}-600 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
                                         <h3 class="text-base font-bold">${classInfo.location} - ${classInfo.name}</h3>
                                         <div class="flex gap-2 items-center">
-                                            <span class="text-xs opacity-90">${sortedStudents.length}名</span>
+                                            <span class="text-xs opacity-90">${sortedStudents.length}å</span>
                                             <button 
                                                 data-add-day="${this.selectedDay}" 
                                                 data-add-location="${classInfo.location}" 
                                                 data-add-class="${classInfo.name}"
                                                 class="add-student-btn bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded text-xs transition">
-                                                + 生徒追加
+                                                + çå¾è¿½å 
                                             </button>
                                         </div>
                                     </div>
@@ -1792,15 +1640,15 @@
                                         <table class="w-full text-xs">
                                             <thead>
                                                 <tr class="bg-gray-50 border-b">
-                                                    <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">氏名</th>
-                                                    <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">プラン</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">第1週</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">第2週</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">第3週</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">第4週</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">予備</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 60px;">出席率</th>
-                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">編集</th>
+                                                    <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">æ°å</th>
+                                                    <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">ãã©ã³</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">ç¬¬1é±</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">ç¬¬2é±</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">ç¬¬3é±</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">ç¬¬4é±</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">äºå</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 60px;">åºå¸­ç</th>
+                                                    <th class="px-2 py-2 text-center font-semibold" style="width: 50px;">ç·¨é</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1821,15 +1669,15 @@
                                                                 <td class="px-2 py-2 text-xs">${student.lastName} ${student.firstName}</td>
                                                                 <td class="px-2 py-2 text-xs">
                                                                     <select id="edit_student_plan" class="w-full border rounded px-1 py-1 text-xs">
-                                                                        <option value="４クラス" ${student.plan === '４クラス' ? 'selected' : ''}>４クラス</option>
-                                                                        <option value="３クラス" ${student.plan === '３クラス' ? 'selected' : ''}>３クラス</option>
-                                                                        <option value="２クラス" ${student.plan === '２クラス' ? 'selected' : ''}>２クラス</option>
-                                                                        <option value="１クラス" ${student.plan === '１クラス' ? 'selected' : ''}>１クラス</option>
-                                                                        <option value="ビジター（会員）" ${student.plan === 'ビジター（会員）' ? 'selected' : ''}>ビジター（会員）</option>
-                                                                        <option value="ビジター（非会員）" ${student.plan === 'ビジター（非会員）' ? 'selected' : ''}>ビジター（非会員）</option>
-                                                                        <option value="ビジター（振替）" ${student.plan === 'ビジター（振替）' ? 'selected' : ''}>ビジター（振替）</option>
-                                                                        <option value="初回体験" ${student.plan === '初回体験' ? 'selected' : ''}>初回体験</option>
-                                                                        <option value="初回無料" ${student.plan === '初回無料' ? 'selected' : ''}>初回無料</option>
+                                                                        <option value="ï¼ã¯ã©ã¹" ${student.plan === 'ï¼ã¯ã©ã¹' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                                                        <option value="ï¼ã¯ã©ã¹" ${student.plan === 'ï¼ã¯ã©ã¹' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                                                        <option value="ï¼ã¯ã©ã¹" ${student.plan === 'ï¼ã¯ã©ã¹' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                                                        <option value="ï¼ã¯ã©ã¹" ${student.plan === 'ï¼ã¯ã©ã¹' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                                                        <option value="ãã¸ã¿ã¼ï¼ä¼å¡ï¼" ${student.plan === 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼' ? 'selected' : ''}>ãã¸ã¿ã¼ï¼ä¼å¡ï¼</option>
+                                                                        <option value="ãã¸ã¿ã¼ï¼éä¼å¡ï¼" ${student.plan === 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼' ? 'selected' : ''}>ãã¸ã¿ã¼ï¼éä¼å¡ï¼</option>
+                                                                        <option value="ãã¸ã¿ã¼ï¼æ¯æ¿ï¼" ${student.plan === 'ãã¸ã¿ã¼ï¼æ¯æ¿ï¼' ? 'selected' : ''}>ãã¸ã¿ã¼ï¼æ¯æ¿ï¼</option>
+                                                                        <option value="ååä½é¨" ${student.plan === 'ååä½é¨' ? 'selected' : ''}>ååä½é¨</option>
+                                                                        <option value="ååç¡æ" ${student.plan === 'ååç¡æ' ? 'selected' : ''}>ååç¡æ</option>
                                                                     </select>
                                                                 </td>
                                                                 ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => `
@@ -1838,12 +1686,12 @@
                                                                             data-class="${studentKey}" 
                                                                             data-week="${week}"
                                                                             class="attendance-btn w-8 h-8 rounded border text-xs ${
-                                                                                attendance[week] === '○' ? 'bg-green-500 border-green-600 text-white' :
-                                                                                attendance[week] === '×' ? 'bg-red-500 border-red-600 text-white' :
-                                                                                attendance[week] === '休講' ? 'bg-gray-500 border-gray-600 text-white' :
+                                                                                attendance[week] === 'â' ? 'bg-green-500 border-green-600 text-white' :
+                                                                                attendance[week] === 'Ã' ? 'bg-red-500 border-red-600 text-white' :
+                                                                                attendance[week] === 'ä¼è¬' ? 'bg-gray-500 border-gray-600 text-white' :
                                                                                 'bg-gray-100 border-gray-300 text-gray-400'
                                                                             } hover:opacity-80 transition font-bold">
-                                                                            ${attendance[week] === '休講' ? '休' : attendance[week] || '-'}
+                                                                            ${attendance[week] === 'ä¼è¬' ? 'ä¼' : attendance[week] || '-'}
                                                                         </button>
                                                                     </td>
                                                                 `).join('')}
@@ -1860,12 +1708,12 @@
                                                                         <button 
                                                                             id="saveEditStudentBtn"
                                                                             class="text-green-600 hover:text-green-800 text-xs">
-                                                                            保存
+                                                                            ä¿å­
                                                                         </button>
                                                                         <button 
                                                                             id="cancelEditStudentBtn"
                                                                             class="text-gray-600 hover:text-gray-800 text-xs">
-                                                                            キャンセル
+                                                                            ã­ã£ã³ã»ã«
                                                                         </button>
                                                                         <button 
                                                                             data-delete-day="${this.selectedDay}"
@@ -1874,7 +1722,7 @@
                                                                             data-delete-lastname="${student.lastName}"
                                                                             data-delete-firstname="${student.firstName}"
                                                                             class="delete-student-btn text-red-600 hover:text-red-800 text-xs">
-                                                                            削除
+                                                                            åé¤
                                                                         </button>
                                                                     </div>
                                                                 </td>
@@ -1892,12 +1740,12 @@
                                                                         data-class="${studentKey}" 
                                                                         data-week="${week}"
                                                                         class="attendance-btn w-8 h-8 rounded border text-xs ${
-                                                                            attendance[week] === '○' ? 'bg-green-500 border-green-600 text-white' :
-                                                                            attendance[week] === '×' ? 'bg-red-500 border-red-600 text-white' :
-                                                                            attendance[week] === '休講' ? 'bg-gray-500 border-gray-600 text-white' :
+                                                                            attendance[week] === 'â' ? 'bg-green-500 border-green-600 text-white' :
+                                                                            attendance[week] === 'Ã' ? 'bg-red-500 border-red-600 text-white' :
+                                                                            attendance[week] === 'ä¼è¬' ? 'bg-gray-500 border-gray-600 text-white' :
                                                                             'bg-gray-100 border-gray-300 text-gray-400'
                                                                         } hover:opacity-80 transition font-bold">
-                                                                        ${attendance[week] === '休講' ? '休' : attendance[week] || '-'}
+                                                                        ${attendance[week] === 'ä¼è¬' ? 'ä¼' : attendance[week] || '-'}
                                                                     </button>
                                                                 </td>
                                                             `).join('')}
@@ -1917,7 +1765,7 @@
                                                                     data-edit-student-lastname="${student.lastName}"
                                                                     data-edit-student-firstname="${student.firstName}"
                                                                     class="edit-student-btn text-blue-600 hover:text-blue-800 text-xs">
-                                                                    編集
+                                                                    ç·¨é
                                                                 </button>
                                                             </td>
                                                         </tr>
@@ -1932,20 +1780,20 @@
                         
                         ${dayClasses.length === 0 ? `
                             <div class="bg-white rounded-lg shadow p-12 text-center">
-                                <p class="text-gray-500 text-lg">この曜日にはクラスがありません</p>
+                                <p class="text-gray-500 text-lg">ãã®ææ¥ã«ã¯ã¯ã©ã¹ãããã¾ãã</p>
                             </div>
                         ` : ''}
 
-                        ${(this.selectedDay === '月曜日' || this.selectedDay === '木曜日') ? this.renderPracticeSession() : ''}
+                        ${(this.selectedDay === 'æææ¥' || this.selectedDay === 'æ¨ææ¥') ? this.renderPracticeSession() : ''}
                     </div>
                 `;
             }
-            // 練習会セクションのレンダリング
+            // ç·´ç¿ä¼ã»ã¯ã·ã§ã³ã®ã¬ã³ããªã³ã°
             renderPracticeSession() {
-                const practiceKey = `練習会_${this.selectedDay}`;
+                const practiceKey = `ç·´ç¿ä¼_${this.selectedDay}`;
                 const practiceData = this.attendanceData[practiceKey] || {};
                 const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-                const weekLabels = ['第1週', '第2週', '第3週', '第4週', '予備'];
+                const weekLabels = ['ç¬¬1é±', 'ç¬¬2é±', 'ç¬¬3é±', 'ç¬¬4é±', 'äºå'];
                 let totalParticipants = 0;
                 weeks.forEach(w => { totalParticipants += (parseInt(practiceData[w]) || 0); });
                 const totalRevenue = totalParticipants * 500;
@@ -1953,24 +1801,24 @@
                 return `
                     <div class="bg-white rounded-lg shadow mb-3">
                         <div class="bg-purple-600 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
-                            <h3 class="text-base font-bold">練習会（¥500/人）</h3>
-                            <span class="text-xs opacity-90">合計: ${totalParticipants}名 / ¥${totalRevenue.toLocaleString()}</span>
+                            <h3 class="text-base font-bold">ç·´ç¿ä¼ï¼Â¥500/äººï¼</h3>
+                            <span class="text-xs opacity-90">åè¨: ${totalParticipants}å / Â¥${totalRevenue.toLocaleString()}</span>
                         </div>
                         <div class="p-3">
                             <table class="w-full text-xs">
                                 <thead>
                                     <tr class="bg-gray-50 border-b">
-                                        <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">項目</th>
+                                        <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">é ç®</th>
                                         ${weekLabels.map(label => `
                                             <th class="px-2 py-2 text-center font-semibold" style="width: 70px;">${label}</th>
                                         `).join('')}
-                                        <th class="px-2 py-2 text-center font-semibold" style="width: 70px;">合計</th>
-                                        <th class="px-2 py-2 text-right font-semibold" style="width: 90px;">売上</th>
+                                        <th class="px-2 py-2 text-center font-semibold" style="width: 70px;">åè¨</th>
+                                        <th class="px-2 py-2 text-right font-semibold" style="width: 90px;">å£²ä¸</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="border-b">
-                                        <td class="px-2 py-2 font-medium">参加人数</td>
+                                        <td class="px-2 py-2 font-medium">åå äººæ°</td>
                                         ${weeks.map(week => `
                                             <td class="px-2 py-2 text-center">
                                                 <input
@@ -1984,9 +1832,9 @@
                                             </td>
                                         `).join('')}
                                         <td class="px-2 py-2 text-center">
-                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-semibold">${totalParticipants}名</span>
+                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-semibold">${totalParticipants}å</span>
                                         </td>
-                                        <td class="px-2 py-2 text-right font-bold text-purple-700">¥${totalRevenue.toLocaleString()}</td>
+                                        <td class="px-2 py-2 text-right font-bold text-purple-700">Â¥${totalRevenue.toLocaleString()}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1997,21 +1845,21 @@
             renderAddStudentForm() {
                 return `
                     <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
-                        <h3 class="text-base font-semibold mb-3 text-gray-800">生徒追加</h3>
+                        <h3 class="text-base font-semibold mb-3 text-gray-800">çå¾è¿½å </h3>
                         
-                        <!-- 顧客検索 -->
+                        <!-- é¡§å®¢æ¤ç´¢ -->
                         <div class="mb-3">
-                            <label class="block text-xs font-medium mb-1">顧客検索（氏名・読み・会員番号）</label>
+                            <label class="block text-xs font-medium mb-1">é¡§å®¢æ¤ç´¢ï¼æ°åã»èª­ã¿ã»ä¼å¡çªå·ï¼</label>
                             <input 
                                 type="text" 
                                 id="student_search_input" 
                                 value="${this.studentSearchTerm}"
                                 class="w-full border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                placeholder="例: 中島、なかしま、ナカシマ、nakashima、0001"
+                                placeholder="ä¾: ä¸­å³¶ããªããã¾ããã«ã·ããnakashimaã0001"
                                 autocomplete="off"
                             />
-                            <div class="text-xs text-gray-500 mt-1">💡 漢字・ひらがな・カタカナ・英語・会員番号で検索できます</div>
-                            <!-- 検索結果表示用コンテナ -->
+                            <div class="text-xs text-gray-500 mt-1">ð¡ æ¼¢å­ã»ã²ãããªã»ã«ã¿ã«ãã»è±èªã»ä¼å¡çªå·ã§æ¤ç´¢ã§ãã¾ã</div>
+                            <!-- æ¤ç´¢çµæè¡¨ç¤ºç¨ã³ã³ãã -->
                             <div id="searchResultsContainer">
                                 ${this.studentSearchResults.length > 0 ? `
                                     <div class="mt-2 border rounded bg-white student-search-results shadow-lg">
@@ -2024,16 +1872,16 @@
                                                     ${customer.memberNumber ? `<span class="text-xs text-gray-500 ml-2">[${customer.memberNumber}]</span>` : ''}
                                                 </div>
                                                 <div class="text-xs text-gray-600 mt-1">
-                                                    ${customer.reading ? `読み: ${customer.reading}` : ''}
+                                                    ${customer.reading ? `èª­ã¿: ${customer.reading}` : ''}
                                                     ${customer.reading && customer.course ? ' | ' : ''}
-                                                    ${customer.course ? `コース: ${customer.course}` : ''}
+                                                    ${customer.course ? `ã³ã¼ã¹: ${customer.course}` : ''}
                                                 </div>
                                             </div>
                                         `).join('')}
                                     </div>
                                 ` : this.studentSearchTerm.trim() && this.studentSearchResults.length === 0 ? `
                                     <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                                        ⚠️ 該当する顧客が見つかりませんでした
+                                        â ï¸ è©²å½ããé¡§å®¢ãè¦ã¤ããã¾ããã§ãã
                                     </div>
                                 ` : ''}
                             </div>
@@ -2042,17 +1890,17 @@
                             <div id="selectedCustomerInfo" class="mb-3 p-3 bg-green-50 border-2 border-green-400 rounded text-sm">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="font-bold text-green-800">✓ 選択中: ${this.selectedCustomerForStudent.lastName} ${this.selectedCustomerForStudent.firstName}</div>
+                                        <div class="font-bold text-green-800">â é¸æä¸­: ${this.selectedCustomerForStudent.lastName} ${this.selectedCustomerForStudent.firstName}</div>
                                         <div class="text-xs text-gray-700 mt-1">
-                                            ${this.selectedCustomerForStudent.memberNumber ? `会員番号: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}
-                                            ${this.selectedCustomerForStudent.reading ? `読み: ${this.selectedCustomerForStudent.reading} | ` : ''}
-                                            コース: ${this.selectedCustomerForStudent.course || 'なし'}
+                                            ${this.selectedCustomerForStudent.memberNumber ? `ä¼å¡çªå·: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}
+                                            ${this.selectedCustomerForStudent.reading ? `èª­ã¿: ${this.selectedCustomerForStudent.reading} | ` : ''}
+                                            ã³ã¼ã¹: ${this.selectedCustomerForStudent.course || 'ãªã'}
                                         </div>
                                     </div>
                                     <button 
                                         id="clearSelectedCustomer"
                                         class="text-red-600 hover:text-red-800 text-xs underline">
-                                        選択解除
+                                        é¸æè§£é¤
                                     </button>
                                 </div>
                             </div>
@@ -2060,41 +1908,41 @@
                         <div class="grid grid-cols-3 gap-3 mb-3">
                             <div id="nameInputContainer" class="${!this.selectedCustomerForStudent ? 'col-span-2 grid grid-cols-2 gap-3' : 'hidden'}">
                                 <div>
-                                    <label class="block text-xs font-medium mb-1">姓 *</label>
+                                    <label class="block text-xs font-medium mb-1">å§ *</label>
                                     <input type="text" id="new_student_lastName" class="w-full border rounded px-2 py-1 text-sm">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium mb-1">名 *</label>
+                                    <label class="block text-xs font-medium mb-1">å *</label>
                                     <input type="text" id="new_student_firstName" class="w-full border rounded px-2 py-1 text-sm">
                                 </div>
                             </div>
                             <div id="planSelectContainer" class="${!this.selectedCustomerForStudent ? '' : 'col-span-3'}">
-                                <label class="block text-xs font-medium mb-1">プラン *</label>
+                                <label class="block text-xs font-medium mb-1">ãã©ã³ *</label>
                                 <select id="new_student_plan" class="w-full border rounded px-2 py-1 text-sm">
-                                    <option value="">選択してください</option>
-                                    <option value="４クラス" ${this.selectedCustomerForStudent?.course === '４' ? 'selected' : ''}>４クラス</option>
-                                    <option value="３クラス" ${this.selectedCustomerForStudent?.course === '３' ? 'selected' : ''}>３クラス</option>
-                                    <option value="２クラス" ${this.selectedCustomerForStudent?.course === '２' ? 'selected' : ''}>２クラス</option>
-                                    <option value="１クラス" ${this.selectedCustomerForStudent?.course === '１' ? 'selected' : ''}>１クラス</option>
-                                    <option value="ビジター（会員）">ビジター（会員）</option>
-                                    <option value="ビジター（非会員）">ビジター（非会員）</option>
-                                    <option value="ビジター（振替）">ビジター（振替）</option>
-                                    <option value="初回体験">初回体験</option>
-                                    <option value="初回無料">初回無料</option>
+                                    <option value="">é¸æãã¦ãã ãã</option>
+                                    <option value="ï¼ã¯ã©ã¹" ${this.selectedCustomerForStudent?.course === 'ï¼' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                    <option value="ï¼ã¯ã©ã¹" ${this.selectedCustomerForStudent?.course === 'ï¼' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                    <option value="ï¼ã¯ã©ã¹" ${this.selectedCustomerForStudent?.course === 'ï¼' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                    <option value="ï¼ã¯ã©ã¹" ${this.selectedCustomerForStudent?.course === 'ï¼' ? 'selected' : ''}>ï¼ã¯ã©ã¹</option>
+                                    <option value="ãã¸ã¿ã¼ï¼ä¼å¡ï¼">ãã¸ã¿ã¼ï¼ä¼å¡ï¼</option>
+                                    <option value="ãã¸ã¿ã¼ï¼éä¼å¡ï¼">ãã¸ã¿ã¼ï¼éä¼å¡ï¼</option>
+                                    <option value="ãã¸ã¿ã¼ï¼æ¯æ¿ï¼">ãã¸ã¿ã¼ï¼æ¯æ¿ï¼</option>
+                                    <option value="ååä½é¨">ååä½é¨</option>
+                                    <option value="ååç¡æ">ååç¡æ</option>
                                 </select>
                             </div>
                         </div>
                         <div class="text-xs text-gray-600 mb-3">
-                            ※ 顧客管理からプランが自動反映されますが、ビジターとして受講する場合は変更してください
+                            â» é¡§å®¢ç®¡çãããã©ã³ãèªååæ ããã¾ããããã¸ã¿ã¼ã¨ãã¦åè¬ããå ´åã¯å¤æ´ãã¦ãã ãã
                         </div>
                         <div class="flex gap-2">
-                            <button id="saveNewStudentBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">追加</button>
-                            <button id="cancelAddStudentBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition text-sm">キャンセル</button>
+                            <button id="saveNewStudentBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">è¿½å </button>
+                            <button id="cancelAddStudentBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition text-sm">ã­ã£ã³ã»ã«</button>
                         </div>
                     </div>
                 `;
             }
-            // イベント専用のレンダリング
+            // ã¤ãã³ãå°ç¨ã®ã¬ã³ããªã³ã°
             renderEventRecord() {
                 const [year, month] = this.selectedMonth.split('-');
                 const total = this.calculateEventTotal();
@@ -2103,7 +1951,7 @@
                         <div class="flex items-center justify-center h-96">
                             <div class="text-center">
                                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                                <p class="text-gray-600">読み込み中...</p>
+                                <p class="text-gray-600">èª­ã¿è¾¼ã¿ä¸­...</p>
                             </div>
                         </div>
                     `;
@@ -2111,21 +1959,21 @@
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">イベント出席記録</h2>
+                            <h2 class="text-2xl font-bold text-gray-800">ã¤ãã³ãåºå¸­è¨é²</h2>
                             <div class="flex gap-2 items-center">
-                                <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>◀ 前月</button>
+                                <button id="prevMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>â åæ</button>
                                 <input 
                                     type="month" 
                                     id="monthSelector" 
                                     value="${this.selectedMonth}" 
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
-                                <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>次月 ▶</button>
+                                <button id="nextMonthRecord" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded transition text-sm" ${this.isLoading ? 'disabled' : ''}>æ¬¡æ â¶</button>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow mb-4">
                             <div class="flex border-b overflow-x-auto">
-                                ${['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', 'イベント'].map(day => `
+                                ${['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥', 'ã¤ãã³ã'].map(day => `
                                     <button id="day-${day}" class="px-4 py-2 text-sm font-medium whitespace-nowrap ${this.selectedDay === day ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'}">
                                         ${day}
                                     </button>
@@ -2134,30 +1982,30 @@
                         </div>
                         <div class="bg-white rounded-lg shadow p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-lg font-bold text-gray-800">イベント参加者一覧</h3>
+                                <h3 class="text-lg font-bold text-gray-800">ã¤ãã³ãåå èä¸è¦§</h3>
                                 <button id="addEventParticipantBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                                    + 参加者を追加
+                                    + åå èãè¿½å 
                                 </button>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="bg-gray-100 border-b">
-                                            <th class="px-3 py-3 text-left font-semibold" style="width: 100px;">氏名（姓）</th>
-                                            <th class="px-3 py-3 text-left font-semibold" style="width: 100px;">氏名（名）</th>
-                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">①</th>
-                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">②</th>
-                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">③</th>
-                                            <th class="px-3 py-3 text-left font-semibold" style="width: 120px;">料金（円）</th>
-                                            <th class="px-3 py-3 text-left font-semibold" style="width: 200px;">備考</th>
-                                            <th class="px-3 py-3 text-center font-semibold" style="width: 80px;">操作</th>
+                                            <th class="px-3 py-3 text-left font-semibold" style="width: 100px;">æ°åï¼å§ï¼</th>
+                                            <th class="px-3 py-3 text-left font-semibold" style="width: 100px;">æ°åï¼åï¼</th>
+                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">â </th>
+                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">â¡</th>
+                                            <th class="px-3 py-3 text-center font-semibold" style="width: 60px;">â¢</th>
+                                            <th class="px-3 py-3 text-left font-semibold" style="width: 120px;">æéï¼åï¼</th>
+                                            <th class="px-3 py-3 text-left font-semibold" style="width: 200px;">åè</th>
+                                            <th class="px-3 py-3 text-center font-semibold" style="width: 80px;">æä½</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         ${this.eventAttendanceData.length === 0 ? `
                                             <tr>
                                                 <td colspan="8" class="px-3 py-8 text-center text-gray-500">
-                                                    参加者がいません。「+ 参加者を追加」ボタンから追加してください。
+                                                    åå èããã¾ãããã+ åå èãè¿½å ããã¿ã³ããè¿½å ãã¦ãã ããã
                                                 </td>
                                             </tr>
                                         ` : this.eventAttendanceData.map((participant, index) => `
@@ -2169,7 +2017,7 @@
                                                         data-event-index="${index}"
                                                         value="${participant.lastName || ''}"
                                                         class="w-full border rounded px-2 py-1 text-sm"
-                                                        placeholder="姓"
+                                                        placeholder="å§"
                                                     />
                                                 </td>
                                                 <td class="px-3 py-3">
@@ -2179,7 +2027,7 @@
                                                         data-event-index="${index}"
                                                         value="${participant.firstName || ''}"
                                                         class="w-full border rounded px-2 py-1 text-sm"
-                                                        placeholder="名"
+                                                        placeholder="å"
                                                     />
                                                 </td>
                                                 <td class="px-3 py-3 text-center">
@@ -2187,10 +2035,10 @@
                                                         data-event-week="week1" 
                                                         data-event-index="${index}"
                                                         class="event-attendance-btn w-10 h-10 rounded border text-sm ${
-                                                            participant.week1 === '○' ? 'bg-green-500 border-green-600 text-white' :
+                                                            participant.week1 === 'â' ? 'bg-green-500 border-green-600 text-white' :
                                                             'bg-red-500 border-red-600 text-white'
                                                         } hover:opacity-80 transition font-bold">
-                                                        ${participant.week1 === '○' ? '○' : '×'}
+                                                        ${participant.week1 === 'â' ? 'â' : 'Ã'}
                                                     </button>
                                                 </td>
                                                 <td class="px-3 py-3 text-center">
@@ -2198,10 +2046,10 @@
                                                         data-event-week="week2" 
                                                         data-event-index="${index}"
                                                         class="event-attendance-btn w-10 h-10 rounded border text-sm ${
-                                                            participant.week2 === '○' ? 'bg-green-500 border-green-600 text-white' :
+                                                            participant.week2 === 'â' ? 'bg-green-500 border-green-600 text-white' :
                                                             'bg-red-500 border-red-600 text-white'
                                                         } hover:opacity-80 transition font-bold">
-                                                        ${participant.week2 === '○' ? '○' : '×'}
+                                                        ${participant.week2 === 'â' ? 'â' : 'Ã'}
                                                     </button>
                                                 </td>
                                                 <td class="px-3 py-3 text-center">
@@ -2209,10 +2057,10 @@
                                                         data-event-week="week3" 
                                                         data-event-index="${index}"
                                                         class="event-attendance-btn w-10 h-10 rounded border text-sm ${
-                                                            participant.week3 === '○' ? 'bg-green-500 border-green-600 text-white' :
+                                                            participant.week3 === 'â' ? 'bg-green-500 border-green-600 text-white' :
                                                             'bg-red-500 border-red-600 text-white'
                                                         } hover:opacity-80 transition font-bold">
-                                                        ${participant.week3 === '○' ? '○' : '×'}
+                                                        ${participant.week3 === 'â' ? 'â' : 'Ã'}
                                                     </button>
                                                 </td>
                                                 <td class="px-3 py-3">
@@ -2233,14 +2081,14 @@
                                                         data-event-index="${index}"
                                                         value="${participant.memo || ''}"
                                                         class="w-full border rounded px-2 py-1 text-sm"
-                                                        placeholder="備考"
+                                                        placeholder="åè"
                                                     />
                                                 </td>
                                                 <td class="px-3 py-3 text-center">
                                                     <button 
                                                         data-delete-event-index="${index}"
                                                         class="delete-event-participant-btn text-red-600 hover:text-red-800 text-xs">
-                                                        削除
+                                                        åé¤
                                                     </button>
                                                 </td>
                                             </tr>
@@ -2248,20 +2096,20 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="bg-blue-50 border-t-2 border-blue-300">
-                                            <td colspan="5" class="px-3 py-4 text-right font-bold text-gray-800">合計金額:</td>
-                                            <td class="px-3 py-4 font-bold text-blue-600 text-lg">¥${total.toLocaleString()}</td>
+                                            <td colspan="5" class="px-3 py-4 text-right font-bold text-gray-800">åè¨éé¡:</td>
+                                            <td class="px-3 py-4 font-bold text-blue-600 text-lg">Â¥${total.toLocaleString()}</td>
                                             <td colspan="2"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
                             <div class="mt-6 p-4 bg-gray-50 rounded border">
-                                <h4 class="font-semibold mb-2 text-sm">使い方</h4>
+                                <h4 class="font-semibold mb-2 text-sm">ä½¿ãæ¹</h4>
                                 <ul class="text-xs text-gray-600 space-y-1">
-                                    <li>• 氏名・料金・備考は直接入力できます</li>
-                                    <li>• ①②③のボタンをクリックすると <span class="text-green-600 font-bold">○</span> → <span class="text-red-600 font-bold">×</span> → <span class="text-gray-600 font-bold">休</span> → <span class="text-gray-400 font-bold">-</span> と切り替わります</li>
-                                    <li>• 入力内容は自動保存されます</li>
-                                    <li>• 料金の合計金額が自動で表示されます</li>
+                                    <li>â¢ æ°åã»æéã»åèã¯ç´æ¥å¥åã§ãã¾ã</li>
+                                    <li>â¢ â â¡â¢ã®ãã¿ã³ãã¯ãªãã¯ããã¨ <span class="text-green-600 font-bold">â</span> â <span class="text-red-600 font-bold">Ã</span> â <span class="text-gray-600 font-bold">ä¼</span> â <span class="text-gray-400 font-bold">-</span> ã¨åãæ¿ããã¾ã</li>
+                                    <li>â¢ å¥ååå®¹ã¯èªåä¿å­ããã¾ã</li>
+                                    <li>â¢ æéã®åè¨éé¡ãèªåã§è¡¨ç¤ºããã¾ã</li>
                                 </ul>
                             </div>
                         </div>
@@ -2277,14 +2125,14 @@
                     this.attendanceTab = 'record';
                     this.render();
                 });
-                // 月選択inputのイベント（出席記録）
+                // æé¸æinputã®ã¤ãã³ãï¼åºå¸­è¨é²ï¼
                 const monthSelector = document.getElementById('monthSelector');
                 if (monthSelector) {
                     monthSelector.addEventListener('change', (e) => {
                         this.selectMonth(e.target.value);
                     });
                 }
-                // 月選択inputのイベント（ダッシュボード）
+                // æé¸æinputã®ã¤ãã³ãï¼ããã·ã¥ãã¼ãï¼
                 const monthSelectorOverview = document.getElementById('monthSelectorOverview');
                 if (monthSelectorOverview) {
                     monthSelectorOverview.addEventListener('change', (e) => {
@@ -2323,7 +2171,7 @@
                         this.changeMonth(1);
                     });
                 }
-                ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', 'イベント'].forEach(day => {
+                ['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥', 'ã¤ãã³ã'].forEach(day => {
                     document.getElementById(`day-${day}`)?.addEventListener('click', () => {
                         this.selectedDay = day;
                         this.render();
@@ -2344,7 +2192,7 @@
                         this.addStudentToClass(day, location, className);
                     });
                 });
-                // 生徒編集ボタン
+                // çå¾ç·¨éãã¿ã³
                 document.querySelectorAll('.edit-student-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const day = btn.getAttribute('data-edit-student-day');
@@ -2355,7 +2203,7 @@
                         this.startEditStudent(day, location, className, lastName, firstName);
                     });
                 });
-                // 生徒削除ボタン
+                // çå¾åé¤ãã¿ã³
                 document.querySelectorAll('.delete-student-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const day = btn.getAttribute('data-delete-day');
@@ -2366,16 +2214,16 @@
                         this.deleteStudent(day, location, className, lastName, firstName);
                     });
                 });
-                // 生徒編集保存・キャンセル
+                // çå¾ç·¨éä¿å­ã»ã­ã£ã³ã»ã«
                 document.getElementById('saveEditStudentBtn')?.addEventListener('click', () => this.saveEditStudent());
                 document.getElementById('cancelEditStudentBtn')?.addEventListener('click', () => {
                     this.editingStudent = null;
                     this.render();
                 });
-                // 生徒検索（リアルタイム）- フォーカス維持のため検索結果のみ更新
+                // çå¾æ¤ç´¢ï¼ãªã¢ã«ã¿ã¤ã ï¼- ãã©ã¼ã«ã¹ç¶­æã®ããæ¤ç´¢çµæã®ã¿æ´æ°
                 const searchInput = document.getElementById('student_search_input');
                 if (searchInput) {
-                    // inputイベントで検索結果のみ更新（全体を再レンダリングしない）
+                    // inputã¤ãã³ãã§æ¤ç´¢çµæã®ã¿æ´æ°ï¼å¨ä½ãåã¬ã³ããªã³ã°ããªãï¼
                     searchInput.addEventListener('input', (e) => {
                         this.studentSearchTerm = e.target.value;
                         if (this.studentSearchTerm.trim()) {
@@ -2384,11 +2232,11 @@
                             this.studentSearchResults = [];
                             this.selectedCustomerForStudent = null;
                         }
-                        // 検索結果のみを更新（フォーカスを維持）
+                        // æ¤ç´¢çµæã®ã¿ãæ´æ°ï¼ãã©ã¼ã«ã¹ãç¶­æï¼
                         this.updateSearchResults();
                     });
                     
-                    // フォーカス時にも検索結果を表示
+                    // ãã©ã¼ã«ã¹æã«ãæ¤ç´¢çµæãè¡¨ç¤º
                     searchInput.addEventListener('focus', (e) => {
                         if (this.studentSearchTerm.trim()) {
                             this.studentSearchResults = this.searchCustomerByName(this.studentSearchTerm);
@@ -2396,7 +2244,7 @@
                         }
                     });
                 }
-                // 顧客選択（初期レンダリング時）
+                // é¡§å®¢é¸æï¼åæã¬ã³ããªã³ã°æï¼
                 document.querySelectorAll('.select-customer-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const customerId = btn.getAttribute('data-select-customer-id');
@@ -2406,45 +2254,45 @@
                         }
                     });
                 });
-                // 顧客選択解除（初期レンダリング時）
+                // é¡§å®¢é¸æè§£é¤ï¼åæã¬ã³ããªã³ã°æï¼
                 document.getElementById('clearSelectedCustomer')?.addEventListener('click', () => {
                     this.selectedCustomerForStudent = null;
                     this.studentSearchTerm = '';
                     this.studentSearchResults = [];
                     this.updateSelectedCustomerInfo();
-                    // 検索入力欄をクリア
+                    // æ¤ç´¢å¥åæ¬ãã¯ãªã¢
                     const searchInput = document.getElementById('student_search_input');
                     if (searchInput) searchInput.value = '';
-                    // 検索結果をクリア
+                    // æ¤ç´¢çµæãã¯ãªã¢
                     this.updateSearchResults();
-                    // プランをリセット
+                    // ãã©ã³ããªã»ãã
                     const planSelect = document.getElementById('new_student_plan');
                     if (planSelect) planSelect.value = '';
                 });
-                // イベント専用のイベントリスナー
+                // ã¤ãã³ãå°ç¨ã®ã¤ãã³ããªã¹ãã¼
                 document.getElementById('addEventParticipantBtn')?.addEventListener('click', () => {
                     this.addEventParticipant();
                 });
-                // イベント出席ボタン
+                // ã¤ãã³ãåºå¸­ãã¿ã³
                 document.querySelectorAll('.event-attendance-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const index = parseInt(btn.getAttribute('data-event-index'));
                         const week = btn.getAttribute('data-event-week');
                         const current = this.eventAttendanceData[index][week] || '';
-                        const next = current === '○' ? '×' : '○';
+                        const next = current === 'â' ? 'Ã' : 'â';
                         this.eventAttendanceData[index][week] = next;
                         this.saveEventAttendance();
                         this.render();
                     });
                 });
-                // イベントフィールド入力
+                // ã¤ãã³ããã£ã¼ã«ãå¥å
                 document.querySelectorAll('[data-event-field]').forEach(input => {
                     input.addEventListener('change', (e) => {
                         const index = parseInt(e.target.getAttribute('data-event-index'));
                         const field = e.target.getAttribute('data-event-field');
                         let value = e.target.value;
                         
-                        // 料金は数値に変換
+                        // æéã¯æ°å¤ã«å¤æ
                         if (field === 'fee') {
                             value = parseFloat(value) || 0;
                         }
@@ -2452,7 +2300,7 @@
                         this.eventAttendanceData[index][field] = value;
                         this.saveEventAttendance();
                     });
-                    // リアルタイム更新（料金のみ）
+                    // ãªã¢ã«ã¿ã¤ã æ´æ°ï¼æéã®ã¿ï¼
                     if (input.getAttribute('data-event-field') === 'fee') {
                         input.addEventListener('input', (e) => {
                             const index = parseInt(e.target.getAttribute('data-event-index'));
@@ -2462,7 +2310,7 @@
                         });
                     }
                 });
-                // イベント参加者削除
+                // ã¤ãã³ãåå èåé¤
                 document.querySelectorAll('.delete-event-participant-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
                         const index = parseInt(btn.getAttribute('data-delete-event-index'));
@@ -2478,13 +2326,13 @@
                     this.studentSearchResults = [];
                     this.render();
                 });
-                // 練習会の参加人数入力
+                // ç·´ç¿ä¼ã®åå äººæ°å¥å
                 document.querySelectorAll('.practice-input').forEach(input => {
                     input.addEventListener('change', async (e) => {
                         const day = e.target.getAttribute('data-practice-day');
                         const week = e.target.getAttribute('data-practice-week');
                         const value = parseInt(e.target.value) || 0;
-                        const practiceKey = `練習会_${day}`;
+                        const practiceKey = `ç·´ç¿ä¼_${day}`;
                         if (!this.attendanceData[practiceKey]) {
                             this.attendanceData[practiceKey] = {};
                         }
@@ -2493,15 +2341,15 @@
                         this.render();
                     });
                 });
-                // バックアップボタン
+                // ããã¯ã¢ãããã¿ã³
                 document.getElementById('backupBtn')?.addEventListener('click', async () => {
                     await this.createBackup();
                 });
             }
-            // バックアップ機能
+            // ããã¯ã¢ããæ©è½
             async createBackup() {
                 const statusEl = document.getElementById('backupStatus');
-                if (statusEl) statusEl.textContent = 'バックアップ作成中...';
+                if (statusEl) statusEl.textContent = 'ããã¯ã¢ããä½æä¸­...';
                 try {
                     const backup = { timestamp: new Date().toISOString(), collections: {} };
                     // schedule
@@ -2533,7 +2381,7 @@
                             }
                         } catch(e) {}
                     }
-                    // ダウンロード
+                    // ãã¦ã³ã­ã¼ã
                     const json = JSON.stringify(backup, null, 2);
                     const blob = new Blob([json], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
@@ -2542,10 +2390,10 @@
                     a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
                     a.click();
                     URL.revokeObjectURL(url);
-                    if (statusEl) statusEl.textContent = `✅ バックアップ完了 (${new Date().toLocaleString('ja-JP')})`;
+                    if (statusEl) statusEl.textContent = `â ããã¯ã¢ããå®äº (${new Date().toLocaleString('ja-JP')})`;
                 } catch (error) {
-                    console.error('バックアップエラー:', error);
-                    if (statusEl) statusEl.textContent = `❌ バックアップ失敗: ${error.message}`;
+                    console.error('ããã¯ã¢ããã¨ã©ã¼:', error);
+                    if (statusEl) statusEl.textContent = `â ããã¯ã¢ããå¤±æ: ${error.message}`;
                 }
             }
         }
