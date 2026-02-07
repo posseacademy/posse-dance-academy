@@ -142,7 +142,8 @@
                     'ビジター（非会員）': 2300,
                     'ビジター1.5h（会員）': 2200,
                     'ビジター1.5h（非会員）': 2500,
-                    '月謝クラス振替': 1000
+                    '月謝クラス振替': 1000,
+                    '練習会': 500
                 };
                 this.planOrder = {
                     '4クラス': 1,
@@ -1213,6 +1214,65 @@
                 
                 return revenue;
             }
+            // 練習会の売上計算
+            calculatePracticeRevenue() {
+                let totalParticipants = 0;
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                const details = {};
+                ['月曜日', '木曜日'].forEach(day => {
+                    const key = `練習会_${day}`;
+                    const data = this.attendanceData[key];
+                    let dayTotal = 0;
+                    if (data) {
+                        weeks.forEach(week => {
+                            const count = parseInt(data[week]) || 0;
+                            dayTotal += count;
+                        });
+                    }
+                    details[day] = dayTotal;
+                    totalParticipants += dayTotal;
+                });
+                return { participants: totalParticipants, revenue: totalParticipants * 500, details };
+            }
+            // 詳細売上計算（全カテゴリ別）
+            calculateDetailedRevenue() {
+                const categories = {
+                    '練習会': { count: 0, revenue: 0 },
+                    'ビジター（会員）': { count: 0, revenue: 0 },
+                    'ビジター（非会員）': { count: 0, revenue: 0 },
+                    'ビジター1.5h（会員）': { count: 0, revenue: 0 },
+                    'ビジター1.5h（非会員）': { count: 0, revenue: 0 },
+                    '月謝クラス振替': { count: 0, revenue: 0 },
+                    '初回体験': { count: 0, revenue: 0 },
+                    '初回無料': { count: 0, revenue: 0 }
+                };
+                // 練習会
+                const practice = this.calculatePracticeRevenue();
+                categories['練習会'] = { count: practice.participants, revenue: practice.revenue };
+                // ビジター・体験系
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                Object.keys(this.attendanceData).forEach(key => {
+                    if (key.startsWith('練習会_')) return; // 練習会は別処理済み
+                    const attendance = this.attendanceData[key];
+                    weeks.forEach(week => {
+                        if (attendance[week] === '○') {
+                            const parts = key.split('_');
+                            const day = parts[0];
+                            const location = parts[1];
+                            const className = parts[2];
+                            const studentName = parts.slice(3).join('_');
+                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
+                            const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
+                            if (student && categories[student.plan] !== undefined) {
+                                const price = this.pricing[student.plan] || 0;
+                                categories[student.plan].count++;
+                                categories[student.plan].revenue += price;
+                            }
+                        }
+                    });
+                });
+                return categories;
+            }
             // 出席簿関連のメソッド
             async loadAttendance() {
                 try {
@@ -1441,7 +1501,7 @@
             }
             renderAttendanceOverview() {
                 const [year, month] = this.selectedMonth.split('-');
-                
+
                 // 全曜日のクラス数と生徒数を集計
                 let totalClasses = 0;
                 let totalStudents = 0;
@@ -1456,54 +1516,33 @@
                     const studentCount = classes.reduce((sum, cls) => sum + cls.students.length, 0);
                     return { day, classCount: classes.length, studentCount };
                 });
+
+                // 詳細売上計算
+                const detailed = this.calculateDetailedRevenue();
                 const visitorRevenue = this.calculateVisitorRevenue();
-                
-                // ビジター別売上計算
-                const visitorBreakdown = {};
-                Object.keys(this.attendanceData).forEach(key => {
-                    const attendance = this.attendanceData[key];
-                    const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-                    
-                    weeks.forEach(week => {
-                        if (attendance[week] === '○') {
-                            const parts = key.split('_');
-                            const day = parts[0];
-                            const location = parts[1];
-                            const className = parts[2];
-                            const studentName = parts.slice(3).join('_');
-                            
-                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
-                            const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
-                            
-                            // ビジター、体験、無料プランを対象とする
-                            if (student && (student.plan.includes('ビジター') || student.plan.includes('体験') || student.plan.includes('無料'))) {
-                                const price = this.pricing[student.plan] || 0;
-                                if (!visitorBreakdown[student.plan]) {
-                                    visitorBreakdown[student.plan] = { count: 0, revenue: 0 };
-                                }
-                                visitorBreakdown[student.plan].count++;
-                                visitorBreakdown[student.plan].revenue += price;
-                            }
-                        }
-                    });
-                });
+                const practiceRevenue = detailed['練習会'].revenue;
+                const totalExtraRevenue = Object.values(detailed).reduce((sum, d) => sum + d.revenue, 0);
+
+                // 表示順序を定義
+                const displayOrder = ['練習会', 'ビジター（会員）', 'ビジター（非会員）', 'ビジター1.5h（会員）', 'ビジター1.5h（非会員）', '月謝クラス振替', '初回体験', '初回無料'];
+
                 return `
                     <div>
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-3xl font-bold text-gray-800">出席状況</h2>
                             <div class="flex gap-2 items-center">
                                 <button id="prevMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">◀ 前月</button>
-                                <input 
-                                    type="month" 
-                                    id="monthSelectorOverview" 
-                                    value="${this.selectedMonth}" 
+                                <input
+                                    type="month"
+                                    id="monthSelectorOverview"
+                                    value="${this.selectedMonth}"
                                     class="px-3 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <button id="nextMonth" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded transition">次月 ▶</button>
                             </div>
                         </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                             <div class="bg-white rounded-lg shadow p-6">
                                 <div class="text-gray-600 text-sm mb-2">総クラス数</div>
                                 <div class="text-4xl font-bold text-blue-600">${totalClasses}</div>
@@ -1515,9 +1554,54 @@
                                 <div class="text-xs text-gray-500 mt-2">名</div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-                                <div class="text-gray-600 text-sm mb-2">ビジター売上（今月）</div>
+                                <div class="text-gray-600 text-sm mb-2">ビジター売上</div>
                                 <div class="text-4xl font-bold text-yellow-600">¥${visitorRevenue.toLocaleString()}</div>
                                 <div class="text-xs text-gray-500 mt-2">円</div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+                                <div class="text-gray-600 text-sm mb-2">練習会売上</div>
+                                <div class="text-4xl font-bold text-purple-600">¥${practiceRevenue.toLocaleString()}</div>
+                                <div class="text-xs text-gray-500 mt-2">${detailed['練習会'].count}名参加</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 mb-8">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">売上内訳（受講人数・売上）</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100 border-b">
+                                            <th class="px-4 py-3 text-left font-semibold">カテゴリ</th>
+                                            <th class="px-4 py-3 text-center font-semibold">単価</th>
+                                            <th class="px-4 py-3 text-center font-semibold">受講人数</th>
+                                            <th class="px-4 py-3 text-right font-semibold">売上</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${displayOrder.map(plan => {
+                                            const data = detailed[plan] || { count: 0, revenue: 0 };
+                                            const price = this.pricing[plan] || 0;
+                                            const bgColor = plan === '練習会' ? 'bg-purple-50' : data.count > 0 ? 'bg-yellow-50' : '';
+                                            return `
+                                                <tr class="border-b ${bgColor}">
+                                                    <td class="px-4 py-3 font-medium">${plan}</td>
+                                                    <td class="px-4 py-3 text-center text-gray-600">¥${price.toLocaleString()}</td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        ${data.count > 0 ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${data.count}${plan === '練習会' ? '名' : '回'}</span>` : '<span class="text-gray-400">-</span>'}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right font-semibold ${data.revenue > 0 ? 'text-green-700' : 'text-gray-400'}">
+                                                        ${data.revenue > 0 ? '¥' + data.revenue.toLocaleString() : '-'}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="bg-blue-50 border-t-2 border-blue-300">
+                                            <td class="px-4 py-3 font-bold" colspan="3">合計</td>
+                                            <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">¥${totalExtraRevenue.toLocaleString()}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -1536,17 +1620,13 @@
                                 </div>
                             </div>
                             <div class="bg-white rounded-lg shadow p-6">
-                                <h3 class="text-xl font-bold mb-4 text-gray-800">ビジター売上内訳</h3>
+                                <h3 class="text-xl font-bold mb-4 text-gray-800">バックアップ</h3>
                                 <div class="space-y-3">
-                                    ${Object.keys(visitorBreakdown).length > 0 ? Object.entries(visitorBreakdown).map(([plan, data]) => `
-                                        <div class="flex justify-between items-center p-3 border rounded">
-                                            <span class="font-medium">${plan}</span>
-                                            <div class="flex gap-4">
-                                                <span class="text-gray-600">${data.count}回</span>
-                                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">¥${data.revenue.toLocaleString()}</span>
-                                            </div>
-                                        </div>
-                                    `).join('') : '<p class="text-gray-500 text-center">データがありません</p>'}
+                                    <p class="text-sm text-gray-600">データの安全のため、定期的にバックアップを取得してください。</p>
+                                    <button id="backupBtn" class="w-full bg-green-600 text-white px-4 py-3 rounded hover:bg-green-700 transition font-medium">
+                                        📦 バックアップを取得
+                                    </button>
+                                    <div id="backupStatus" class="text-xs text-gray-500 text-center"></div>
                                 </div>
                             </div>
                         </div>
@@ -1555,8 +1635,7 @@
                             <div class="space-y-2 text-gray-600">
                                 <p>• 「📝 出席記録」タブから各曜日のクラスの出席を記録できます</p>
                                 <p>• ボタンをクリックで <span class="text-green-600 font-bold">○</span> → <span class="text-red-600 font-bold">×</span> → <span class="text-gray-600 font-bold">休</span> → <span class="text-gray-400 font-bold">-</span> と切り替わります</p>
-                                <p>• 「予備」列は振替クラス用で、出席率には含まれません</p>
-                                <p>• 「休講」は出席率の計算から除外されます</p>
+                                <p>• 月曜日・木曜日には「練習会」欄があり、参加人数を入力できます（¥500/人）</p>
                                 <p>• 各クラスに「生徒追加」ボタンから新規生徒を追加できます</p>
                             </div>
                         </div>
@@ -1769,6 +1848,62 @@
                                 <p class="text-gray-500 text-lg">この曜日にはクラスがありません</p>
                             </div>
                         ` : ''}
+
+                        ${(this.selectedDay === '月曜日' || this.selectedDay === '木曜日') ? this.renderPracticeSession() : ''}
+                    </div>
+                `;
+            }
+            // 練習会セクションのレンダリング
+            renderPracticeSession() {
+                const practiceKey = `練習会_${this.selectedDay}`;
+                const practiceData = this.attendanceData[practiceKey] || {};
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                const weekLabels = ['第1週', '第2週', '第3週', '第4週', '予備'];
+                let totalParticipants = 0;
+                weeks.forEach(w => { totalParticipants += (parseInt(practiceData[w]) || 0); });
+                const totalRevenue = totalParticipants * 500;
+
+                return `
+                    <div class="bg-white rounded-lg shadow mb-3">
+                        <div class="bg-purple-600 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
+                            <h3 class="text-base font-bold">練習会（¥500/人）</h3>
+                            <span class="text-xs opacity-90">合計: ${totalParticipants}名 / ¥${totalRevenue.toLocaleString()}</span>
+                        </div>
+                        <div class="p-3">
+                            <table class="w-full text-xs">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b">
+                                        <th class="px-2 py-2 text-left font-semibold" style="width: 100px;">項目</th>
+                                        ${weekLabels.map(label => `
+                                            <th class="px-2 py-2 text-center font-semibold" style="width: 70px;">${label}</th>
+                                        `).join('')}
+                                        <th class="px-2 py-2 text-center font-semibold" style="width: 70px;">合計</th>
+                                        <th class="px-2 py-2 text-right font-semibold" style="width: 90px;">売上</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b">
+                                        <td class="px-2 py-2 font-medium">参加人数</td>
+                                        ${weeks.map(week => `
+                                            <td class="px-2 py-2 text-center">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value="${parseInt(practiceData[week]) || 0}"
+                                                    data-practice-day="${this.selectedDay}"
+                                                    data-practice-week="${week}"
+                                                    class="practice-input w-14 border rounded px-1 py-1 text-xs text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                />
+                                            </td>
+                                        `).join('')}
+                                        <td class="px-2 py-2 text-center">
+                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-semibold">${totalParticipants}名</span>
+                                        </td>
+                                        <td class="px-2 py-2 text-right font-bold text-purple-700">¥${totalRevenue.toLocaleString()}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 `;
             }
@@ -2256,6 +2391,75 @@
                     this.studentSearchResults = [];
                     this.render();
                 });
+                // 練習会の参加人数入力
+                document.querySelectorAll('.practice-input').forEach(input => {
+                    input.addEventListener('change', async (e) => {
+                        const day = e.target.getAttribute('data-practice-day');
+                        const week = e.target.getAttribute('data-practice-week');
+                        const value = parseInt(e.target.value) || 0;
+                        const practiceKey = `練習会_${day}`;
+                        if (!this.attendanceData[practiceKey]) {
+                            this.attendanceData[practiceKey] = {};
+                        }
+                        this.attendanceData[practiceKey][week] = value;
+                        await this.saveAttendance(practiceKey, this.attendanceData[practiceKey]);
+                        this.render();
+                    });
+                });
+                // バックアップボタン
+                document.getElementById('backupBtn')?.addEventListener('click', async () => {
+                    await this.createBackup();
+                });
+            }
+            // バックアップ機能
+            async createBackup() {
+                const statusEl = document.getElementById('backupStatus');
+                if (statusEl) statusEl.textContent = 'バックアップ作成中...';
+                try {
+                    const backup = { timestamp: new Date().toISOString(), collections: {} };
+                    // schedule
+                    const scheduleSnap = await getDocs(collection(db, 'schedule'));
+                    backup.collections.schedule = {};
+                    scheduleSnap.docs.forEach(d => { backup.collections.schedule[d.id] = d.data(); });
+                    // customers
+                    const custSnap = await getDocs(collection(db, 'customers'));
+                    backup.collections.customers = {};
+                    custSnap.docs.forEach(d => { backup.collections.customers[d.id] = d.data(); });
+                    // attendance months
+                    const months = ['202509','202511','202512','202601','202602','202603'];
+                    for (const m of months) {
+                        try {
+                            const snap = await getDocs(collection(db, `attendance_${m}`));
+                            if (!snap.empty) {
+                                backup.collections[`attendance_${m}`] = {};
+                                snap.docs.forEach(d => { backup.collections[`attendance_${m}`][d.id] = d.data(); });
+                            }
+                        } catch(e) {}
+                    }
+                    // event_attendance months
+                    for (const m of months) {
+                        try {
+                            const snap = await getDocs(collection(db, `event_attendance_${m}`));
+                            if (!snap.empty) {
+                                backup.collections[`event_attendance_${m}`] = {};
+                                snap.docs.forEach(d => { backup.collections[`event_attendance_${m}`][d.id] = d.data(); });
+                            }
+                        } catch(e) {}
+                    }
+                    // ダウンロード
+                    const json = JSON.stringify(backup, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    if (statusEl) statusEl.textContent = `✅ バックアップ完了 (${new Date().toLocaleString('ja-JP')})`;
+                } catch (error) {
+                    console.error('バックアップエラー:', error);
+                    if (statusEl) statusEl.textContent = `❌ バックアップ失敗: ${error.message}`;
+                }
             }
         }
         window.app = new DanceStudioApp();
