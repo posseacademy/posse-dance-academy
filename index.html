@@ -885,6 +885,11 @@
                     return orderA - orderB;
                 });
             }
+            // 月謝プラン（毎月引き継ぐ）かどうかを判定
+            isRegularPlan(plan) {
+                const regularPlans = ['1クラス', '１クラス', '2クラス', '２クラス', '3クラス', '３クラス', '4クラス', '４クラス', '1.5hクラス'];
+                return regularPlans.includes(plan);
+            }
             // 選択された顧客情報の表示のみを更新
             updateSelectedCustomerInfo() {
                 const selectedInfoContainer = document.getElementById('selectedCustomerInfo');
@@ -1107,13 +1112,29 @@
                 }
                 const { day, location, className } = this.selectedClassForAdd;
                 const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
-                
+
                 if (classIndex !== -1) {
-                    this.scheduleData[day][classIndex].students.push({ lastName, firstName, plan });
-                    this.scheduleData[day][classIndex].students = this.sortStudentsByPlan(this.scheduleData[day][classIndex].students);
-                    
-                    // Firestoreに保存
-                    await this.saveScheduleData();
+                    // 既にスケジュールに存在するかチェック
+                    const exists = this.scheduleData[day][classIndex].students.some(
+                        s => s.lastName === lastName && s.firstName === firstName
+                    );
+
+                    if (!exists) {
+                        // 新規追加
+                        this.scheduleData[day][classIndex].students.push({ lastName, firstName, plan });
+                        this.scheduleData[day][classIndex].students = this.sortStudentsByPlan(this.scheduleData[day][classIndex].students);
+                        await this.saveScheduleData();
+                    }
+
+                    // ビジター等の非月謝プランの場合、当月の出席データにプレースホルダーを作成して表示されるようにする
+                    if (!this.isRegularPlan(plan)) {
+                        const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
+                        if (!this.attendanceData[studentKey]) {
+                            this.attendanceData[studentKey] = {};
+                            // Firestoreにも保存して永続化
+                            await this.saveAttendance(studentKey, { _active: true });
+                        }
+                    }
                 }
                 this.showAddStudentForm = false;
                 this.selectedClassForAdd = null;
@@ -1686,12 +1707,18 @@
                         ${this.showAddStudentForm ? this.renderAddStudentForm() : ''}
                         ${dayClasses.map((classInfo, idx) => {
                             const sortedStudents = this.sortStudentsByPlan([...classInfo.students]);
+                            // 月謝プランの生徒は常に表示、それ以外は当月の出席データがある場合のみ表示
+                            const filteredStudents = sortedStudents.filter(student => {
+                                if (this.isRegularPlan(student.plan)) return true;
+                                const key = `${this.selectedDay}_${classInfo.location}_${classInfo.name}_${student.lastName}${student.firstName}`;
+                                return this.attendanceData.hasOwnProperty(key);
+                            });
                             return `
                                 <div class="bg-white rounded-lg shadow mb-3">
                                     <div class="bg-${classInfo.color}-600 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
                                         <h3 class="text-base font-bold">${classInfo.location} - ${classInfo.name}</h3>
                                         <div class="flex gap-2 items-center">
-                                            <span class="text-xs opacity-90">${sortedStudents.length}名</span>
+                                            <span class="text-xs opacity-90">${filteredStudents.length}名</span>
                                             <button 
                                                 data-add-day="${this.selectedDay}" 
                                                 data-add-location="${classInfo.location}" 
@@ -1717,7 +1744,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                ${sortedStudents.map(student => {
+                                                ${filteredStudents.map(student => {
                                                     const studentKey = `${this.selectedDay}_${classInfo.location}_${classInfo.name}_${student.lastName}${student.firstName}`;
                                                     const attendance = this.attendanceData[studentKey] || {};
                                                     const rate = this.getAttendanceRate(studentKey);
