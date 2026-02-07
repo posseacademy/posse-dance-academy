@@ -1273,6 +1273,63 @@
                 });
                 return categories;
             }
+            // 練習会の売上計算
+            calculatePracticeRevenue() {
+                let totalParticipants = 0;
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                const details = {};
+                ['月曜日', '木曜日'].forEach(day => {
+                    const key = `練習会_${day}`;
+                    const data = this.attendanceData[key];
+                    let dayTotal = 0;
+                    if (data) {
+                        weeks.forEach(week => {
+                            const count = parseInt(data[week]) || 0;
+                            dayTotal += count;
+                        });
+                    }
+                    details[day] = dayTotal;
+                    totalParticipants += dayTotal;
+                });
+                return { participants: totalParticipants, revenue: totalParticipants * 500, details };
+            }
+            // 詳細売上計算（全カテゴリ別）
+            calculateDetailedRevenue() {
+                const categories = {
+                    '練習会': { count: 0, revenue: 0 },
+                    'ビジター（会員）': { count: 0, revenue: 0 },
+                    'ビジター（非会員）': { count: 0, revenue: 0 },
+                    'ビジター1.5h（会員）': { count: 0, revenue: 0 },
+                    'ビジター1.5h（非会員）': { count: 0, revenue: 0 },
+                    '月謝クラス振替': { count: 0, revenue: 0 },
+                    '初回体験': { count: 0, revenue: 0 },
+                    '初回無料': { count: 0, revenue: 0 }
+                };
+                const practice = this.calculatePracticeRevenue();
+                categories['練習会'] = { count: practice.participants, revenue: practice.revenue };
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+                Object.keys(this.attendanceData).forEach(key => {
+                    if (key.startsWith('練習会_')) return;
+                    const attendance = this.attendanceData[key];
+                    weeks.forEach(week => {
+                        if (attendance[week] === '○') {
+                            const parts = key.split('_');
+                            const day = parts[0];
+                            const location = parts[1];
+                            const className = parts[2];
+                            const studentName = parts.slice(3).join('_');
+                            const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
+                            const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
+                            if (student && categories[student.plan] !== undefined) {
+                                const price = this.pricing[student.plan] || 0;
+                                categories[student.plan].count++;
+                                categories[student.plan].revenue += price;
+                            }
+                        }
+                    });
+                });
+                return categories;
+            }
             // 出席簿関連のメソッド
             async loadAttendance() {
                 try {
@@ -1601,6 +1658,36 @@
                                             <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">¥${totalExtraRevenue.toLocaleString()}</td>
                                         </tr>
                                     </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 mb-8">
+                            <h3 class="text-xl font-bold mb-4 text-gray-800">売上内訳（受講人数・売上）</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead><tr class="bg-gray-100 border-b">
+                                        <th class="px-4 py-3 text-left font-semibold">カテゴリ</th>
+                                        <th class="px-4 py-3 text-center font-semibold">単価</th>
+                                        <th class="px-4 py-3 text-center font-semibold">受講人数</th>
+                                        <th class="px-4 py-3 text-right font-semibold">売上</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        ${displayOrder.map(plan => {
+                                            const data = detailed[plan] || { count: 0, revenue: 0 };
+                                            const price = this.pricing[plan] || 0;
+                                            const bgColor = plan === '練習会' ? 'bg-purple-50' : data.count > 0 ? 'bg-yellow-50' : '';
+                                            return `<tr class="border-b ${bgColor}">
+                                                <td class="px-4 py-3 font-medium">${plan}</td>
+                                                <td class="px-4 py-3 text-center text-gray-600">¥${price.toLocaleString()}</td>
+                                                <td class="px-4 py-3 text-center">${data.count > 0 ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">${data.count}${plan === '練習会' ? '名' : '回'}</span>` : '<span class="text-gray-400">-</span>'}</td>
+                                                <td class="px-4 py-3 text-right font-semibold ${data.revenue > 0 ? 'text-green-700' : 'text-gray-400'}">${data.revenue > 0 ? '¥' + data.revenue.toLocaleString() : '-'}</td>
+                                            </tr>`;
+                                        }).join('')}
+                                    </tbody>
+                                    <tfoot><tr class="bg-blue-50 border-t-2 border-blue-300">
+                                        <td class="px-4 py-3 font-bold" colspan="3">合計</td>
+                                        <td class="px-4 py-3 text-right font-bold text-lg text-blue-700">¥${totalExtraRevenue.toLocaleString()}</td>
+                                    </tr></tfoot>
                                 </table>
                             </div>
                         </div>
