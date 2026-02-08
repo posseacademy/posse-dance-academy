@@ -3,29 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>posse dance academy 顧客管理システム</title>
+    <title>POSSE Dance Academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; }
-        .status-tab-active { background-color: #3B82F6; color: white; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 240px;
+            height: 100vh;
+            background: #1d1d1f;
+            color: white;
+            padding: 20px;
+            border-right: 1px solid #424245;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-logo {
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #424245;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-logo p {
+            font-size: 12px;
+            color: #a1a1a6;
+            margin-top: 4px;
+        }
+
+        .sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            color: #a1a1a6;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            color: #f5f5f7;
+            background: #323235;
+        }
+
+        .nav-item.active {
+            color: white;
+            background: #0071e3;
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f5f5f7;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+
+        .btn-secondary {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border: 1px solid #e5e5ea;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8ed;
+        }
+
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: #ff453a;
+        }
+
+        .btn-green {
+            background: #34c759;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-green:hover {
+            background: #3dd65f;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-green {
+            background: #d1f4e0;
+            color: #06543f;
+        }
+
+        .badge-yellow {
+            background: #fff4d6;
+            color: #78350f;
+        }
+
+        .badge-gray {
+            background: #f3f3f6;
+            color: #424245;
+        }
+
+        .badge-red {
+            background: #fce8e6;
+            color: #7f1d1a;
+        }
+
+        .badge-blue {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        /* Form inputs */
+        .form-input {
+            padding: 10px 12px;
+            border: 1px solid #e5e5ea;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0071e3;
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f5f5f7;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: #86868b;
+            border-bottom: 1px solid #e5e5ea;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f5f5f7;
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid #e5e5ea;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #86868b;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            color: #0071e3;
+            border-bottom-color: #0071e3;
+        }
+
+        /* Instructor cards */
+        .instructor-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #f5f5f7;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .instructor-header {
+            padding: 20px;
+            border-bottom: 1px solid #f5f5f7;
+            background: #fafafa;
+        }
+
+        .instructor-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 4px;
+        }
+
+        .instructor-stage {
+            font-size: 13px;
+            color: #86868b;
+            margin-bottom: 12px;
+        }
+
+        .instructor-body {
+            padding: 20px;
+        }
+
+        .instructor-section {
+            margin-bottom: 16px;
+        }
+
+        .instructor-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .instructor-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1d1d1f;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        /* Status badges */
         .status-badge-active { background-color: #10B981; color: white; }
         .status-badge-paused { background-color: #F59E0B; color: white; }
         .status-badge-withdrawn { background-color: #6B7280; color: white; }
         .gender-male { color: #2563EB; font-weight: 600; }
         .gender-female { color: #DC2626; font-weight: 600; }
+
+        /* Sortable headers */
         .sortable-header { cursor: pointer; user-select: none; }
         .sortable-header:hover { background-color: #F3F4F6; }
         .sort-icon { display: inline-block; margin-left: 4px; font-size: 10px; }
-        
-        table { table-layout: fixed; }
-        td, th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        td.memo-cell { 
+
+        /* Text cells */
+        td.memo-cell {
             white-space: normal !important;
             word-wrap: break-word;
             word-break: break-word;
@@ -34,54 +344,58 @@
             padding-bottom: 12px !important;
             vertical-align: top;
         }
-        
+
         td.email-cell {
             white-space: nowrap !important;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
-        /* クラス別の色分け */
+
+        /* Class colors */
         .class-red { background-color: #DC2626; }
         .class-orange { background-color: #EA580C; }
         .class-blue { background-color: #2563EB; }
         .class-green { background-color: #16A34A; }
         .class-purple { background-color: #9333EA; }
-        
+
         .border-red-500 { border-color: #EF4444; }
         .border-orange-500 { border-color: #F97316; }
         .border-blue-500 { border-color: #3B82F6; }
         .border-green-500 { border-color: #22C55E; }
         .border-purple-500 { border-color: #A855F7; }
-        
+
         .text-red-600 { color: #DC2626; }
         .text-orange-600 { color: #EA580C; }
         .text-blue-600 { color: #2563EB; }
         .text-green-600 { color: #16A34A; }
         .text-purple-600 { color: #9333EA; }
-        
+
         .bg-red-600 { background-color: #DC2626; }
         .bg-orange-600 { background-color: #EA580C; }
         .bg-blue-600 { background-color: #2563EB; }
         .bg-green-600 { background-color: #16A34A; }
         .bg-purple-600 { background-color: #9333EA; }
-        
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         .animate-spin {
             animation: spin 1s linear infinite;
         }
-        
+
         .student-search-results {
             max-height: 300px;
             overflow-y: auto;
             z-index: 10;
         }
-        
+
         .select-customer-btn:hover {
             background-color: #EFF6FF;
         }
+
+        /* Tab active state (for backward compatibility) */
+        .tab-active { border-bottom: 3px solid #3B82F6; color: #3B82F6; }
+        .status-tab-active { background-color: #3B82F6; color: white; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -101,7 +415,7 @@
         const db = getFirestore(firebaseApp);
         class DanceStudioApp {
             constructor() {
-                this.currentTab = 'dashboard';
+                this.currentTab = 'home';
                 this.statusFilter = '入会中';
                 this.customers = [];
                 this.editingId = null;
@@ -319,6 +633,84 @@
                     ],
                     'イベント': []
                 };
+
+                // 講師プロフィールデータ
+                this.instructorData = [
+                    {
+                        name: '邑本 康祐', stageName: 'Mottchmen', genre: "BREAKIN'", birthDate: '1975/3/31',
+                        careerStart: '1997年よりブレイクダンスを中心にダンスを始める',
+                        profile: '', message: '',
+                        awards: ['2013年 UK bboy championships 九州予選 準優勝','2014年 UK bboy championships 九州予選 準優勝','2015年 WDC 九州大会 best4','2016年 UK bboy championships japan final best8','2017年 WDC 九州大会 best4','2018年 UK bboy championships japan final best4','2018年 Superman grand championships 準優勝','2019,2020年 PARTY×LINE crewbattle 優勝'],
+                        otherExperience: ['SUNSET LIVE 2017,2018,2019','RHYMESTER BBOYイズム バックダンサーとして出演'],
+                        lessons: ['K2JAM ダンススタジオ 2010年〜','スターリー69 ダンススタジオ 2021年9月〜']
+                    },
+                    {
+                        name: '中島 春彦', stageName: 'HARUHIKO aka WATCHM3N', genre: "BREAKIN'", birthDate: '1982/03/10',
+                        careerStart: '1999年よりダンス（ブレイキング）のキャリアスタート',
+                        profile: '2000年からブレイキンのオリジナリティスタートし、ダンスバトルやショウケース、審査員などで九州内外で活動しています。',
+                        message: 'ブレイキンは非常に運動量の多いダンスです。子供たちの身体能力、柔軟性、体幹を無理なく鍛え、挫折なく効率的に上達できるようなカリキュラムを組んでいます。',
+                        awards: ['2005年 UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION 準優勝','2006年 UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION BEST4','2012年 Red Bull BC One japanfinal best4','2015年 World Dance Colosseum ワールドファイナル世界大会審査員','2018年 Red Bull BC One japanfinal best16','2020年 SUPER BREAK 世界大会審査員'],
+                        otherExperience: ['JAPAN DANCE DELIGHT ファイナリスト','GARAND CHAMPION CARNIVAL ファイナリスト複数回','SUNSET LIVE 2017,2018,2019','RHYMESTER BBOYイズム バックダンサー','RHYMESTER 全国ツアー 福岡バックダンサー'],
+                        lessons: ['FEELダンススタジオ 指導歴10年以上','スタジオMJ（世界No.1ブレイクダンサーISSEIを輩出したスタジオ）']
+                    },
+                    {
+                        name: '甲斐 僧耶', stageName: 'SOYA', genre: 'アクロバット・ブレイキン', birthDate: '1995/11/22',
+                        careerStart: '2012年よりブレイクダンスを中心にキャリアスタート',
+                        profile: '小学生の頃、テレビ番組「スーパーチャンプル」を見てダンスに興味を持ち、高2年の冬に本格的にブレイクダンスを始めました。',
+                        message: 'パワームーブやフリーズ、アクロバットも得意としています。生徒一人ひとりに合わせて指導し、楽しみながら本人の目標に向けてレベルアップしていくことを大切にしています。',
+                        awards: ['2017年 SASEBO DANCE FES 特別賞STEEZ PRIZE','2018年 Kirafes Cup Battle Jam Vol.12 Breakin Side 優勝','2018年 GABANERO Vol.19 優勝','2019年 GABANEROVol.20 準優勝','2019年 UK九州予選 Best 4','2019年 GRAND CHAMPION CARNIVAL Free Style ファイナリスト','2020年 GABANERO Vol.22 優勝'],
+                        otherExperience: ['TBS系列ナイナイお見合い大作戦in八女出演','Emotion rise kyushu支部 フラッシュモブ 元キャスト','RKBTV【チャギハ】Xperia商品PR ダンサー出演'],
+                        lessons: ['TUDIO COLOR 2015〜2020','STUDIO TRAX 2015〜2018','FUNKFUNDANCECOMPANY 2015〜2022','SPROUT production 2019〜現在']
+                    },
+                    {
+                        name: '伊藤 厚史', stageName: 'Ryce', genre: "BREAKIN'", birthDate: '1986/10/18',
+                        careerStart: '2004年より中学の頃にブレイクダンスを始める',
+                        profile: '福岡を拠点に九州をレベゼして活動しているBboy。',
+                        message: '楽しみながら本人の目標に向けてレベルアップしていくことを大切にしています。',
+                        awards: ['2007年 BIG WAX','2009年 Buzz Style','2011年 R-16 世界大会','2013年 UK bboy'],
+                        otherExperience: ['オーストラリア・タイ・その他多数の海外経験'],
+                        lessons: ['指導歴8年近く。福岡以外にも佐賀や熊本でもレッスン経験あり']
+                    }
+                ];
+
+                // タイムスケジュールデータ
+                this.timeScheduleData = {
+                    '月曜日': [
+                        { time: '18:00-19:00', venue: '天神校', name: 'アクロバット SOYA', color: '#DC2626' },
+                        { time: '18:00-19:00', venue: '天神校', name: 'ブレイキン入門 SOYA', color: '#EA580C' },
+                        { time: '19:00-20:00', venue: '天神校', name: 'hiphop HIMEKA', color: '#9333EA' },
+                        { time: '20:00-21:00', venue: '天神校', name: 'K-POP AI', color: '#16A34A' },
+                        { time: '19:00-20:00', venue: '大橋校', name: 'hiphop HIMEKA', color: '#9333EA' },
+                        { time: '20:00-21:00', venue: '大橋校', name: 'トップロック フットワーク DAZ', color: '#2563EB' },
+                        { time: '21:00-22:00', venue: '大橋校', name: '練習会', color: '#F59E0B' }
+                    ],
+                    '火曜日': [
+                        { time: '16:50-17:50', venue: '大橋校', name: 'HIPHOP ヒメカ', color: '#DC2626' },
+                        { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C' },
+                        { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#EA580C' },
+                        { time: '19:00-20:00', venue: '照葉校', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+                        { time: '20:00-21:00', venue: '照葉校', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
+                    ],
+                    '水曜日': [
+                        { time: '18:30-19:30', venue: '天神校', name: 'ブレイキン初級 HARUHIKO', color: '#DC2626' },
+                        { time: '19:30-21:00', venue: '天神校', name: 'ブレイキン中上級 HARUHIKO', color: '#EA580C' }
+                    ],
+                    '木曜日': [
+                        { time: '18:30-19:30', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#DC2626' },
+                        { time: '19:20-20:20', venue: '大橋校', name: 'アクロ＆パワー SOYA', color: '#EA580C' },
+                        { time: '20:30-21:30', venue: '大橋校', name: 'パワームーブ＆アクロ SOYA', color: '#2563EB' },
+                        { time: '18:30-19:30', venue: '照葉校', name: 'ブレイキン入門 リュウセイ', color: '#DC2626' },
+                        { time: '19:30-20:30', venue: '照葉校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
+                        { time: '21:30-23:10', venue: '照葉校', name: '練習会', color: '#F59E0B' }
+                    ],
+                    '金曜日': [
+                        { time: '17:50-18:50', venue: '大橋校', name: 'ブレイキン入門 HARUHIKO', color: '#2563EB' },
+                        { time: '19:00-20:00', venue: '天神校', name: 'アクロ＆パワー SOYA', color: '#DC2626' },
+                        { time: '19:00-20:00', venue: '大橋校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
+                        { time: '20:00-21:00', venue: '天神校', name: 'ブレイキン初中級 HARUHIKO', color: '#EA580C' },
+                        { time: '20:00-21:00', venue: '大橋校', name: 'アクロ＆パワー ryusei', color: '#16A34A' }
+                    ]
+                };
             }
             getEmptyCustomer() {
                 return {
@@ -532,36 +924,56 @@
             render() {
                 const filteredCustomers = this.getFilteredCustomers();
                 document.getElementById('app').innerHTML = `
-                    <div class="min-h-screen">
-                        <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
-                            <div class="container mx-auto px-4 py-4">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <h1 class="text-2xl font-bold">posse dance academy</h1>
-                                        <p class="text-sm opacity-90">顧客管理システム</p>
-                                    </div>
-                                </div>
+                    <div class="flex">
+                        <aside class="sidebar">
+                            <div class="sidebar-logo">
+                                <h1>POSSE</h1>
+                                <p>dance academy</p>
                             </div>
-                        </header>
-                        <nav class="bg-white shadow">
-                            <div class="container mx-auto px-4">
-                                <div class="flex space-x-8">
-                                    <button id="dashboardTab" class="py-4 px-2 font-medium ${this.currentTab === 'dashboard' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">ダッシュボード</button>
-                                    <button id="customersTab" class="py-4 px-2 font-medium ${this.currentTab === 'customers' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">顧客管理</button>
-                                    <button id="attendanceTab" class="py-4 px-2 font-medium ${this.currentTab === 'attendance' ? 'tab-active' : 'text-gray-600 hover:text-blue-600'}">出席名簿</button>
-                                </div>
-                            </div>
-                        </nav>
-                        <main class="container mx-auto px-4 py-8">
-                            ${this.currentTab === 'dashboard' ? this.renderDashboard() : 
+                            <nav style="padding-top:8px;">
+                                <button id="homeTab" class="nav-item ${this.currentTab === 'home' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"></path></svg>
+                                    <span>HOME</span>
+                                </button>
+                                <button id="customersTab" class="nav-item ${this.currentTab === 'customers' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>
+                                    <span>顧客管理</span>
+                                </button>
+                                <button id="attendanceTab" class="nav-item ${this.currentTab === 'attendance' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                    <span>出席名簿</span>
+                                </button>
+                                <button id="timeScheduleTab" class="nav-item ${this.currentTab === 'timeSchedule' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                                    <span>タイムスケジュール</span>
+                                </button>
+                                <button id="monthlyScheduleTab" class="nav-item ${this.currentTab === 'monthlySchedule' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    <span>月間スケジュール</span>
+                                </button>
+                                <button id="instructorsTab" class="nav-item ${this.currentTab === 'instructors' ? 'active' : ''}">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                    <span>講師プロフィール</span>
+                                </button>
+                            </nav>
+                        </aside>
+                        <main class="main-content">
+                            ${this.currentTab === 'home' ? this.renderDashboard() :
                               this.currentTab === 'customers' ? this.renderCustomers(filteredCustomers) :
-                              this.renderAttendance()}
+                              this.currentTab === 'attendance' ? this.renderAttendance() :
+                              this.currentTab === 'timeSchedule' ? this.renderTimeSchedule() :
+                              this.currentTab === 'monthlySchedule' ? this.renderMonthlySchedule() :
+                              this.currentTab === 'instructors' ? this.renderInstructors() :
+                              this.renderDashboard()}
                         </main>
                     </div>
                 `;
-                document.getElementById('dashboardTab')?.addEventListener('click', () => { this.currentTab = 'dashboard'; this.render(); });
+                document.getElementById('homeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
                 document.getElementById('customersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
                 document.getElementById('attendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
+                document.getElementById('timeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
+                document.getElementById('monthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
+                document.getElementById('instructorsTab')?.addEventListener('click', () => { this.currentTab = 'instructors'; this.render(); });
                 if (this.currentTab === 'customers') {
                     this.setupCustomerPageEvents();
                 } else if (this.currentTab === 'attendance') {
@@ -655,7 +1067,7 @@
                 });
                 return `
                     <div>
-                        <h2 class="text-3xl font-bold mb-6 text-gray-800">ダッシュボード</h2>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">HOME</h2>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                             <div class="bg-white rounded-lg shadow p-6">
                                 <div class="text-gray-600 text-sm mb-2">総顧客数</div>
@@ -1294,7 +1706,6 @@
                 });
                 return categories;
             }
-            // 練習会の売上計算
             // 出席簿関連のメソッド
             async loadAttendance() {
                 try {
@@ -1512,7 +1923,7 @@
                         <div class="bg-white rounded-lg shadow mb-6">
                             <div class="border-b">
                                 <div class="flex">
-                                    <button id="attendanceOverviewTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📊 ダッシュボード</button>
+                                    <button id="attendanceOverviewTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📊 HOME</button>
                                     <button id="attendanceRecordTab" class="px-6 py-3 font-medium ${this.attendanceTab === 'record' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'}">📝 出席記録</button>
                                 </div>
                             </div>
@@ -1551,22 +1962,22 @@
                 // 各レッスン受講人数 & インストラクター別データ
                 const lessonData = [];
                 const instructorMap = {};
-                const dayOrder2 = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
+                const dayOrder = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
                 const dayColors = { '月曜日': 'blue', '火曜日': 'red', '水曜日': 'green', '木曜日': 'orange', '金曜日': 'purple' };
 
-                for (const day2 of dayOrder2) {
-                    const classes2 = this.scheduleData[day2] || [];
-                    for (const cls2 of classes2) {
-                        if (cls2.students.length === 0) continue;
-                        const parts2 = cls2.name.split(' ');
-                        const instructor2 = parts2[parts2.length - 1];
-                        lessonData.push({ day: day2, location: cls2.location, name: cls2.name, instructor: instructor2, count: cls2.students.length, color: cls2.color });
-                        if (!instructorMap[instructor2]) {
-                            instructorMap[instructor2] = { classes: 0, students: 0, classList: [] };
+                for (const day of dayOrder) {
+                    const classes = this.scheduleData[day] || [];
+                    for (const cls of classes) {
+                        if (cls.students.length === 0) continue;
+                        const parts = cls.name.split(' ');
+                        const instructor = parts[parts.length - 1];
+                        lessonData.push({ day, location: cls.location, name: cls.name, instructor, count: cls.students.length, color: cls.color });
+                        if (!instructorMap[instructor]) {
+                            instructorMap[instructor] = { classes: 0, students: 0, classList: [] };
                         }
-                        instructorMap[instructor2].classes++;
-                        instructorMap[instructor2].students += cls2.students.length;
-                        instructorMap[instructor2].classList.push(day2.charAt(0) + ' ' + cls2.location + ' ' + cls2.name.replace(' ' + instructor2, ''));
+                        instructorMap[instructor].classes++;
+                        instructorMap[instructor].students += cls.students.length;
+                        instructorMap[instructor].classList.push(`${day.charAt(0)} ${cls.location} ${cls.name.replace(' ' + instructor, '')}`);
                     }
                 }
                 const sortedInstructors = Object.entries(instructorMap).sort((a, b) => b[1].students - a[1].students);
@@ -1649,7 +2060,8 @@
                                     </tfoot>
                                 </table>
                             </div>
-                        </div><div class="bg-white rounded-lg shadow p-6 mb-8">
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6 mb-8">
                             <h3 class="text-xl font-bold mb-4 text-gray-800">各レッスン受講人数</h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-sm">
@@ -1686,15 +2098,15 @@
                         <div class="bg-white rounded-lg shadow p-6 mb-8">
                             <h3 class="text-xl font-bold mb-4 text-gray-800">インストラクター別 生徒数</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                ${sortedInstructors.map(([name, d]) => `
+                                ${sortedInstructors.map(([name, data]) => `
                                     <div class="border rounded-lg p-4 hover:shadow-md transition">
                                         <div class="flex justify-between items-center mb-2">
                                             <span class="text-lg font-bold text-indigo-700">${name}</span>
-                                            <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-bold">${d.students}名</span>
+                                            <span class="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-bold">${data.students}名</span>
                                         </div>
-                                        <div class="text-xs text-gray-500 mb-2">${d.classes}クラス担当</div>
+                                        <div class="text-xs text-gray-500 mb-2">${data.classes}クラス担当</div>
                                         <div class="flex flex-wrap gap-1">
-                                            ${d.classList.map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}
+                                            ${data.classList.map(c => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">${c}</span>`).join('')}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -1725,15 +2137,6 @@
                                     </button>
                                     <div id="backupStatus" class="text-xs text-gray-500 text-center"></div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h3 class="text-xl font-bold mb-4 text-gray-800">使い方</h3>
-                            <div class="space-y-2 text-gray-600">
-                                <p>• 「📝 出席記録」タブから各曜日のクラスの出席を記録できます</p>
-                                <p>• ボタンをクリックで <span class="text-green-600 font-bold">○</span> → <span class="text-red-600 font-bold">×</span> → <span class="text-gray-600 font-bold">休</span> → <span class="text-gray-400 font-bold">-</span> と切り替わります</p>
-                                <p>• 月曜日・木曜日には「練習会」欄があり、参加人数を入力できます（¥500/人）</p>
-                                <p>• 各クラスに「生徒追加」ボタンから新規生徒を追加できます</p>
                             </div>
                         </div>
                     </div>
@@ -2280,6 +2683,177 @@
                                     <li>• 料金の合計金額が自動で表示されます</li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+                `;
+            }
+            renderTimeSchedule() {
+                const days = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
+                const dayLabels = {'月曜日':'MON','火曜日':'TUE','水曜日':'WED','木曜日':'THU','金曜日':'FRI'};
+                const hours = ['16:00','17:00','18:00','19:00','20:00','21:00','22:00'];
+
+                return `
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">タイムスケジュール</h2>
+                        <div class="card" style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:60px;padding:12px 8px;text-align:center;background:#f5f5f7;border:1px solid #e5e5ea;font-size:11px;">時間</th>
+                                        ${days.map(d => `<th style="padding:12px 8px;text-align:center;background:#f5f5f7;border:1px solid #e5e5ea;font-size:12px;font-weight:600;">${d}<br><span style="font-size:10px;color:#86868b;">${dayLabels[d]}</span></th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${hours.map(hour => {
+                                        const hourNum = parseInt(hour);
+                                        return `<tr>
+                                            <td style="padding:8px;text-align:center;background:#f9f9fb;border:1px solid #e5e5ea;font-size:11px;font-weight:500;color:#86868b;vertical-align:top;">${hour}</td>
+                                            ${days.map(day => {
+                                                const classes = (this.timeScheduleData[day] || []).filter(c => {
+                                                    const startHour = parseInt(c.time.split(':')[0]);
+                                                    return startHour >= hourNum && startHour < hourNum + 1;
+                                                });
+                                                return `<td style="padding:4px;border:1px solid #e5e5ea;vertical-align:top;">
+                                                    ${classes.map(c => `
+                                                        <div style="background:${c.color};color:#fff;border-radius:8px;padding:6px 8px;margin:2px 0;font-size:11px;">
+                                                            <div style="font-weight:600;">${c.time}</div>
+                                                            <div style="opacity:0.9;margin-top:2px;">${c.name}</div>
+                                                            <div style="opacity:0.7;font-size:10px;">${c.venue}</div>
+                                                        </div>
+                                                    `).join('')}
+                                                </td>`;
+                                            }).join('')}
+                                        </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            renderMonthlySchedule() {
+                const [year, month] = this.selectedMonth.split('-').map(Number);
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+                const dayNames = ['日','月','火','水','木','金','土'];
+                const venues = ['天神校','大橋校','照葉校'];
+
+                // Determine which venues have classes on which day of week
+                const dayOfWeekVenues = {};
+                const dayMap = {'月曜日':1,'火曜日':2,'水曜日':3,'木曜日':4,'金曜日':5};
+                Object.entries(this.scheduleData).forEach(([dayName, classes]) => {
+                    const dow = dayMap[dayName];
+                    if (dow) {
+                        const venueSet = new Set();
+                        classes.forEach(c => {
+                            if (c.location === '天神') venueSet.add('天神校');
+                            else if (c.location === '大橋') venueSet.add('大橋校');
+                            else if (c.location === '照葉') venueSet.add('照葉校');
+                        });
+                        dayOfWeekVenues[dow] = venueSet;
+                    }
+                });
+
+                let rows = '';
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dow = new Date(year, month - 1, d).getDay();
+                    const isWeekend = dow === 0 || dow === 6;
+                    const dayColor = isWeekend ? '#ff3b30' : dow === 3 ? '#34c759' : '#1d1d1f';
+                    const bgColor = isWeekend ? '#fef2f2' : '#fff';
+
+                    rows += `<tr style="background:${bgColor};">
+                        <td style="padding:8px 12px;border:1px solid #e5e5ea;text-align:center;font-weight:500;font-size:13px;">${d}</td>
+                        <td style="padding:8px 12px;border:1px solid #e5e5ea;text-align:center;color:${dayColor};font-weight:600;font-size:12px;">${dayNames[dow]}</td>
+                        ${venues.map(v => {
+                            const hasClass = dayOfWeekVenues[dow]?.has(v);
+                            return `<td style="padding:8px 12px;border:1px solid #e5e5ea;text-align:center;font-size:13px;">
+                                ${isWeekend ? '<span style="color:#ff3b30;font-size:11px;">休校</span>' : hasClass ? '<span style="color:#0071e3;font-weight:600;">○</span>' : '<span style="color:#d2d2d7;">-</span>'}
+                            </td>`;
+                        }).join('')}
+                    </tr>`;
+                }
+
+                return `
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-3xl font-bold text-gray-800">月間スケジュール ${year}年${month}月</h2>
+                            <div class="flex gap-2 items-center">
+                                <button id="prevMonth" class="btn-secondary btn-sm">◀ 前月</button>
+                                <input type="month" id="monthSelectorOverview" value="${this.selectedMonth}" class="form-input" style="width:auto;" />
+                                <button id="nextMonth" class="btn-secondary btn-sm">次月 ▶</button>
+                            </div>
+                        </div>
+                        <div class="card" style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#f5f5f7;">
+                                        <th style="padding:12px;border:1px solid #e5e5ea;font-size:11px;width:50px;">日</th>
+                                        <th style="padding:12px;border:1px solid #e5e5ea;font-size:11px;width:50px;">曜日</th>
+                                        ${venues.map(v => `<th style="padding:12px;border:1px solid #e5e5ea;font-size:12px;font-weight:600;">${v}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            renderInstructors() {
+                return `
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6 text-gray-800">講師プロフィール</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            ${this.instructorData.map(inst => `
+                                <div class="instructor-card">
+                                    <div class="instructor-header">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <div class="instructor-name">${inst.name}</div>
+                                                <div class="instructor-stage">${inst.stageName}</div>
+                                            </div>
+                                            <span class="badge badge-blue">${inst.genre}</span>
+                                        </div>
+                                        <div style="margin-top:12px;font-size:12px;color:#86868b;">
+                                            <span>生年月日: ${inst.birthDate}</span>
+                                            <span style="margin-left:16px;">キャリア: ${inst.careerStart}</span>
+                                        </div>
+                                    </div>
+                                    <div class="instructor-body">
+                                        ${inst.profile ? `
+                                            <div class="instructor-section">
+                                                <div class="instructor-section-title">プロフィール</div>
+                                                <p style="font-size:13px;line-height:1.6;color:#424245;">${inst.profile}</p>
+                                            </div>
+                                        ` : ''}
+                                        ${inst.message ? `
+                                            <div class="instructor-section">
+                                                <div class="instructor-section-title">メッセージ</div>
+                                                <p style="font-size:13px;line-height:1.6;color:#424245;">${inst.message}</p>
+                                            </div>
+                                        ` : ''}
+                                        <div class="instructor-section">
+                                            <div class="instructor-section-title">受賞歴</div>
+                                            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                                ${inst.awards.map(a => `<span style="display:inline-block;font-size:11px;background:#f5f5f7;padding:4px 8px;border-radius:6px;color:#424245;">${a}</span>`).join('')}
+                                            </div>
+                                        </div>
+                                        ${inst.otherExperience.length > 0 ? `
+                                            <div class="instructor-section">
+                                                <div class="instructor-section-title">その他経歴</div>
+                                                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                                    ${inst.otherExperience.map(e => `<span style="display:inline-block;font-size:11px;background:#e8f0fe;padding:4px 8px;border-radius:6px;color:#1a56db;">${e}</span>`).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        <div class="instructor-section">
+                                            <div class="instructor-section-title">レッスン経歴</div>
+                                            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                                ${inst.lessons.map(l => `<span style="display:inline-block;font-size:11px;background:#e8f5e8;padding:4px 8px;border-radius:6px;color:#1a7a1a;">${l}</span>`).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
