@@ -1440,7 +1440,7 @@
                         });
                     });
                 });
-                const visitorRevenue = visitorVisits * 2000;
+                const visitorRevenue = this.calculateVisitorRevenue();
 
                 // 総クラス数・総生徒数
                 let totalClasses = 0;
@@ -1536,7 +1536,7 @@
                                 <div class="visitor-highlight" style="margin-bottom:20px;">
                                     <div class="vh-label">ビジター売上（今月）</div>
                                     <div class="vh-value">¥${visitorRevenue.toLocaleString()}</div>
-                                    <div class="vh-detail">${visitorVisits}回 × ¥2,000（会員）</div>
+                                    <div class="vh-detail">ビジター・振替 合計</div>
                                 </div>
                                 <div class="content-card">
                                     <div class="card-header">
