@@ -2092,8 +2092,9 @@
                                 }
                             } else if (!student) {
                                 const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
-                                const plan = pMap[studentName] || studentName;
-                                if (this.pricing[plan]) { revenue += this.pricing[plan]; }
+                                const plan = pMap[studentName];
+                    if (plan && this.pricing[plan]) { revenue += this.pricing[plan]; }
+                    else if (!plan && studentName) { revenue += this.pricing['ビジター（会員）'] || 2000; }
                             }
                         }
                     });
@@ -2153,7 +2154,7 @@
                             let plan = student?.plan;
                             if (!plan) {
                                 const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
-                                plan = pMap[studentName] || studentName;
+                                plan = pMap[studentName] || 'ビジター（会員）';
                             }
                             if (plan && categories[plan] !== undefined) {
                                 const price = this.pricing[plan] || 0;
@@ -2672,8 +2673,9 @@
                             Object.keys(this.attendanceData).forEach(key => {
                                 if (key.startsWith(classPrefix)) {
                                     const studentName = key.substring(classPrefix.length);
-                                    if (!existingNames.has(studentName) && knownTypes[studentName]) {
-                                        filteredStudents.push({lastName: studentName, firstName: '', plan: knownTypes[studentName]});
+                                    if (!existingNames.has(studentName)) {
+                const plan = knownTypes[studentName] || 'ビジター（会員）';
+                                        filteredStudents.push({lastName: studentName, firstName: '', plan: plan});
                                         existingNames.add(studentName);
                                     }
                                 }
