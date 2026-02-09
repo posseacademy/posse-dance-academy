@@ -2067,7 +2067,7 @@
                 alert('生徒を削除しました');
             }
             calculateVisitorRevenue() {
-            const _ovr=this.visitorRevenueOverrides?.[(this.selectedMonth||'').replace(/^(\d{4})(\d{2})$/,'$1-$2')]; if(_ovr) return _ovr.total;
+            const _ovr=this.visitorRevenueOverrides?.[(this.selectedMonth||'').replace(/-/g,'')]; if(_ovr) return _ovr.total;
                 let revenue = 0;
                 const monthKey = this.selectedMonth.replace('-', '');
                 
@@ -2126,7 +2126,7 @@
             }
             // 詳細売上計算（全カテゴリ別）
             calculateDetailedRevenue() {
-            const _ovr=this.visitorRevenueOverrides?.[(this.selectedMonth||'').replace(/^(\d{4})(\d{2})$/,'$1-$2')]; if(_ovr){const r={};['練習会','ビジター（会員）','ビジター（非会員）','ビジター1.5h（会員）','ビジター1.5h（非会員）','月謝クラス振替','初回体験','初回無料'].forEach(k=>r[k]={count:0,revenue:0}); if(_ovr.visitor>0) r['ビジター（会員）']={count:Math.round(_ovr.visitor/2000),revenue:_ovr.visitor}; if(_ovr.trial>0) r['初回体験']={count:Math.round(_ovr.trial/1000),revenue:_ovr.trial}; return r;}
+            const _ovr=this.visitorRevenueOverrides?.[(this.selectedMonth||'').replace(/-/g,'')]; if(_ovr){const r={};['練習会','ビジター（会員）','ビジター（非会員）','ビジター1.5h（会員）','ビジター1.5h（非会員）','月謝クラス振替','初回体験','初回無料'].forEach(k=>r[k]={count:0,revenue:0}); if(_ovr.visitor>0) r['ビジター（会員）']={count:Math.round(_ovr.visitor/2000),revenue:_ovr.visitor}; if(_ovr.trial>0) r['初回体験']={count:Math.round(_ovr.trial/1000),revenue:_ovr.trial}; return r;}
                 const categories = {
                     '練習会': { count: 0, revenue: 0 },
                     'ビジター（会員）': { count: 0, revenue: 0 },
