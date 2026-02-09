@@ -2668,12 +2668,12 @@
                             // 出席データにのみ存在するビジター・初回体験等のエントリーも追加
                             const classPrefix = `${this.selectedDay}_${classInfo.location}_${classInfo.name}_`;
                             const existingNames = new Set(filteredStudents.map(s => s.lastName + s.firstName));
-                            const planNameMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','ビジター（振替）':'ビジター（振替）','月謝クラス振替':'月謝クラス振替'};
+                            const knownTypes = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','ビジター（振替）':'ビジター（振替）','月謝クラス振替':'月謝クラス振替'};
                             Object.keys(this.attendanceData).forEach(key => {
                                 if (key.startsWith(classPrefix)) {
                                     const studentName = key.substring(classPrefix.length);
-                                    if (!existingNames.has(studentName) && studentName !== '') {
-                                        filteredStudents.push({lastName: studentName, firstName: '', plan: planNameMap[studentName] || studentName});
+                                    if (!existingNames.has(studentName) && knownTypes[studentName]) {
+                                        filteredStudents.push({lastName: studentName, firstName: '', plan: knownTypes[studentName]});
                                         existingNames.add(studentName);
                                     }
                                 }
