@@ -2090,6 +2090,10 @@
                                 if (this.pricing[student.plan]) {
                                     revenue += this.pricing[student.plan];
                                 }
+                            } else if (!student) {
+                                const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
+                                const plan = pMap[studentName] || studentName;
+                                if (this.pricing[plan]) { revenue += this.pricing[plan]; }
                             }
                         }
                     });
@@ -2146,10 +2150,15 @@
                             const studentName = parts.slice(3).join('_');
                             const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
                             const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
-                            if (student && categories[student.plan] !== undefined) {
-                                const price = this.pricing[student.plan] || 0;
-                                categories[student.plan].count++;
-                                categories[student.plan].revenue += price;
+                            let plan = student?.plan;
+                            if (!plan) {
+                                const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
+                                plan = pMap[studentName] || studentName;
+                            }
+                            if (plan && categories[plan] !== undefined) {
+                                const price = this.pricing[plan] || 0;
+                                categories[plan].count++;
+                                categories[plan].revenue += price;
                             }
                         }
                     });
@@ -2655,6 +2664,19 @@
                                 if (this.isRegularPlan(student.plan)) return true;
                                 const key = `${this.selectedDay}_${classInfo.location}_${classInfo.name}_${student.lastName}${student.firstName}`;
                                 return this.attendanceData.hasOwnProperty(key);
+                            });
+                            // 出席データにのみ存在するビジター・初回体験等のエントリーも追加
+                            const classPrefix = `${this.selectedDay}_${classInfo.location}_${classInfo.name}_`;
+                            const existingNames = new Set(filteredStudents.map(s => s.lastName + s.firstName));
+                            const planNameMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','ビジター（振替）':'ビジター（振替）','月謝クラス振替':'月謝クラス振替'};
+                            Object.keys(this.attendanceData).forEach(key => {
+                                if (key.startsWith(classPrefix)) {
+                                    const studentName = key.substring(classPrefix.length);
+                                    if (!existingNames.has(studentName) && studentName !== '') {
+                                        filteredStudents.push({lastName: studentName, firstName: '', plan: planNameMap[studentName] || studentName});
+                                        existingNames.add(studentName);
+                                    }
+                                }
                             });
                             return `
                                 <div class="bg-white rounded-lg shadow mb-3">
