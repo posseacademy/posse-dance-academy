@@ -60,22 +60,29 @@
         }
 
         .sidebar-logo {
-            padding: 0 28px;
-            margin-bottom: 40px;
+            padding: 0 20px;
+            margin-bottom: 32px;
+        }
+
+        .sidebar-logo .logo-image {
+            width: 100%;
+            max-width: 180px;
+            margin-bottom: 0px;
         }
 
         .sidebar-logo h1 {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 20px;
+            font-weight: 800;
             letter-spacing: -0.5px;
             line-height: 1.2;
+            color: #fff;
         }
 
         .sidebar-logo p {
-            font-size: 13px;
-            color: rgba(255,255,255,0.45);
-            margin-top: 4px;
-            letter-spacing: 1.5px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+            letter-spacing: 2px;
         }
 
         .sidebar nav {
@@ -1283,8 +1290,10 @@
                     <div style="display:flex;">
                         <aside class="sidebar">
                             <div class="sidebar-logo">
-                                <h1>posse</h1>
-                                <p style="text-transform:lowercase;letter-spacing:1.5px;">dance academy</p>
+                                <svg class="logo-image" viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+                                    <text x="8" y="92" font-family="'Futura','Trebuchet MS','Arial Black',sans-serif" font-weight="900" font-size="100" fill="#e42313" letter-spacing="-4">posse</text>
+                                    <text x="10" y="128" font-family="'Futura','Trebuchet MS',Arial,sans-serif" font-weight="400" font-size="34" fill="#e42313" letter-spacing="4.5">dance academy</text>
+                                </svg>
                             </div>
                             <nav>
                                 <button id="homeTab" class="nav-item ${this.currentTab === 'home' ? 'active' : ''}">
