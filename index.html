@@ -2107,8 +2107,10 @@
                                 }
                             } else if (!student) {
                                 const attPlan = attendance._plan;
-                                if (attPlan && this.pricing[attPlan]) { revenue += this.pricing[attPlan]; }
-                                else {
+                                const _isVT=attPlan&&(attPlan.includes('ビジター')||attPlan.includes('体験')||attPlan.includes('無料')||attPlan==='月謝クラス振替'||attPlan==='練習会');
+                        if (_isVT && this.pricing[attPlan]) {
+                            revenue += this.pricing[attPlan];
+                        } else if (!attPlan) {
                                 const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
                                 const plan = pMap[studentName];
                     if (plan && this.pricing[plan]) { revenue += this.pricing[plan]; }
