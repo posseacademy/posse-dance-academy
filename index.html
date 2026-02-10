@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POSSE Dance Academy</title>
+    <title>posse dance academy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
@@ -1242,7 +1242,7 @@
                 const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `顧客管理_${new Date().toISOString().split('T')[0]}.csv`;
+                link.download = `顧客一覧_${new Date().toISOString().split('T')[0]}.csv`;
                 link.click();
             }
             sortBy(field) {
@@ -1283,7 +1283,7 @@
                     <div style="display:flex;">
                         <aside class="sidebar">
                             <div class="sidebar-logo">
-                                <h1>POSSE</h1>
+                                <h1>posse</h1>
                                 <p style="text-transform:lowercase;letter-spacing:1.5px;">dance academy</p>
                             </div>
                             <nav>
@@ -1293,7 +1293,7 @@
                                 </button>
                                 <button id="customersTab" class="nav-item ${this.currentTab === 'customers' ? 'active' : ''}">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                                    <span>顧客管理</span>
+                                    <span>顧客一覧</span>
                                 </button>
                                 <button id="attendanceTab" class="nav-item ${this.currentTab === 'attendance' ? 'active' : ''}">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l2 2 4-4"/></svg>
@@ -1461,7 +1461,7 @@
                         <div class="page-header">
                             <div>
                                 <h2>HOME</h2>
-                                <p class="subtitle">POSSE Dance Academy の概要</p>
+                                <p class="subtitle">posse dance academy の概要</p>
                             </div>
                             <div class="date-badge">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -1570,7 +1570,7 @@
                     <div>
                         <div class="page-header">
                             <div>
-                                <h2>顧客管理</h2>
+                                <h2>顧客一覧</h2>
                                 <p class="subtitle">会員情報の一覧と管理</p>
                             </div>
                             <div style="display:flex;gap:10px;">
@@ -3009,7 +3009,7 @@
                             </div>
                         </div>
                         <div class="text-xs text-gray-600 mb-3">
-                            ※ 顧客管理からプランが自動反映されますが、ビジターとして受講する場合は変更してください
+                            ※ 顧客一覧からプランが自動反映されますが、ビジターとして受講する場合は変更してください
                         </div>
                         <div class="flex gap-2">
                             <button id="saveNewStudentBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">追加</button>
@@ -3317,7 +3317,7 @@
                         <div class="page-header">
                             <div>
                                 <h2>講師プロフィール</h2>
-                                <p class="subtitle">POSSE Dance Academy のインストラクター</p>
+                                <p class="subtitle">posse dance academy のインストラクター</p>
                             </div>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:24px;">
