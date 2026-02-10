@@ -2035,6 +2035,13 @@
                         await this.saveScheduleData();
                     }
                 }
+                // attendanceDataにもプランを保存（出席データのみの生徒でも確実に反映）
+                const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
+                if (!this.attendanceData[studentKey]) {
+                    this.attendanceData[studentKey] = {};
+                }
+                this.attendanceData[studentKey]._plan = newPlan;
+                await this.saveAttendance(studentKey, this.attendanceData[studentKey]);
                 this.editingStudent = null;
                 this.render();
                 alert('生徒情報を更新しました');
@@ -2093,10 +2100,14 @@
                                     revenue += this.pricing[student.plan];
                                 }
                             } else if (!student) {
+                                const attPlan = attendance._plan;
+                                if (attPlan && this.pricing[attPlan]) { revenue += this.pricing[attPlan]; }
+                                else {
                                 const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
                                 const plan = pMap[studentName];
                     if (plan && this.pricing[plan]) { revenue += this.pricing[plan]; }
                     else if (!plan && studentName) { let _m=false;['月曜日','火曜日','水曜日','木曜日','金曜日'].forEach(d=>{const dd=this.scheduleData?.[d];if(dd)Object.values(dd).forEach(c=>{if(c.students?.some(s=>(s.lastName+(s.firstName||'')).trim()===studentName))_m=true})}); revenue += _m ? (this.pricing['月謝クラス振替']||1000) : (this.pricing['ビジター（会員）']||2000); }
+                                }
                             }
                         }
                     });
@@ -2155,6 +2166,9 @@
                             const classData = this.scheduleData[day]?.find(c => c.location === location && c.name === className);
                             const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
                             let plan = student?.plan;
+                            if (!plan) {
+                                plan = attendance._plan;
+                            }
                             if (!plan) {
                                 const pMap = {'初回体験':'初回体験','初回無料':'初回無料','ビジター会員':'ビジター（会員）','ビジター非会員':'ビジター（非会員）','ビジター1.5h会員':'ビジター1.5h（会員）','ビジター1.5h非会員':'ビジター1.5h（非会員）','ビジター（会員）':'ビジター（会員）','ビジター（非会員）':'ビジター（非会員）','月謝クラス振替':'月謝クラス振替'};
                                 plan = pMap[studentName] || (()=>{let _m2=false;['月曜日','火曜日','水曜日','木曜日','金曜日'].forEach(d=>{const dd=this.scheduleData?.[d];if(dd)Object.values(dd).forEach(c=>{if(c.students?.some(s=>(s.lastName+(s.firstName||'')).trim()===studentName))_m2=true})});return _m2?'月謝クラス振替':'ビジター（会員）';})();
@@ -2677,7 +2691,7 @@
                                 if (key.startsWith(classPrefix)) {
                                     const studentName = key.substring(classPrefix.length);
                                     if (!existingNames.has(studentName)) {
-                const plan = knownTypes[studentName] || (()=>{let _m3=false;['月曜日','火曜日','水曜日','木曜日','金曜日'].forEach(d=>{const dd=this.scheduleData?.[d];if(dd)Object.values(dd).forEach(c=>{if(c.students?.some(s=>(s.lastName+(s.firstName||'')).trim()===studentName))_m3=true})});return _m3?'月謝クラス振替':'ビジター（会員）';})();
+                const plan = this.attendanceData[key]?._plan || knownTypes[studentName] || (()=>{let _m3=false;['月曜日','火曜日','水曜日','木曜日','金曜日'].forEach(d=>{const dd=this.scheduleData?.[d];if(dd)Object.values(dd).forEach(c=>{if(c.students?.some(s=>(s.lastName+(s.firstName||'')).trim()===studentName))_m3=true})});return _m3?'月謝クラス振替':'ビジター（会員）';})();
                                         filteredStudents.push({lastName: studentName, firstName: '', plan: plan});
                                         existingNames.add(studentName);
                                     }
