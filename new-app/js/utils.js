@@ -23,7 +23,7 @@ export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleD
         const studentName = parts.slice(3).join('_');
 
         const classData = scheduleData[day]?.find(c => c.location === location && c.name === className);
-        const student = classData?.students.find(s =>  ${s.lastName}${s.firstName}` === studentName);
+        const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
 
         // Only count visitor/trial/free plans
         if (student && (student.plan.includes('ãã¸ã¿ã¼') || student.plan.includes('ä½é¨') || student.plan.includes('ç¡æ'))) {
