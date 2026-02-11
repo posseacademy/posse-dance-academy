@@ -64,7 +64,7 @@ class DanceStudioApp {
       this.scheduleData = scheduleData;
       this.attendanceData = attendanceData;
     } catch (error) {
-      console.error('ãã¼ã¿ã®åæåã«å¤±æ:', error);
+      console.error('データの初期化に失敗:', error);
       this.scheduleData = { ...defaultSchedule };
     }
 
@@ -89,14 +89,14 @@ class DanceStudioApp {
     this.render();
   }
 
-  // Toggle attendance mark: - â â â Ã â ä¼è« â -
+  // Toggle attendance mark: - → ○ → × → 休諛 → -
   async toggleAttendance(studentKey, week) {
     if (!this.attendanceData[studentKey]) {
       this.attendanceData[studentKey] = {};
     }
 
     const current = this.attendanceData[studentKey][week] || '-';
-    const cycle = ['-', 'â', 'Ã', 'ä¼è¬'];
+    const cycle = ['-', '○', '×', '休講'];
     const nextIndex = (cycle.indexOf(current) + 1) % cycle.length;
     this.attendanceData[studentKey][week] = cycle[nextIndex] === '-' ? null : cycle[nextIndex];
 
@@ -132,7 +132,7 @@ class DanceStudioApp {
       lastName: document.getElementById('form-lastName')?.value || '',
       firstName: document.getElementById('form-firstName')?.value || '',
       plan: document.getElementById('form-plan')?.value || '',
-      status: document.getElementById('form-status')?.value || 'å¥ä¼ä¸­',
+      status: document.getElementById('form-status')?.value || '入会中',
       joinDate: document.getElementById('form-joinDate')?.value || '',
       phone: document.getElementById('form-phone')?.value || '',
       notes: document.getElementById('form-notes')?.value || ''
@@ -151,7 +151,7 @@ class DanceStudioApp {
   }
 
   async deleteCustomer(id) {
-    if (!confirm(`${this.customers[id]?.lastName || ''} ${this.customers[id]?.firstName || ''} ãåé¤ãã¾ããï¼`)) return;
+    if (!confirm(`${this.customers[id]?.lastName || ''} ${this.customers[id]?.firstName || ''} を削除しますか？`)) return;
 
     const success = await fbDeleteCustomer(id);
     if (success) {
