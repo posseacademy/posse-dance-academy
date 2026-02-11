@@ -15,7 +15,7 @@ export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleD
     const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
 
     weeks.forEach(week => {
-      if (attendance[week] === 'â') {
+      if (attendance[week] === '○') {
         const parts = key.split('_');
         const day = parts[0];
         const location = parts[1];
@@ -26,40 +26,40 @@ export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleD
         const student = classData?.students.find(s => `${s.lastName}${s.firstName}` === studentName);
 
         // Only count visitor/trial/free plans
-        if (student && (student.plan.includes('ãã¸ã¿ã¼') || student.plan.includes('ä½é¨') || student.plan.includes('ç¡æ'))) {
+        if (student && (student.plan.includes('ビジター') || student.plan.includes('体験') || student.plan.includes('無料'))) {
           if (pricing[student.plan]) {
             revenue += pricing[student.plan];
           }
         } else if (!student) {
           const attPlan = attendance._plan;
           const _isVT = attPlan && (
-            attPlan.includes('ãã¸ã¿ã¼') ||
-            attPlan.includes('ä½é¨') ||
-            attPlan.includes('ç¡æ') ||
-            attPlan === 'æè¬ã¯ã©ã¹æ¯æ¿' ||
-            attPlan === 'ç·´ç¿ä¼'
+            attPlan.includes('ビジター') ||
+            attPlan.includes('体験') ||
+            attPlan.includes('無料') ||
+            attPlan === '月謝クラス振替' ||
+            attPlan === '練習会'
           );
 
           if (_isVT && pricing[attPlan]) {
             revenue += pricing[attPlan];
           } else if (!attPlan) {
             const pMap = {
-              'ååä½é¨': 'ååä½é¨',
-              'ååç¡æ': 'ååç¡æ',
-              'ãã¸ã¿ã¼ä¼å¡': 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼',
-              'ãã¸ã¿ã¼éä¼å¡': 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼',
-              'ãã¸ã¿ã¼1.5hä¼å¡': 'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼',
-              'ãã¸ã¿ã¼1.5héä¼å¡': 'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼',
-              'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼',
-              'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼',
-              'æè¬ã¯ã©ã¹æ¯æ¿': 'æè¬ã¯ã©ã¹æ¯æ¿'
+              '初回体験': '初回体験',
+              '初回無料': '初回無料',
+              'ビジター会員': 'ビジター（会員）',
+              'ビジター非会員': 'ビジター（非会員）',
+              'ビジター1.5h会員': 'ビジター1.5h（会員）',
+              'ビジター1.5h非会員': 'ビジター1.5h（非会員）',
+              'ビジター（会員）': 'ビジター（会員）',
+              'ビジター（非会員）': 'ビジター（非会員）',
+              '月謝クラス振替': '月謝クラス振替'
             };
             const plan = pMap[studentName];
             if (plan && pricing[plan]) {
               revenue += pricing[plan];
             } else if (!plan && studentName) {
               let _m = false;
-              ['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥'].forEach(d => {
+              ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'].forEach(d => {
                 const dd = scheduleData?.[d];
                 if (dd) {
                   // dd is an array of classes
@@ -70,7 +70,7 @@ export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleD
                   });
                 }
               });
-              revenue += _m ? (pricing['æè¬ã¯ã©ã¹æ¯æ¿'] || 1000) : (pricing['ãã¸ã¿ã¼ï¼ä¼å¡ï¼'] || 2000);
+              revenue += _m ? (pricing['月謝クラス振替'] || 1000) : (pricing['ビジター（会員）'] || 2000);
             }
           }
         }
@@ -89,8 +89,8 @@ export function calculatePracticeRevenue(attendanceData) {
   const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
   const details = {};
 
-  ['æææ¥', 'æ¨ææ¥'].forEach(day => {
-    const key = `ç·´ç¿ä¼_${day}`;
+  ['月曜日', '木曜日'].forEach(day => {
+    const key = `練習会_${day}`;
     const data = attendanceData[key];
     let dayTotal = 0;
     if (data) {
@@ -117,35 +117,35 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
   const _ovr = visitorRevenueOverrides?.[(selectedMonth || '').replace(/-/g, '')];
   if (_ovr) {
     const r = {};
-    ['ç·´ç¿ä¼', 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼', 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼', 'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼', 'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼', 'æè¬ã¯ã©ã¹æ¯æ¿', 'ååä½é¨', 'ååç¡æ'].forEach(k => r[k] = { count: 0, revenue: 0 });
-    if (_ovr.visitor > 0) r['ãã¸ã¿ã¼ï¼ä¼å¡ï¼'] = { count: Math.round(_ovr.visitor / 2000), revenue: _ovr.visitor };
-    if (_ovr.trial > 0) r['ååä½é¨'] = { count: Math.round(_ovr.trial / 1000), revenue: _ovr.trial };
+    ['練習会', 'ビジター（会員）', 'ビジター（非会員）', 'ビジター1.5h（会員）', 'ビジター1.5h（非会員）', '月謝クラス振替', '初回体験', '初回無料'].forEach(k => r[k] = { count: 0, revenue: 0 });
+    if (_ovr.visitor > 0) r['ビジター（会員）'] = { count: Math.round(_ovr.visitor / 2000), revenue: _ovr.visitor };
+    if (_ovr.trial > 0) r['初回体験'] = { count: Math.round(_ovr.trial / 1000), revenue: _ovr.trial };
     return r;
   }
 
   const categories = {
-    'ç·´ç¿ä¼': { count: 0, revenue: 0 },
-    'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': { count: 0, revenue: 0 },
-    'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': { count: 0, revenue: 0 },
-    'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼': { count: 0, revenue: 0 },
-    'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼': { count: 0, revenue: 0 },
-    'æè¬ã¯ã©ã¹æ¯æ¿': { count: 0, revenue: 0 },
-    'ååä½é¨': { count: 0, revenue: 0 },
-    'ååç¡æ': { count: 0, revenue: 0 }
+    '練習会': { count: 0, revenue: 0 },
+    'ビジター（会員）': { count: 0, revenue: 0 },
+    'ビジター（非会員）': { count: 0, revenue: 0 },
+    'ビジター1.5h（会員）': { count: 0, revenue: 0 },
+    'ビジター1.5h（非会員）': { count: 0, revenue: 0 },
+    '月謝クラス振替': { count: 0, revenue: 0 },
+    '初回体験': { count: 0, revenue: 0 },
+    '初回無料': { count: 0, revenue: 0 }
   };
 
   // Practice revenue
   const practice = calculatePracticeRevenue(attendanceData);
-  categories['ç·´ç¿ä¼'] = { count: practice.participants, revenue: practice.revenue };
+  categories['練習会'] = { count: practice.participants, revenue: practice.revenue };
 
   // Visitor/trial revenue
   const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
   Object.keys(attendanceData).forEach(key => {
-    if (key.startsWith('ç·´ç¿ä¼_')) return;
+    if (key.startsWith('練習会_')) return;
 
     const attendance = attendanceData[key];
     weeks.forEach(week => {
-      if (attendance[week] === 'â') {
+      if (attendance[week] === '○') {
         const parts = key.split('_');
         const day = parts[0];
         const location = parts[1];
@@ -161,19 +161,19 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
         }
         if (!plan) {
           const pMap = {
-            'ååä½é¨': 'ååä½é¨',
-            'ååç¡æ': 'ååç¡æ',
-            'ãã¸ã¿ã¼ä¼å¡': 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼',
-            'ãã¸ã¿ã¼éä¼å¡': 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼',
-            'ãã¸ã¿ã¼1.5hä¼å¡': 'ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼',
-            'ãã¸ã¿ã¼1.5héä¼å¡': 'ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼',
-            'ãã¸ã¿ã¼ï¼ä¼å¡ï¼': 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼',
-            'ãã¸ã¿ã¼ï¼éä¼å¡ï¼': 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼',
-            'æè¬ã¯ã©ã¹æ¯æ¿': 'æè¬ã¯ã©ã¹æ¯æ¿'
+            '初回体験': '初回体験',
+            '初回無料': '初回無料',
+            'ビジター会員': 'ビジター（会員）',
+            'ビジター非会員': 'ビジター（非会員）',
+            'ビジター1.5h会員': 'ビジター1.5h（会員）',
+            'ビジター1.5h非会員': 'ビジター1.5h（非会員）',
+            'ビジター（会員）': 'ビジター（会員）',
+            'ビジター（非会員）': 'ビジター（非会員）',
+            '月謝クラス振替': '月謝クラス振替'
           };
           plan = pMap[studentName] || (() => {
             let _m2 = false;
-            ['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥'].forEach(d => {
+            ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'].forEach(d => {
               const dd = scheduleData?.[d];
               if (dd) {
                 dd.forEach(c => {
@@ -183,7 +183,7 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
                 });
               }
             });
-            return _m2 ? 'æè¬ã¯ã©ã¹æ¯æ¿' : 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼';
+            return _m2 ? '月謝クラス振替' : 'ビジター（会員）';
           })();
         }
 
@@ -207,13 +207,13 @@ export function calculateTuitionSummary(customers) {
   const planCounts = {};
 
   Object.values(customers).forEach(c => {
-    if (c.status === 'å¥ä¼ä¸­' && c.plan) {
-      // Extract the number from the plan (e.g., "3ã¯ã©ã¹" -> "3")
-      const match = c.plan.match(/([ï¼ï¼ï¼ï¼1234])/);
+    if (c.status === '入会中' && c.plan) {
+      // Extract the number from the plan (e.g., "3クラス" -> "3")
+      const match = c.plan.match(/([１２３４1234])/);
       if (match) {
         const num = match[1]
-          .replace('ï¼', '1').replace('ï¼', '2')
-          .replace('ï¼', '3').replace('ï¼', '4');
+          .replace('１', '1').replace('２', '2')
+          .replace('３', '3').replace('４', '4');
         const key = num;
         if (!planCounts[key]) planCounts[key] = 0;
         planCounts[key]++;
@@ -228,21 +228,21 @@ export function calculateTuitionSummary(customers) {
  * Format currency for display
  */
 export function formatCurrency(amount) {
-  return `Â¥${amount.toLocaleString()}`;
+  return `¥${amount.toLocaleString()}`;
 }
 
 /**
  * Convert full-width numbers to half-width
  */
 export function toHalfWidth(str) {
-  return str.replace(/[ï¼-ï¼]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+  return str.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
 }
 
 /**
  * Generate CSV from customer data
  */
 export function generateCustomerCSV(customers) {
-  const headers = ['ID', 'å§', 'å', 'ãã©ã³', 'ã¹ãã¼ã¿ã¹', 'å¥ä¼æ¥', 'é»è©±çªå·', 'ã¡ã¼ã«'];
+  const headers = ['ID', '姓', '名', 'プラン', 'ステータス', '入会日', '電話番号', 'メール'];
   const rows = Object.entries(customers).map(([id, c]) => [
     id, c.lastName || '', c.firstName || '', c.plan || '',
     c.status || '', c.joinDate || '', c.phone || '', c.email || ''
