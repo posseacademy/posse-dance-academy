@@ -6,14 +6,14 @@ export function renderSchedule(app) {
   return `
     <div class="schedule-view">
       <div class="page-header">
-        <h1 class="page-title">ã¹ã±ã¸ã¥ã¼ã«</h1>
+        <h1 class="page-title">スケジュール</h1>
       </div>
 
       <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
         <div class="tab-item ${scheduleTab === 'time' ? 'active' : ''}"
-          onclick="app.scheduleTab='time';app.render()">ã¿ã¤ã ã¹ã±ã¸ã¥ã¼ã«</div>
+          onclick="app.scheduleTab='time';app.render()">タイムスケジュール</div>
         <div class="tab-item ${scheduleTab === 'monthly' ? 'active' : ''}"
-          onclick="app.scheduleTab='monthly';app.render()">æéã¹ã±ã¸ã¥ã¼ã«</div>
+          onclick="app.scheduleTab='monthly';app.render()">月間スケジュール</div>
       </div>
 
       ${scheduleTab === 'time' ? renderTimeSchedule() : renderMonthlySchedule(app)}
@@ -22,7 +22,7 @@ export function renderSchedule(app) {
 }
 
 function renderTimeSchedule() {
-  const venues = ['å¤©ç¥æ ¡', 'å¤§æ©æ ¡', 'ç§èæ ¡'];
+  const venues = ['天神校', '大橋校', '照葉校'];
 
   return `
     ${dayOrder.map(day => {
@@ -69,16 +69,16 @@ function renderMonthlySchedule(app) {
         <div class="card" style="margin-bottom:var(--spacing-4)">
           <div class="card-header">
             <h3 class="card-title">${day}</h3>
-            <span class="badge">${classes.length}ã¯ã©ã¹</span>
+            <span class="badge">${classes.length}クラス</span>
           </div>
           <div class="card-body">
             ${classes.length > 0 ? `
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>å ´æ</th>
-                    <th>ã¯ã©ã¹å</th>
-                    <th style="text-align:center">çå¾æ°</th>
+                    <th>場所</th>
+                    <th>クラス名</th>
+                    <th style="text-align:center">生徒数</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -86,12 +86,12 @@ function renderMonthlySchedule(app) {
                     <tr>
                       <td>${c.location}</td>
                       <td><strong>${c.name}</strong></td>
-                      <td style="text-align:center">${(c.students || []).length}å</td>
+                      <td style="text-align:center">${(c.students || []).length}名</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="text-align:center;color:var(--color-text-secondary)">ã¯ã©ã¹ãããã¾ãã</p>'}
+            ` : '<p style="text-align:center;color:var(--color-text-secondary)">クラスがありません</p>'}
           </div>
         </div>
       `;
