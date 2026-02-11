@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>posse dance academy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <svg class="logo-image" viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg" style="max-width:140px;margin-bottom:24px">
+          <text x="6" y="68" font-family="'Futura','Trebuchet MS','Arial Black',sans-serif" font-weight="900" font-size="76" fill="#e42313" letter-spacing="-2">posse</text>
+          <text x="8" y="93" font-family="'Futura','Trebuchet MS',Arial,sans-serif" font-weight="300" font-size="24" fill="rgba(255,255,255,0.85)" letter-spacing="5.5">dance academy</text>
+        </svg>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-tab="home" onclick="app.navigate('home')">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">HOME</span>
+        </div>
+        <div class="nav-item" data-tab="customers" onclick="app.navigate('customers')">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">顧客一覧</span>
+        </div>
+        <div class="nav-item" data-tab="attendance" onclick="app.navigate('attendance')">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">出席名簿</span>
+        </div>
+        <div class="nav-item" data-tab="schedule" onclick="app.navigate('schedule')">
+          <span class="nav-icon">📅</span>
+          <span class="nav-label">スケジュール</span>
+        </div>
+        <div class="nav-item" data-tab="instructors" onclick="app.navigate('instructors')">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">講師プロフィール</span>
+        </div>
+      </nav>
+    </aside>
+    <main class="main-content" id="main-content">
+      <div style="display:flex;align-items:center;justify-content:center;height:60vh">
+        <div class="loading-spinner"></div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
