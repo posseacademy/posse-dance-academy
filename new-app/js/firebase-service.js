@@ -15,7 +15,7 @@ export async function loadCustomers() {
       customers[doc.id] = doc.data();
     });
   } catch (error) {
-    console.error('é¡§å®¢ãã¼ã¿ã®èª­ã¿è¾¼ã¿ã«å¤±æ:', error);
+    console.error('顧客データの読み込みに失敗:', error);
   }
   return customers;
 }
@@ -26,7 +26,7 @@ export async function saveCustomer(id, data) {
     await setDoc(doc(db, 'customers', id), data);
     return true;
   } catch (error) {
-    console.error('é¡§å®¢ãã¼ã¿ã®ä¿å­ã«å¤±æ:', error);
+    console.error('顧客データの保存に失敗:', error);
     return false;
   }
 }
@@ -37,7 +37,7 @@ export async function deleteCustomer(id) {
     await deleteDoc(doc(db, 'customers', id));
     return true;
   } catch (error) {
-    console.error('é¡§å®¢ãã¼ã¿ã®åé¤ã«å¤±æ:', error);
+    console.error('顧客データの削除に失敗:', error);
     return false;
   }
 }
@@ -48,7 +48,7 @@ export async function loadScheduleData() {
   try {
     const querySnapshot = await getDocs(collection(db, 'schedule'));
     if (querySnapshot.empty) {
-      console.log('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿ãè¦ã¤ããã¾ãããåæãã¼ã¿ãä¿å­ãã¾ãã');
+      console.log('スケジュールデータが見つかりません。初期データを保存します。');
       // Save default schedule to Firestore
       for (const [day, classes] of Object.entries(defaultSchedule)) {
         await setDoc(doc(db, 'schedule', day), { classes: classes });
@@ -60,7 +60,7 @@ export async function loadScheduleData() {
       scheduleData[docSnap.id] = docSnap.data().classes || [];
     });
   } catch (error) {
-    console.error('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿ã®èª­ã¿è¾¼ã¿ã«å¤±æ:', error);
+    console.error('スケジュールデータの読み込みに失敗:', error);
     return { ...defaultSchedule };
   }
   return scheduleData;
@@ -73,7 +73,7 @@ export async function saveScheduleData(day, classes) {
     await setDoc(doc(db, 'schedule', day), { classes: classes });
     return true;
   } catch (error) {
-    console.error('ã¹ã±ã¸ã¥ã¼ã«ãã¼ã¿ã®ä¿å­ã«å¤±æ:', error);
+    console.error('スケジュールデータの保存に失敗:', error);
     return false;
   }
 }
@@ -88,7 +88,7 @@ export async function loadAttendance(selectedMonth) {
       attendanceData[docSnap.id] = docSnap.data();
     });
   } catch (error) {
-    console.error('åºå¸­ãã¼ã¿ã®èª­ã¿è¾¼ã¿ã«å¤±æ:', error);
+    console.error('出席データの読み込みに失敗:', error);
   }
   return attendanceData;
 }
@@ -100,7 +100,7 @@ export async function saveAttendance(selectedMonth, studentId, weekData) {
     await setDoc(doc(db, `attendance_${monthKey}`, studentId), weekData);
     return true;
   } catch (error) {
-    console.error('åºå¸­ãã¼ã¿ã®ä¿å­ã«å¤±æ:', error);
+    console.error('出席データの保存に失敗:', error);
     return false;
   }
 }
