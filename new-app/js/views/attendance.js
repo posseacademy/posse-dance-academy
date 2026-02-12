@@ -37,7 +37,7 @@ export function renderAttendance(app) {
       </div>
     </div>
 
-    <!-- Top tabs: HOME / åºå¸­è¨é² -->
+    <!-- Top tabs -->
     <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
       <div class="tab-item ${attendanceTab === 'overview' ? 'active' : ''}"
         onclick="app.attendanceTab='overview';app.render()">HOME</div>
@@ -105,10 +105,10 @@ function renderOverviewTab(app, days, scheduleData, attendanceData, visitorReven
       </div>
     </div>
 
-    <!-- å£²ä¸åè¨³ -->
+    <!-- Revenue breakdown -->
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">\u58F2\u4E0A\u5185\u8A33\uFF08\u54D7\u8B1B\u4EBA\u6570\u30FB\u58F2\u4E0A\uFF09</h2>
+        <h2 class="card-title">\u58F2\u4E0A\u5185\u8A33\uFF08\u53D7\u8B1B\u4EBA\u6570\u30FB\u58F2\u4E0A\uFF09</h2>
       </div>
       <div class="card-body">
         <table class="data-table">
@@ -128,18 +128,54 @@ function renderOverviewTab(app, days, scheduleData, attendanceData, visitorReven
                   <td>${cat}</td>
                   <td style="text-align:center">${data.count > 0 ? `<span class="badge badge-green">${data.count}\u56DE</span>` : '-'}</td>
                   <td style="text-align:right">${formatCurrency(price)}</td>
-    Ý[OH^X[YÛYÚÙ]K][YHÈÝÛÈÝ[OHÛÛÜ\KXÛÛÜY[Ù\HÙÜX]Ý\[ÞJ]K][YJ_OÜÝÛÏ	ËIßOÝÝÂJKÚ[	ÉÊ_BÝ[OHÛ]ÙZYÚÌØÜ\]ÜÛÛY\KXÛÛÜYÜ^KLÌ
-HMMNLÝÝÝÝ[OH^X[YÛYÚÙÜX]Ý\[ÞJ\Ú]Ü][YJ_OÝÝÝÙOÝXOÙ]Ù]KKH9íí9ïä¹/&KO]Û\ÜÏHØ\Ý[OHX\Ú[]Ü\K\ÜXÚ[ËM
-H]Û\ÜÏHØ\ZXY\Û\ÜÏHØ\]]HMÑMÑMPOÚÜ[Û\ÜÏHØ\XYÙHÙÜX]Ý\[ÞJXÝXÙUÝ[
-_OÜÜ[Ù]]Û\ÜÏHØ\XÙH	ÜXÝXÙQ^\ËX\
-^HOÂÛÛÝÙ^HHMÑMÑMPWÉÙ^_XÂÛÛÝ]HH][[ÙQ]VÚÙ^WHßNÂ]\]Ý[OHX\Ú[XÝÛN\K\ÜXÚ[ËM
-HÈÝ[OHÛ\Ú^N\[NÛX\Ú[XÝÛN\K\ÜXÚ[ËLHÙ^_HMÑMÑMPOÚÏXHÛ\ÜÏH]K]XHXYÝ	ÝÙYZÜËX\
+                  <td style="text-align:right">${data.revenue > 0 ? `<strong style="color:var(--color-danger)">${formatCurrency(data.revenue)}</strong>` : '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+            <tr style="font-weight:700;border-top:2px solid var(--color-gray-300)">
+              <td>\u5408\u8A08</td>
+              <td></td>
+              <td></td>
+              <td style="text-align:right">${formatCurrency(visitorRevenue)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-ËJHOÝ[OH^X[YÛÙ[\MÐÉÚJÌ_WNLÌOÝ
-KÚ[	ÉÊ_BÝ[OH^X[YÛÙ[\MMNLÝÝÝXYÙOMLÐÌMLLMPWMMÌÝ	ÝÙYZÜËX\
-ÈOÂÛÛÝÛÝ[H]VÝ×HÂ]\Ý[OH^X[YÛÙ[\[]\OH[X\Û\ÜÏHÜKZ[]Ý[OHÚYÝ^X[YÛÙ[\[YOHØÛÝ[HZ[HÛÚ[ÙOH\\]TXÝXÙJ	ÉÚÙ^_IË	ÉÝßIË\ÙR[
-\Ë[YJ_
-HÝÂJKÚ[	ÉÊ_BÝ[="text-align:center">
+    <!-- Practice sessions -->
+    <div class="card" style="margin-top:var(--spacing-4)">
+      <div class="card-header">
+        <h2 class="card-title">\u7DF4\u7FD2\u4F1A</h2>
+        <span class="card-badge">${formatCurrency(practiceTotal)}</span>
+      </div>
+      <div class="card-body">
+        ${practiceDays.map(day => {
+          const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+          const data = attendanceData[key] || {};
+          return `
+            <div style="margin-bottom:var(--spacing-4)">
+              <h3 style="font-size:1rem;margin-bottom:var(--spacing-2)">${day} \u7DF4\u7FD2\u4F1A</h3>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    ${weeks.map((_, i) => `<th style="text-align:center">\u7B2C${i+1}\u9031</th>`).join('')}
+                    <th style="text-align:center">\u5408\u8A08</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>\u53C2\u52A0\u4EBA\u6570</td>
+                    ${weeks.map(w => {
+                      const count = data[w] || 0;
+                      return `<td style="text-align:center">
+                        <input type="number" class="form-input" style="width:60px;text-align:center"
+                          value="${count}" min="0"
+                          onchange="app.updatePractice('${key}','${w}',parseInt(this.value)||0)">
+                      </td>`;
+                    }).join('')}
+                    <td style="text-align:center">
                       <strong>${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}\u540D</strong>
                     </td>
                   </tr>
