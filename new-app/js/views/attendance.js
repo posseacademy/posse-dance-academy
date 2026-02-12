@@ -7,102 +7,245 @@ export function renderAttendance(app) {
   const scheduleData = app.scheduleData || {};
   const dayClasses = Array.isArray(scheduleData[selectedDay]) ? scheduleData[selectedDay] : [];
   const attendanceData = app.attendanceData || {};
-  const attendanceTab = app.attendanceTab || 'classes';
+  const attendanceTab = app.attendanceTab || 'overview';
 
-  // Revenue calculations for summary tab
+  // Revenue calculations
   const visitorRevenue = calculateVisitorRevenue(app.selectedMonth, attendanceData, scheduleData);
   const detailed = calculateDetailedRevenue(app.selectedMonth, attendanceData, scheduleData);
   const practice = calculatePracticeRevenue(attendanceData);
 
+  // Calculate total classes and total students
+  let totalClasses = 0;
+  let totalStudents = 0;
+  days.forEach(day => {
+    const dc = Array.isArray(scheduleData[day]) ? scheduleData[day] : [];
+    totalClasses += dc.length;
+    dc.forEach(cls => {
+      const key = cls.id || (day + '_' + cls.name);
+      const att = attendanceData[key] || {};
+      const students = att.students || [];
+      totalStudents += students.length;
+    });
+  });
+
   return `
-    <div class="attendance-view">
-      <div class="page-header">
-        <h1 class="page-title">出席名簿</h1>
-        <div style="display:flex;gap:var(--spacing-3);align-items:center">
-          <input type="month" class="form-input" value="${app.selectedMonth || ''}"
-            onchange="app.changeMonth(this.value)">
-          <button class="btn btn-sm" onclick="app.downloadBackup()">バックアップ</button>
+   <div class="attendance-view">
+    <div class="page-header">
+      <h1 class="page-title">出席名簿</h1>
+      <div style="display:flex;gap:var(--spacing-3);align-items:center">
+        <input type="month" class="form-input" value="${app.selectedMonth || ''}"
+          onchange="app.changeMonth(this.value)">
+        <button class="btn btn-sm" onclick="app.downloadBackup()">バックアップ</button>
+      </div>
+    </div>
+
+    <!-- Top tabs: HOME / 出席記録 -->
+    <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
+      <div class="tab-item ${attendanceTab === 'overview' ? 'active' : ''}"
+        onclick="app.attendanceTab='overview';app.render()">HOME</div>
+      <div class="tab-item ${attendanceTab === 'record' ? 'active' : ''}"
+        onclick="app.attendanceTab='record';app.render()">出席記録</div>
+    </div>
+
+    ${attendanceTab === 'overview' ? renderOverviewTab(app, days, scheduleData, attendanceData, visitorRevenue, detailed, practice, totalClasses, totalStudents) : ''}
+    ${attendanceTab === 'record' ? renderRecordTab(app, days, selectedDay, dayClasses, attendanceData) : ''}
+   </div>
+  `;
+}
+
+function renderOverviewTab(app, days, scheduleData, attendanceData, visitorRevenue, detailed, practice, totalClasses, totalStudents) {
+  const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+  const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
+
+  // Calculate practice revenue
+  let practiceTotal = 0;
+  practiceDays.forEach(day => {
+    const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+    const data = attendanceData[key] || {};
+    weeks.forEach(w => {
+      practiceTotal += (parseInt(data[w]) || 0) * (pricing['\u7DF4\u7FD2\u4F1A'] || 500);
+    });
+  });
+
+  return `
+    <!-- Summary Cards -->
+    <div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--spacing-4);margin-bottom:var(--spacing-6)">
+      <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+          <span style="font-size:1.5rem">\uD83D\uDCC5</span>
+          <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DCF\u30AF\u30E9\u30B9\u6570</span>
         </div>
+        <div style="font-size:2rem;font-weight:700">${totalClasses}</div>
+        <div style="color:var(--color-text-secondary);font-size:0.875rem">\u30AF\u30E9\u30B9</div>
       </div>
-
-      <!-- Top tabs: Classes / Summary / Practice -->
-      <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
-        <div class="tab-item ${attendanceTab === 'classes' ? 'active' : ''}"
-          onclick="app.attendanceTab='classes';app.render()">クラス別出席</div>
-        <div class="tab-item ${attendanceTab === 'summary' ? 'active' : ''}"
-          onclick="app.attendanceTab='summary';app.render()">売上サマリー</div>
-        <div class="tab-item ${attendanceTab === 'practice' ? 'active' : ''}"
-          onclick="app.attendanceTab='practice';app.render()">練習会</div>
+      <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+          <span style="font-size:1.5rem">\uD83D\uDC65</span>
+          <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DCF\u751F\u5F92\u6570\uFF08\u5EF6\u3079\uFF09</span>
+        </div>
+        <div style="font-size:2rem;font-weight:700;color:var(--color-primary)">${totalStudents}</div>
+        <div style="color:var(--color-text-secondary);font-size:0.875rem">\u540D</div>
       </div>
+      <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+          <span style="font-size:1.5rem">\uD83D\uDCB0</span>
+          <span style="color:var(--color-text-secondary);font-size:0.875rem">\u30D3\u30B8\u30BF\u30FC\u58F2\u4E0A</span>
+        </div>
+        <div style="font-size:2rem;font-weight:700;color:var(--color-danger)">${formatCurrency(visitorRevenue)}</div>
+      </div>
+      <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+        <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+          <span style="font-size:1.5rem">\u23F0</span>
+          <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DF4\u7FD2\u4F1A\u58F2\u4E0A</span>
+        </div>
+        <div style="font-size:2rem;font-weight:700">${formatCurrency(practiceTotal)}</div>
+        <div style="color:var(--color-text-secondary);font-size:0.875rem">${practiceDays.reduce((sum, day) => {
+          const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+          const data = attendanceData[key] || {};
+          return sum + weeks.reduce((s, w) => s + (parseInt(data[w]) || 0), 0);
+        }, 0)}\u540D\u53C2\u52A0</div>
+      </div>
+    </div>
 
-      ${attendanceTab === 'classes' ? renderClassesTab(app, days, selectedDay, dayClasses, attendanceData) : ''}
-      ${attendanceTab === 'summary' ? renderSummaryTab(visitorRevenue, detailed, practice) : ''}
-      ${attendanceTab === 'practice' ? renderPracticeTab(app, attendanceData) : ''}
+    <!-- 売上内訳 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">\u58F2\u4E0A\u5185\u8A33\uFF08\u53D7\u8B1B\u4EBA\u6570\u30FB\u58F2\u4E0A\uFF09</h2>
+      </div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>\u30AB\u30C6\u30B4\u30EA</th>
+              <th style="text-align:center">\u53D7\u8B1B\u4EBA\u6570</th>
+              <th style="text-align:right">\u5358\u4FA1</th>
+              <th style="text-align:right">\u58F2\u4E0A</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.entries(detailed).map(([cat, data]) => {
+              const price = pricing[cat] || 0;
+              return `
+                <tr>
+                  <td>${cat}</td>
+                  <td style="text-align:center">${data.count > 0 ? `<span class="badge badge-green">${data.count}\u56DE</span>` : '-'}</td>
+                  <td style="text-align:right">${formatCurrency(price)}</td>
+                  <td style="text-align:right">${data.revenue > 0 ? `<strong style="color:var(--color-danger)">${formatCurrency(data.revenue)}</strong>` : '-'}</td>
+                </tr>
+              `;
+            }).join('')}
+            <tr style="font-weight:700;border-top:2px solid var(--color-gray-300)">
+              <td>\u5408\u8A08</td>
+              <td></td>
+              <td></td>
+              <td style="text-align:right">${formatCurrency(visitorRevenue)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 練習会 -->
+    <div class="card" style="margin-top:var(--spacing-4)">
+      <div class="card-header">
+        <h2 class="card-title">\u7DF4\u7FD2\u4F1A</h2>
+        <span class="card-badge">${formatCurrency(practiceTotal)}</span>
+      </div>
+      <div class="card-body">
+        ${practiceDays.map(day => {
+          const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+          const data = attendanceData[key] || {};
+          return `
+            <div style="margin-bottom:var(--spacing-4)">
+              <h3 style="font-size:1rem;margin-bottom:var(--spacing-2)">${day} \u7DF4\u7FD2\u4F1A</h3>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    ${weeks.map((_, i) => `<th style="text-align:center">\u7B2C${i+1}\u9031</th>`).join('')}
+                    <th style="text-align:center">\u5408\u8A08</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>\u53C2\u52A0\u4EBA\u6570</td>
+                    ${weeks.map(w => {
+                      const count = data[w] || 0;
+                      return `<td style="text-align:center">
+                        <input type="number" class="form-input" style="width:60px;text-align:center"
+                          value="${count}" min="0"
+                          onchange="app.updatePractice('${key}','${w}',parseInt(this.value)||0)">
+                      </td>`;
+                    }).join('')}
+                    <td style="text-align:center">
+                      <strong>${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}\u540D</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
 
-function renderClassesTab(app, days, selectedDay, dayClasses, attendanceData) {
+function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData) {
   return `
     <!-- Day tabs -->
     <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
       ${days.map(day => `
         <div class="tab-item ${day === selectedDay ? 'active' : ''}"
           onclick="app.selectedDay='${day}';app.render()">
-          ${day.replace('曜日', '')}
+          ${day}
         </div>
       `).join('')}
     </div>
 
-    <!-- Classes for selected day -->
-    ${dayClasses.map((cls, ci) => {
-      const students = cls.students || [];
+    ${dayClasses.map(cls => {
+      const key = cls.id || (selectedDay + '_' + cls.name);
+      const att = attendanceData[key] || {};
+      const students = att.students || [];
+      const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+
       return `
         <div class="card" style="margin-bottom:var(--spacing-4)">
-          <div class="card-header" style="border-left:4px solid ${cls.color === 'red' ? '#DC2626' : cls.color === 'orange' ? '#EA580C' : cls.color === 'blue' ? '#2563EB' : cls.color === 'green' ? '#16A34A' : cls.color === 'purple' ? '#9333EA' : '#6B7280'}">
-            <h3 class="card-title">${cls.location} - ${cls.name}</h3>
-            <span class="badge">${students.length}名</span>
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">${cls.location || ''} - ${cls.name} ${cls.instructor || ''}</h3>
+              <span style="color:var(--color-text-secondary)">${students.length}\u540D</span>
+            </div>
           </div>
-          <div class="card-body" style="overflow-x:auto">
-            <table class="data-table attendance-table">
+          <div class="card-body">
+            <table class="data-table">
               <thead>
                 <tr>
-                  <th>生徒名</th>
-                  <th>プラン</th>
-                  <th style="text-align:center">W1</th>
-                  <th style="text-align:center">W2</th>
-                  <th style="text-align:center">W3</th>
-                  <th style="text-align:center">W4</th>
-                  <th style="text-align:center">W5</th>
-                  <th style="text-align:center">出席率</th>
+                  <th>\u751F\u5F92\u540D</th>
+                  <th>\u30D7\u30E9\u30F3</th>
+                  ${weeks.map((_, i) => `<th style="text-align:center">W${i+1}</th>`).join('')}
+                  <th style="text-align:center">\u51FA\u5E2D\u7387</th>
                 </tr>
               </thead>
               <tbody>
-                ${students.sort((a, b) => (planOrder[a.plan] || 99) - (planOrder[b.plan] || 99)).map(s => {
-                  const studentKey = `${selectedDay}_${cls.location}_${cls.name}_${s.lastName}${s.firstName}`;
-                  const att = attendanceData[studentKey] || {};
-                  const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-                  const attended = weeks.filter(w => att[w] === '○').length;
-                  const absent = weeks.filter(w => att[w] === '×').length;
-                  const total = attended + absent;
-                  const rate = total > 0 ? Math.round((attended / total) * 100) : '-';
-
+                ${students.map((st, si) => {
+                  const attended = weeks.filter(w => st[w] === '\u25CB' || st[w] === '\u4F11\u8B1B').length;
+                  const totalWeeks = weeks.filter(w => st[w] && st[w] !== '-').length;
+                  const rate = totalWeeks > 0 ? Math.round((attended / totalWeeks) * 100) + '%' : '-';
                   return `
                     <tr>
-                      <td><strong>${s.lastName} ${s.firstName}</strong></td>
-                      <td><span class="badge">${s.plan}</span></td>
+                      <td>${st.name || ''}</td>
+                      <td>${st.plan || '-'}</td>
                       ${weeks.map(w => {
-                        const val = att[w] || '-';
-                        const cls2 = val === '○' ? 'attendance-present' : val === '×' ? 'attendance-absent' : val === '休講' ? 'attendance-cancel' : '';
+                        const val = st[w] || '-';
+                        const style = val === '\u25CB' ? 'color:var(--color-primary)' :
+                                      val === '\u4F11\u8B1B' ? 'background:var(--color-warning-light);color:var(--color-warning);border-radius:4px;padding:2px 6px;font-size:0.75rem' :
+                                      'color:var(--color-text-secondary)';
                         return `<td style="text-align:center">
-                          <span class="attendance-mark ${cls2}"
-                            onclick="app.toggleAttendance('${studentKey}','${w}')"
-                            style="cursor:pointer">${val}</span>
+                          <span style="${style}">${val}</span>
                         </td>`;
                       }).join('')}
-                      <td style="text-align:center">
-                        <strong>${rate === '-' ? '-' : rate + '%'}</strong>
-                      </td>
+                      <td style="text-align:center;font-weight:600">${rate}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -113,98 +256,6 @@ function renderClassesTab(app, days, selectedDay, dayClasses, attendanceData) {
       `;
     }).join('')}
 
-    ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">この曜日にはクラスがありません</div></div>' : ''}
-  `;
-}
-
-function renderSummaryTab(visitorRevenue, detailed, practice) {
-  return `
-    <div class="card">
-      <div class="card-header">
-        <h2 class="card-title">ビジター・体験売上</h2>
-        <span class="card-badge">${formatCurrency(visitorRevenue)}</span>
-      </div>
-      <div class="card-body">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>カテゴリ</th>
-              <th style="text-align:center">回数</th>
-              <th style="text-align:right">単価</th>
-              <th style="text-align:right">売上</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Object.entries(detailed).map(([cat, data]) => {
-              const price = pricing[cat] || 0;
-              return `
-                <tr>
-                  <td>${cat}</td>
-                  <td style="text-align:center">${data.count}回</td>
-                  <td style="text-align:right">${formatCurrency(price)}</td>
-                  <td style="text-align:right"><strong>${formatCurrency(data.revenue)}</strong></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:var(--spacing-4)">
-      <div class="card-header">
-        <h2 class="card-title">練習会売上</h2>
-        <span class="card-badge">${formatCurrency(practice.revenue)}</span>
-      </div>
-      <div class="card-body">
-        <p>参加者数: ${practice.participants}名 × ¥500 = ${formatCurrency(practice.revenue)}</p>
-      </div>
-    </div>
-  `;
-}
-
-function renderPracticeTab(app, attendanceData) {
-  const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-  const practiceDays = ['月曜日', '木曜日'];
-
-  return `
-    ${practiceDays.map(day => {
-      const key = `練習会_${day}`;
-      const data = attendanceData[key] || {};
-      return `
-        <div class="card" style="margin-bottom:var(--spacing-4)">
-          <div class="card-header">
-            <h3 class="card-title">${day} 練習会</h3>
-          </div>
-          <div class="card-body">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th></th>
-                  ${weeks.map((_, i) => `<th style="text-align:center">第${i+1}週</th>`).join('')}
-                  <th style="text-align:center">合計</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>参加人数</td>
-                  ${weeks.map(w => {
-                    const count = data[w] || 0;
-                    return `<td style="text-align:center">
-                      <input type="number" class="form-input" style="width:60px;text-align:center"
-                        value="${count}" min="0"
-                        onchange="app.updatePractice('${key}','${w}',parseInt(this.value)||0)">
-                    </td>`;
-                  }).join('')}
-                  <td style="text-align:center">
-                    <strong>${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}名</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }).join('')}
+    ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">\u3053\u306E\u66DC\u65E5\u306B\u306F\u30AF\u30E9\u30B9\u304C\u3042\u308A\u307E\u305B\u3093</div></div>' : ''}
   `;
 }
