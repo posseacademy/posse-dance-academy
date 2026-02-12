@@ -97,7 +97,7 @@ class DanceStudioApp {
     }
     const current = this.attendanceData[studentKey][week] || '';
     const next = current === '\u25CB' ? '\u00D7'
-               : current === '\u00D7' ? '\u4F11\u8B1B''
+               : current === '\u00D7' ? '\u4F11\u8B1B'
                : current === '\u4F11\u8B1B' ? ''
                : '\u25CB';
 
