@@ -206,16 +206,16 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
 export function calculateTuitionSummary(customers) {
   const planCounts = {};
   Object.values(customers).forEach(c => {
-    if (c.status === '入会中' && c.plan) {
+    if (c.status === '入会中' && c.course) {
       // Extract the number from the plan (e.g., "3クラス" -> "3", "３" -> "3")
-      const match = c.plan.match(/([１２３４1234])/);
+      const match = c.course.match(/([１２３４1234])/);
       if (match) {
         const num = match[1]
           .replace('１', '1').replace('２', '2')
           .replace('３', '3').replace('４', '4');
         if (!planCounts[num]) planCounts[num] = 0;
         planCounts[num]++;
-      } else if (c.plan.includes('ビジター')) {
+      } else if (c.course.includes('ビジター')) {
         if (!planCounts['visitor']) planCounts['visitor'] = 0;
         planCounts['visitor']++;
       }
