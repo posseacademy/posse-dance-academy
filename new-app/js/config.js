@@ -61,36 +61,41 @@ export const defaultSchedule = {
   'イベント': [],
   '月曜日': [
     { location: '天神', name: 'アクロバット SOYA', color: 'red', students: [
-      { lastName: '中島', firstName: '櫜吾', plan: '３クラス' },
+      { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
       { lastName: '四井', firstName: '陽音', plan: '３クラス' },
       { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
       { lastName: '嶋川', firstName: '陽大', plan: '３クラス' },
-      { lastName: '', firstName: '大空', plan: '３クラス' },
+      { lastName: '上田', firstName: '大空', plan: '２クラス' },
       { lastName: '津留', firstName: '創真', plan: '２クラス' },
       { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' },
-      { lastName: '伊藤', firstName: '和馬', plan: '1クラス' }
+      { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
+      { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
+      { lastName: '堤', firstName: '勇仁', plan: '３クラス' },
+      { lastName: '森田', firstName: '翔真', plan: '３クラス' },
+      { lastName: '樋渡', firstName: '皓太', plan: '３クラス' }
     ]},
     { location: '天神', name: 'ブレイキン入門 SOYA', color: 'orange', students: [
       { lastName: '津留', firstName: '創真', plan: '２クラス' },
       { lastName: '榊', firstName: '花梨', plan: '２クラス' },
-      { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' }
+      { lastName: '樋渡', firstName: '皓太', plan: '３クラス' }
     ]},
     { location: '天神', name: 'トップロック フットワーク DAZ', color: 'blue', students: [
       { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
       { lastName: '四井', firstName: '陽音', plan: '３クラス' },
       { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-      { lastName: '', firstName: '大空', plan: '３クラス' },
-      { lastName: '嶋川', firstName: '陽大', plan: '２クラス' },
+      { lastName: '上田', firstName: '大空', plan: '２クラス' },
       { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
       { lastName: '戸田', firstName: '唯斗', plan: '1クラス' },
-      { lastName: '森脇', firstName: '鳳仁', plan: '1クラス' }
+      { lastName: '森脇', firstName: '鳳仁', plan: '1クラス' },
+      { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
+      { lastName: '堤', firstName: '勇仁', plan: '３クラス' }
     ]},
     { location: '天神', name: 'K-POP AI', color: 'green', students: [
       { lastName: '石原', firstName: '美黎', plan: '２クラス' },
       { lastName: '平嶋', firstName: '彩佳', plan: '1クラス' },
       { lastName: '杉村', firstName: '早紀', plan: '1クラス' },
       { lastName: '田代', firstName: '杏奈', plan: '1クラス' },
-      { lastName: '唯野', firstName: '萎維', plan: '1クラス' }
+      { lastName: '唯野', firstName: '萌維', plan: '1クラス' }
     ]},
     { location: '天神', name: 'hiphop HIMEKA', color: 'purple', students: [
       { lastName: '中川', firstName: '凛音', plan: '２クラス' },
@@ -103,7 +108,7 @@ export const defaultSchedule = {
   '火曜日': [
     { location: '大橋', name: 'キッズダンス AYANO', color: 'red', students: [
       { lastName: '古賀', firstName: '文人', plan: '1クラス' },
-      { lastName: '古賀', firstName: '卯月夃', plan: '1クラス' },
+      { lastName: '古賀', firstName: '卯月妃', plan: '1クラス' },
       { lastName: '原口', firstName: '省吾', plan: '1クラス' },
       { lastName: 'わたなべ', firstName: 'いとし', plan: '1クラス' },
       { lastName: '富井', firstName: '藍', plan: '1クラス' }
@@ -122,9 +127,9 @@ export const defaultSchedule = {
   ],
   '水曜日': [
     { location: '天神', name: 'ブレイキン初級 HARUHIKO', color: 'red', students: [
-      { lastName: '甲島', firstName: '渚', plan: '1クラス' },
+      { lastName: '田島', firstName: '渚', plan: '1クラス' },
       { lastName: '吉田', firstName: '智幸', plan: '1クラス' },
-      { lastName: '未橋', firstName: '廉士', plan: '1クラス' },
+      { lastName: '本橋', firstName: '廉士', plan: '1クラス' },
       { lastName: '酒井', firstName: '天優', plan: '1クラス' },
       { lastName: '新藤', firstName: '大希', plan: '1クラス' },
       { lastName: '荒巻', firstName: '大和', plan: '1クラス' },
@@ -142,7 +147,7 @@ export const defaultSchedule = {
     { location: '大橋', name: 'ブレイキン入門 SOYA', color: 'red', students: [
       { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
       { lastName: '原口', firstName: '賢伸', plan: '２クラス' },
-      { lastName: '渡邉', firstName: '剭太', plan: '２クラス' },
+      { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
       { lastName: '藤田', firstName: '将舞', plan: '２クラス' },
       { lastName: '藤田', firstName: '凌羽', plan: '２クラス' },
       { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
@@ -183,7 +188,7 @@ export const defaultSchedule = {
   ],
   '金曜日': [
     { location: '天神', name: 'アクロ＆パワー SOYA', color: 'red', students: [
-      { lastName: '中島', firstName: '櫜吾', plan: '３クラス' },
+      { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
       { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
       { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
       { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' },
