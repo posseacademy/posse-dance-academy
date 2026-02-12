@@ -10,23 +10,23 @@ export const firebaseConfig = {
 
 // Pricing - EXACT values
 export const pricing = {
-  "4ã¯ã©ã¹": 18600, "ï¼ã¯ã©ã¹": 18600,
-  "3ã¯ã©ã¹": 14400, "ï¼ã¯ã©ã¹": 14400,
-  "2ã¯ã©ã¹": 10000, "ï¼ã¯ã©ã¹": 10000,
-  "1ã¯ã©ã¹": 6000, "ï¼ã¯ã©ã¹": 6000,
-  "1.5hã¯ã©ã¹": 6600,
-  "ååä½é¨": 1000, "ååç¡æ": 0,
-  "ãã¸ã¿ã¼ï¼ä¼å¡ï¼": 2000, "ãã¸ã¿ã¼ï¼éä¼å¡ï¼": 2300,
-  "ãã¸ã¿ã¼1.5hï¼ä¼å¡ï¼": 2200, "ãã¸ã¿ã¼1.5hï¼éä¼å¡ï¼": 2500,
-  "æè¬ã¯ã©ã¹æ¯æ¿": 1000, "ç·´ç¿ä¼": 500
+  "4クラス": 18600, "４クラス": 18600,
+  "3クラス": 14400, "３クラス": 14400,
+  "2クラス": 10000, "２クラス": 10000,
+  "1クラス": 6000, "１クラス": 6000,
+  "1.5hクラス": 6600,
+  "初回体験": 1000, "初回無料": 0,
+  "ビジター（会員）": 2000, "ビジター（非会員）": 2300,
+  "ビジター1.5h（会員）": 2200, "ビジター1.5h（非会員）": 2500,
+  "月謝クラス振替": 1000, "練習会": 500
 };
 
 // Plan order for sorting
 export const planOrder = {
-  "4ã¯ã©ã¹":1,"ï¼ã¯ã©ã¹":1,"3ã¯ã©ã¹":2,"ï¼ã¯ã©ã¹":2,
-  "2ã¯ã©ã¹":3,"ï¼ã¯ã©ã¹":3,"1ã¯ã©ã¹":4,"ï¼ã¯ã©ã¹":4,
-  "1.5hã¯ã©ã¹":5,"ãã¸ã¿ã¼ï¼ä¼å¡ï¼":6,"ãã¸ã¿ã¼ï¼éä¼å¡ï¼":7,
-  "ãã¸ã¿ã¼ï¼æ¯æ¿ï¼":8,"ååä½é¨":9,"ååç¡æ":10
+  "4クラス":1,"４クラス":1,"3クラス":2,"３クラス":2,
+  "2クラス":3,"２クラス":3,"1クラス":4,"１クラス":4,
+  "1.5hクラス":5,"ビジター（会員）":6,"ビジター（非会員）":7,
+  "ビジター（振替）":8,"初回体験":9,"初回無料":10
 };
 
 // Visitor revenue overrides - hardcoded monthly values for data protection
@@ -39,330 +39,330 @@ export const visitorRevenueOverrides = {
 
 // Course prices for dashboard display (monthly tuition by class count)
 export const coursePrices = {
-  'ï¼': 6000, 'ï¼': 10000, 'ï¼': 14400, 'ï¼': 18600
+  '１': 6000, '２': 10000, '３': 14400, '４': 18600
 };
 
 // Course colors for dashboard
 export const courseColors = {
-  'ï¼': '#3B82F6', 'ï¼': '#8B5CF6', 'ï¼': '#F59E0B', 'ï¼': '#EF4444'
+  '１': '#3B82F6', '２': '#8B5CF6', '３': '#F59E0B', '４': '#EF4444'
 };
 
 // Default schedule - EXACT student names from the live system
 export const defaultSchedule = {
-  'ã¤ãã³ã': [],
-  'æææ¥': [
-    { location: 'å¤©ç¥', name: 'ã¢ã¯ã­ããã SOYA', color: 'red', students: [
-      { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å¶å·', firstName: 'é½å¤§', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ´¥ç', firstName: 'åµç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ã²ããã', firstName: 'ããã', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: '1ã¯ã©ã¹' }
+  'イベント': [],
+  '月曜日': [
+    { location: '天神', name: 'アクロバット SOYA', color: 'red', students: [
+      { lastName: '中島', firstName: '櫜吾', plan: '３クラス' },
+      { lastName: '四井', firstName: '陽音', plan: '３クラス' },
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+      { lastName: '嶋川', firstName: '陽大', plan: '３クラス' },
+      { lastName: '', firstName: '大空', plan: '３クラス' },
+      { lastName: '津留', firstName: '創真', plan: '２クラス' },
+      { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' },
+      { lastName: '伊藤', firstName: '和馬', plan: '1クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'orange', students: [
-      { lastName: 'æ´¥ç', firstName: 'åµç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¦', firstName: 'è±æ¢¨', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ã²ããã', firstName: 'ããã', plan: 'ï¼ã¯ã©ã¹' }
+    { location: '天神', name: 'ブレイキン入門 SOYA', color: 'orange', students: [
+      { lastName: '津留', firstName: '創真', plan: '２クラス' },
+      { lastName: '榊', firstName: '花梨', plan: '２クラス' },
+      { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'ãããã­ãã¯ ãããã¯ã¼ã¯ DAZ', color: 'blue', students: [
-      { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å¶å·', firstName: 'é½å¤§', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ¸ç°', firstName: 'å¯æ', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ£®è', firstName: 'é³³ä»', plan: '1ã¯ã©ã¹' }
+    { location: '天神', name: 'トップロック フットワーク DAZ', color: 'blue', students: [
+      { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
+      { lastName: '四井', firstName: '陽音', plan: '３クラス' },
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+      { lastName: '', firstName: '大空', plan: '３クラス' },
+      { lastName: '嶋川', firstName: '陽大', plan: '２クラス' },
+      { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
+      { lastName: '戸田', firstName: '唯斗', plan: '1クラス' },
+      { lastName: '森脇', firstName: '鳳仁', plan: '1クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'K-POP AI', color: 'green', students: [
-      { lastName: 'ç³å', firstName: 'ç¾é»', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å¹³å¶', firstName: 'å½©ä½³', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ææ', firstName: 'æ©ç´', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ç°ä»£', firstName: 'æå¥', plan: '1ã¯ã©ã¹' },
-      { lastName: 'å¯é', firstName: 'èç¶­', plan: '1ã¯ã©ã¹' }
+    { location: '天神', name: 'K-POP AI', color: 'green', students: [
+      { lastName: '石原', firstName: '美黎', plan: '２クラス' },
+      { lastName: '平嶋', firstName: '彩佳', plan: '1クラス' },
+      { lastName: '杉村', firstName: '早紀', plan: '1クラス' },
+      { lastName: '田代', firstName: '杏奈', plan: '1クラス' },
+      { lastName: '唯野', firstName: '萎維', plan: '1クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'hiphop HIMEKA', color: 'purple', students: [
-      { lastName: 'ä¸­å·', firstName: 'åé³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ç³å', firstName: 'ç¾é»', plan: '1ã¯ã©ã¹' }
+    { location: '天神', name: 'hiphop HIMEKA', color: 'purple', students: [
+      { lastName: '中川', firstName: '凛音', plan: '２クラス' },
+      { lastName: '石原', firstName: '美黎', plan: '1クラス' }
     ]},
-    { location: 'å¤§æ©', name: 'hiphop HIMEKA', color: 'purple', students: [
-      { lastName: 'æ¸æ°´', firstName: 'ããã¿', plan: '1ã¯ã©ã¹' }
+    { location: '大橋', name: 'hiphop HIMEKA', color: 'purple', students: [
+      { lastName: '清水', firstName: 'くるみ', plan: '1クラス' }
     ]}
   ],
-  'ç«ææ¥': [
-    { location: 'å¤§æ©', name: 'ã­ããºãã³ã¹ AYANO', color: 'red', students: [
-      { lastName: 'å¤è³', firstName: 'æäºº', plan: '1ã¯ã©ã¹' },
-      { lastName: 'å¤è³', firstName: 'å¯æå¦', plan: '1ã¯ã©ã¹' },
-      { lastName: 'åå£', firstName: 'çå¾', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ãããªã¹', firstName: 'ãã¨ã', plan: '1ã¯ã©ã¹' },
-      { lastName: 'å¯äº', firstName: 'è', plan: '1ã¯ã©ã¹' }
+  '火曜日': [
+    { location: '大橋', name: 'キッズダンス AYANO', color: 'red', students: [
+      { lastName: '古賀', firstName: '文人', plan: '1クラス' },
+      { lastName: '古賀', firstName: '卯月夃', plan: '1クラス' },
+      { lastName: '原口', firstName: '省吾', plan: '1クラス' },
+      { lastName: 'わたなべ', firstName: 'いとし', plan: '1クラス' },
+      { lastName: '富井', firstName: '藍', plan: '1クラス' }
     ]},
-    { location: 'å¤§æ©', name: 'Bgirlã¯ã©ã¹ AYANO HARUHIKO', color: 'orange', students: [
-      { lastName: 'æç²', firstName: 'å¤§è¼ª', plan: '1ã¯ã©ã¹' }
+    { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
+      { lastName: '愛甲', firstName: '大輪', plan: '1クラス' }
     ]},
-    { location: 'ç§è', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'blue', students: [
-      { lastName: 'æ¦', firstName: 'è±æ¢¨', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¥¿å', firstName: 'åæ', plan: '1ã¯ã©ã¹' }
+    { location: '照葉', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
+      { lastName: '榊', firstName: '花梨', plan: '２クラス' },
+      { lastName: '西園', firstName: '千晃', plan: '1クラス' }
     ]},
-    { location: 'ç§è', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'green', students: [
-      { lastName: 'åæ­¦', firstName: 'åä¿', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å ¤', firstName: 'åä»', plan: '1ã¯ã©ã¹' }
+    { location: '照葉', name: 'アクロ＆パワー SOYA', color: 'green', students: [
+      { lastName: '吉武', firstName: '凛保', plan: '３クラス' },
+      { lastName: '堤', firstName: '勇仁', plan: '1クラス' }
     ]}
   ],
-  'æ°´ææ¥': [
-    { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³åç´ HARUHIKO', color: 'red', students: [
-      { lastName: 'ç°å³¶', firstName: 'æ¸', plan: '1ã¯ã©ã¹' },
-      { lastName: 'åç°', firstName: 'æºå¹¸', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ¬æ©', firstName: 'å»å£«', plan: '1ã¯ã©ã¹' },
-      { lastName: 'éäº', firstName: 'å¤©åª', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ°è¤', firstName: 'å¤§å¸', plan: '1ã¯ã©ã¹' },
-      { lastName: 'èå·»', firstName: 'å¤§å', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ãã', firstName: 'ããã¨', plan: '1ã¯ã©ã¹' },
-      { lastName: 'è¤é', firstName: 'è¼é£«', plan: '1ã¯ã©ã¹' }
+  '水曜日': [
+    { location: '天神', name: 'ブレイキン初級 HARUHIKO', color: 'red', students: [
+      { lastName: '甲島', firstName: '渚', plan: '1クラス' },
+      { lastName: '吉田', firstName: '智幸', plan: '1クラス' },
+      { lastName: '未橋', firstName: '廉士', plan: '1クラス' },
+      { lastName: '酒井', firstName: '天優', plan: '1クラス' },
+      { lastName: '新藤', firstName: '大希', plan: '1クラス' },
+      { lastName: '荒巻', firstName: '大和', plan: '1クラス' },
+      { lastName: 'しん', firstName: 'よしと', plan: '1クラス' },
+      { lastName: '藤野', firstName: '蒼士', plan: '1クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³ä¸­ä¸ç´ HARUHIKO', color: 'orange', students: [
-      { lastName: '', firstName: 'å¤§ç©º', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ£®ç°', firstName: 'ç¿ç', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ä¸­å±±', firstName: 'çµæ', plan: '1ã¯ã©ã¹' },
-      { lastName: 'è¿«ç°', firstName: 'ããã', plan: '1ã¯ã©ã¹' }
+    { location: '天神', name: 'ブレイキン中上級 HARUHIKO', color: 'orange', students: [
+      { lastName: '', firstName: '大空', plan: '３クラス' },
+      { lastName: '森田', firstName: '翔真', plan: '1クラス' },
+      { lastName: '中山', firstName: '結愛', plan: '1クラス' },
+      { lastName: '迫田', firstName: 'りりあ', plan: '1クラス' }
     ]}
   ],
-  'æ¨ææ¥': [
-    { location: 'å¤§æ©', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: 'red', students: [
-      { lastName: 'åæ', firstName: 'å¤ªå£±', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åå£', firstName: 'è³¢ä¼¸', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¸¡é', firstName: 'åµå¤ª', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤ç°', firstName: 'å°è', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤ç°', firstName: 'åç¾½', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å°æ³', firstName: 'åé½', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è±ç£', firstName: 'æ æ', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ± ç°', firstName: 'å¨', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ¾¤æ±', firstName: 'æ ', plan: '1ã¯ã©ã¹' },
-      { lastName: 'å±±ä¸', firstName: 'å¹¸åé', plan: '1ã¯ã©ã¹' }
+  '木曜日': [
+    { location: '大橋', name: 'ブレイキン入門 SOYA', color: 'red', students: [
+      { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
+      { lastName: '原口', firstName: '賢伸', plan: '２クラス' },
+      { lastName: '渡邉', firstName: '剭太', plan: '２クラス' },
+      { lastName: '藤田', firstName: '将舞', plan: '２クラス' },
+      { lastName: '藤田', firstName: '凌羽', plan: '２クラス' },
+      { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
+      { lastName: '豊福', firstName: '悠成', plan: '1クラス' },
+      { lastName: '池田', firstName: '全', plan: '1クラス' },
+      { lastName: '澤江', firstName: '悠', plan: '1クラス' },
+      { lastName: '山下', firstName: '幸四郎', plan: '1クラス' }
     ]},
-    { location: 'å¤§æ©', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'orange', students: [
-      { lastName: 'ä¸­å±±', firstName: 'çµæ', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è±ç¦', firstName: 'æ æ', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åæ', firstName: 'å¤ªå£±', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åå£', firstName: 'è³¢ä¼¸', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åäº', firstName: 'é½é³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¸¡é', firstName: 'åµå¤ª', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å°æ³', firstName: 'åé½', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è©å', firstName: 'èé¦', plan: '1ã¯ã©ã¹' },
-      { lastName: 'æ¾¤æ±', firstName: 'æ ', plan: '1ã¯ã©ã¹' }
+    { location: '大橋', name: 'アクロ＆パワー SOYA', color: 'orange', students: [
+      { lastName: '中山', firstName: '結愛', plan: '２クラス' },
+      { lastName: '豊福', firstName: '悠成', plan: '２クラス' },
+      { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
+      { lastName: '原口', firstName: '賢伸', plan: '２クラス' },
+      { lastName: '四井', firstName: '陽音', plan: '２クラス' },
+      { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
+      { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
+      { lastName: '萩原', firstName: '聖香', plan: '1クラス' },
+      { lastName: '澤江', firstName: '悠', plan: '1クラス' }
     ]},
-    { location: 'ç§è', name: 'ãã¬ã¤ã­ã³å¥é ãªã¥ã¦ã»ã¤', color: 'blue', students: [
-      { lastName: 'æ¥', firstName: 'ãã³ãã§ã³ã¨ã¤ãã³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¥', firstName: 'ã¨ã¯ã½', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¢é', firstName: 'å£®å¤§', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¢é', firstName: 'çµ¢é³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'é·è°·å·', firstName: 'ä¸', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ãããã', firstName: 'ã¨ãã¾', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ãããã', firstName: 'ããã¾', plan: '1ã¯ã©ã¹' }
+    { location: '照葉', name: 'ブレイキン入門 リュウセイ', color: 'blue', students: [
+      { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
+      { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
+      { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
+      { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
+      { lastName: '長谷川', firstName: '丈', plan: '２クラス' },
+      { lastName: 'しぎょう', firstName: 'とうま', plan: '1クラス' },
+      { lastName: 'しぎょう', firstName: 'ゆうま', plan: '1クラス' }
     ]},
-    { location: 'ç§è', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ ãªã¥ã¦ã»ã¤', color: 'green', students: [
-      { lastName: 'åæ­¦', firstName: 'åä¿', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¥', firstName: 'ãã³ãã§ã³ã¨ã¤ãã³', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¥', firstName: 'ã¨ã¯ã½', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'å·¥è¤', firstName: 'å¤§å°', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'é·è°·å·', firstName: 'ä¸', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¢é', firstName: 'å£®å¤§', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'æ¢é', firstName: 'çµ¢é³', plan: 'ï¼ã¯ã©ã¹' }
+    { location: '照葉', name: 'アクロ＆パワー リュウセイ', color: 'green', students: [
+      { lastName: '吉武', firstName: '凛保', plan: '２クラス' },
+      { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
+      { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
+      { lastName: '工藤', firstName: '大地', plan: '２クラス' },
+      { lastName: '長谷川', firstName: '丈', plan: '２クラス' },
+      { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
+      { lastName: '梅野', firstName: '絢音', plan: '２クラス' }
     ]}
   ],
-  'éææ¥': [
-    { location: 'å¤©ç¥', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: 'red', students: [
-      { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ãããã¾', firstName: 'ãã', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤é', firstName: 'è¼å£«', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ä¸­å±±', firstName: 'é¼', plan: '1ã¯ã©ã¹' }
+  '金曜日': [
+    { location: '天神', name: 'アクロ＆パワー SOYA', color: 'red', students: [
+      { lastName: '中島', firstName: '櫜吾', plan: '３クラス' },
+      { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+      { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' },
+      { lastName: '藤野', firstName: '蒼士', plan: '1クラス' },
+      { lastName: '中山', firstName: '隼', plan: '1クラス' }
     ]},
-    { location: 'å¤©ç¥', name: 'ãã¬ã¤ã­ã³åä¸­ç´ HARUHIKO', color: 'orange', students: [
-      { lastName: 'ä¸­å³¶', firstName: 'ç«å¾', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'çç', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¼è¤', firstName: 'åé¦¬', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ãããã¾', firstName: 'ãã', plan: 'ï¼ã¯ã©ã¹' }
+    { location: '天神', name: 'ブレイキン初中級 HARUHIKO', color: 'orange', students: [
+      { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+      { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
+      { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' }
     ]},
-    { location: 'å¤§æ©', name: 'ãã¬ã¤ã­ã³å¥é HARUHIKO', color: 'blue', students: [
-      { lastName: 'è©å°¾', firstName: 'éæµ·', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤å·', firstName: 'æ å©', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤å·', firstName: 'æå©', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'ããª', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ç¢é', firstName: 'æ°', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ä¼è°¦æ°¸', firstName: 'æé¢', plan: '1ã¯ã©ã¹' },
-      { lastName: 'ä¹ä¿ç°', firstName: 'æ±é', plan: '1ã¯ã©ã¹' },
-      { lastName: 'å¤è³', firstName: 'å¿å¤ªé', plan: '1ã¯ã©ã¹' }
+    { location: '大橋', name: 'ブレイキン入門 HARUHIKO', color: 'blue', students: [
+      { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
+      { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
+      { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
+      { lastName: '三重野', firstName: 'かな', plan: '２クラス' },
+      { lastName: '矢野', firstName: '新', plan: '1クラス' },
+      { lastName: '伊豆永', firstName: '晄逢', plan: '1クラス' },
+      { lastName: '久保田', firstName: '朱里', plan: '1クラス' },
+      { lastName: '古賀', firstName: '心太郎', plan: '1クラス' }
     ]},
-    { location: 'å¤§æ©', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ ryusei', color: 'green', students: [
-      { lastName: 'è©å°¾', firstName: 'éæµ·', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤å·', firstName: 'æ å©', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'è¤å·', firstName: 'æå©', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'ä¸éé', firstName: 'ããª', plan: 'ï¼ã¯ã©ã¹' },
-      { lastName: 'åç', firstName: 'èæ', plan: '1ã¯ã©ã¹' }
+    { location: '大橋', name: 'アクロ＆パワー ryusei', color: 'green', students: [
+      { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
+      { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
+      { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
+      { lastName: '三重野', firstName: 'かな', plan: '２クラス' },
+      { lastName: '児玉', firstName: '蛍斗', plan: '1クラス' }
     ]}
   ]
 };
 
 // Time schedule data
 export const timeSchedule = {
-  'æææ¥': [
-    { time: '18:00-19:00', venue: 'å¤§ç¥æ ¡', name: 'ã¢ã¯ã­ããã SOYA', color: '#DC2626' },
-    { time: '18:00-19:00', venue: 'å¤©ç¥æ ¡', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: '#EA580C' },
-    { time: '19:00-20:00', venue: 'å¤©ç¥æ ¡', name: 'hiphop HIMEKA', color: '#9333EA' },
-    { time: '20:00-21:00', venue: 'å¤©ç¥æ ¡', name: 'K-POP AI', color: '#16A34A' },
-    { time: '19:00-20:00', venue: 'å¤§æ©æ ¡', name: 'hiphop HIMEKA', color: '#9333EA' },
-    { time: '20:00-21:00', venue: 'å¤§æ©æ ¡', name: 'ãããã­ãã¯ ãããã¯ã¼ã¯ DAZ', color: '#2563EB' },
-    { time: '21:00-22:00', venue: 'å¤§æ©æ ¡', name: 'ç·´ç¿ä¼', color: '#F59E0B' }
+  '月曜日': [
+    { time: '18:00-19:00', venue: '天神校', name: 'アクロバット SOYA', color: '#DC2626' },
+    { time: '18:00-19:00', venue: '天神校', name: 'ブレイキン入門 SOYA', color: '#EA580C' },
+    { time: '19:00-20:00', venue: '天神校', name: 'hiphop HIMEKA', color: '#9333EA' },
+    { time: '20:00-21:00', venue: '天神校', name: 'K-POP AI', color: '#16A34A' },
+    { time: '19:00-20:00', venue: '大橋校', name: 'hiphop HIMEKA', color: '#9333EA' },
+    { time: '20:00-21:00', venue: '大橋校', name: 'トップロック フットワーク DAZ', color: '#2563EB' },
+    { time: '21:00-22:00', venue: '大橋校', name: '練習会', color: '#F59E0B' }
   ],
-  'ç«ææ¥': [
-    { time: '16:50-17:50', venue: 'å¤§æ©æ ¡', name: 'HIPHOP ãã¡ã«', color: '#DC2626' },
-    { time: '17:30-18:30', venue: 'å¤§æ©æ ¡', name: 'ã­ããºãã³ã¹ AYANO', color: '#EA580C' },
-    { time: '18:40-19:40', venue: 'å¤§æ©æ ¡', name: 'Bgirlã¯ã©ã¹ AYANO HARUHIKO', color: '#EA580C' },
-    { time: '19:00-20:00', venue: 'ç§èæ ¡', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: '#2563EB' },
-    { time: '20:00-21:00', venue: 'ç§èæ ¡', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: '#16A34A' }
+  '火曜日': [
+    { time: '16:50-17:50', venue: '大橋校', name: 'HIPHOP ヒメカ', color: '#DC2626' },
+    { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C' },
+    { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#EA580C' },
+    { time: '19:00-20:00', venue: '照葉校', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+    { time: '20:00-21:00', venue: '照葉校', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
   ],
-  'æ°´ææ¥': [
-    { time: '18:30-19:30', venue: 'å¤©ç¥æ ¡', name: 'ãã¬ã¤ã­ã³åç´ HARUHIKO', color: '#DC2626' },
-    { time: '19:30-21:00', venue: 'å¤©ç¥æ ¡', name: 'ãã¬ã¤ã­ã³ä¸­ä¸ç´ HARUHIKO', color: '#EA580C' }
+  '水曜日': [
+    { time: '18:30-19:30', venue: '天神校', name: 'ブレイキン初級 HARUHIKO', color: '#DC2626' },
+    { time: '19:30-21:00', venue: '天神校', name: 'ブレイキン中上級 HARUHIKO', color: '#EA580C' }
   ],
-  'æ¨ææ¥': [
-    { time: '18:30-19:30', venue: 'å¤§æ©æ ¡', name: 'ãã¬ã¤ã­ã³å¥é SOYA', color: '#DC2626' },
-    { time: '19:20-20:20', venue: 'å¤§æ©æ ¡', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: '#EA580C' },
-    { time: '20:30-21:30', venue: 'å¤§æ©æ ¡', name: 'ãã¯ã¼ã ã¼ãï¼ã¢ã¯ã­ SOYA', color: '#2563EB' },
-    { time: '18:30-19:30', venue: 'ç§èæ ¡', name: 'ãã¬ã¤ã­ã³å¥é ãªã¥ã¦ã»ã¤', color: '#DC2626' },
-    { time: '19:30-20:30', venue: 'ç§èæ ¡', name: 'ãã¯ã¼ã¢ã¯ã­ ãªã¥ã¦ã»ã¤', color: '#EA580C' },
-    { time: '21:30-23:10', venue: 'ç§èæ ¡', name: 'ç·´ç¿ä¼', color: '#F59E0B' }
+  '木曜日': [
+    { time: '18:30-19:30', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#DC2626' },
+    { time: '19:20-20:20', venue: '大橋校', name: 'アクロ＆パワー SOYA', color: '#EA580C' },
+    { time: '20:30-21:30', venue: '大橋校', name: 'パワームーブ＆アクロ SOYA', color: '#2563EB' },
+    { time: '18:30-19:30', venue: '照葉校', name: 'ブレイキン入門 リュウセイ', color: '#DC2626' },
+    { time: '19:30-20:30', venue: '照葉校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
+    { time: '21:30-23:10', venue: '照葉校', name: '練習会', color: '#F59E0B' }
   ],
-  'éææ¥': [
-    { time: '17:50-18:50', venue: 'å¤§æ©æ ¡', name: 'ãã¬ã¤ã­ã³å¥é HARUHIKO', color: '#2563EB' },
-    { time: '19:00-20:00', venue: 'å¤©ç¥æ ¡', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ SOYA', color: '#DC2626' },
-    { time: '19:00-20:00', venue: 'å¤§æ©æ ¡', name: 'ãã¯ã¼ã¢ã¯ã­ ãªã¥ã¦ã»ã¤', color: '#EA580C' },
-    { time: '20:00-21:00', venue: 'å¤©ç¥æ ¡', name: 'ãã¬ã¤ã­ã³åä¸­ç´ HARUHIKO', color: '#EA580C' },
-    { time: '20:00-21:00', venue: 'å¤§æ©æ ¡', name: 'ã¢ã¯ã­ï¼ãã¯ã¼ ryusei', color: '#16A34A' }
+  '金曜日': [
+    { time: '17:50-18:50', venue: '大橋校', name: 'ブレイキン入門 HARUHIKO', color: '#2563EB' },
+    { time: '19:00-20:00', venue: '天神校', name: 'アクロ＆パワー SOYA', color: '#DC2626' },
+    { time: '19:00-20:00', venue: '大橋校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
+    { time: '20:00-21:00', venue: '天神校', name: 'ブレイキン初中級 HARUHIKO', color: '#EA580C' },
+    { time: '20:00-21:00', venue: '大橋校', name: 'アクロ＆パワー ryusei', color: '#16A34A' }
   ]
 };
 
 // Instructor data - use EXACT data
 export const instructors = [
   {
-    name: 'é¶æ¬ åº·ç¥',
+    name: '邑本 康祐',
     stageName: 'Mottchmen',
     genre: "BREAKIN'",
     birthDate: '1975/3/31',
-    careerStart: '1997å¹´ãããã¬ã¤ã¯ãã³ã¹ãä¸­å¿ã«ãã³ã¹ãå§ãã',
+    careerStart: '1997年よりブレイクダンスを中心にダンスを始める',
     profile: '',
     message: '',
     awards: [
-      '2013å¹´ UK bboy championships ä¹å·äºé¸ æºåªå',
-      '2014å¹´ UK bboy championships ä¹å·äºé¸ æºåªå',
-      '2015å¹´ WDC ä¹å·å¤§ä¼ best4',
-      '2016å¹´ UK bboy championships japan final best8',
-      '2017å¹´ WDC ä¹å·å¤§ä¼ best4',
-      '2018å¹´ UK bboy championships japan final best4',
-      '2018å¹´ Superman grand championships æºåªå',
-      '2019,2020å¹´ PARTYÃLINE crewbattle åªå'
+      '2013年 UK bboy championships 九州予選 準優勝',
+      '2014年 UK bboy championships 九州予選 準優勝',
+      '2015年 WDC 九州大会 best4',
+      '2016年 UK bboy championships japan final best8',
+      '2017年 WDC 九州大会 best4',
+      '2018年 UK bboy championships japan final best4',
+      '2018年 Superman grand championships 準優勝',
+      '2019,2020年 PARTY×LINE crewbattle 優勝'
     ],
     otherExperience: [
       'SUNSET LIVE 2017,2018,2019',
-      'RHYMESTER BBOYã¤ãºã  ããã¯ãã³ãµã¼ã¨ãã¦åºæ¼'
+      'RHYMESTER BBOYイズム バックダンサーとして出演'
     ],
     lessons: [
-      'K2JAM ãã³ã¹ã¹ã¿ã¸ãª 2010å¹´ã',
-      'ã¹ã¿ã¼ãªã¼69 ãã³ã¹ã¹ã¿ã¸ãª 2021å¹´9æã'
+      'K2JAM ダンススタジオ 2010年〜',
+      'スターリー69 ダンススタジオ 2021年9月〜'
     ]
   },
   {
-    name: 'ä¸­å³¶ æ¥å½¦',
+    name: '中島 春彦',
     stageName: 'HARUHIKO aka WATCHM3N',
     genre: "BREAKIN'",
     birthDate: '1982/03/10',
-    careerStart: '1999å¹´ãããã³ã¹ï¼ãã¬ã¤ã­ã³ã°ï¼ã®ã­ã£ãªã¢ã¹ã¿ã¼ã',
-    profile: '2000å¹´ãããã¬ã¤ã­ã³ã®ãªãªã¸ããªãã£ã¹ã¿ã¼ããããã³ã¹ããã«ãã·ã§ã¦ã±ã¼ã¹ãå¯©æ»å¡ãªã©ã§ä¹å·åå¤ã§æ´»åãã¦ãã¾ãã',
-    message: 'ãã¬ã¤ã­ã³ã¯éå¸¸ã«éåéã®å¤ããã³ã¹ã§ããå­ä¾ãã¡ã®èº«ä½è½åãæè»æ§ãä½å¹¹ãç¡çãªãéããæ«æãªãå¹ççã«ä¸éã§ãããããªã«ãªã­ã¥ã©ã ãçµãã§ãã¾ãã',
+    careerStart: '1999年よりダンス（ブレイキング）のキャリアスタート',
+    profile: '2000年からブレイキンのオリジナリティスタートし、ダンスバトルやショウケース、審査員などで九州内外で活動しています。',
+    message: 'ブレイキンは非常に運動量の多いダンスです。子供たちの身体能力、柔軟性、体幹を無理なく鍛え、挫折なく効率的に上達できるようなカリキュラムを組んでいます。',
     awards: [
-      '2005å¹´ UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION æºåªå',
-      '2006å¹´ UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION BEST4',
-      '2012å¹´ Red Bull BC One japanfinal best4',
-      '2015å¹´ World Dance Colosseum ã¯ã¼ã«ããã¡ã¤ãã«ä¸çå¤§ä¼å¯©æ»å¡',
-      '2018å¹´ Red Bull BC One japanfinal best16',
-      '2020å¹´ SUPER BREAK ä¸çå¤§ä¼å¯©æ»å¡'
+      '2005年 UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION 準優勝',
+      '2006年 UK B-BOY CHAMPIONSHIPS JAPAN ELIMINATION BEST4',
+      '2012年 Red Bull BC One japanfinal best4',
+      '2015年 World Dance Colosseum ワールドファイナル世界大会審査員',
+      '2018年 Red Bull BC One japanfinal best16',
+      '2020年 SUPER BREAK 世界大会審査員'
     ],
     otherExperience: [
-      'JAPAN DANCE DELIGHT ãã¡ã¤ããªã¹ã',
-      'GARAND CHAMPION CARNIVAL ãã¡ã¤ããªã¹ãè¤æ°å',
+      'JAPAN DANCE DELIGHT ファイナリスト',
+      'GARAND CHAMPION CARNIVAL ファイナリスト複数回',
       'SUNSET LIVE 2017,2018,2019',
-      'RHYMESTER BBOYã¤ãºã  ããã¯ãã³ãµã¼',
-      'RHYMESTER å¨å½ãã¢ã¼ ç¦å²¡ããã¯ãã³ãµã¼'
+      'RHYMESTER BBOYイズム バックダンサー',
+      'RHYMESTER 全国ツアー 福岡バックダンサー'
     ],
     lessons: [
-      'FEELãã³ã¹ã¹ã¿ã¸ãª æå°æ­´10å¹´ä»¥ä¸',
-      'ã¹ã¿ã¸ãªMJï¼ä¸çNo.1ãã¬ã¤ã¯ãã³ãµã¼ISSEIãè¼©åºããã¹ã¿ã¸ãªï¼'
+      'FEELダンススタジオ 指導歴10年以上',
+      'スタジオMJ（世界No.1ブレイクダンサーISSEIを輩出したスタジオ）'
     ]
   },
   {
-    name: 'ç²æ å§è¶',
+    name: '甲斐 僧耶',
     stageName: 'SOYA',
-    genre: 'ã¢ã¯ã­ãããã»ãã¬ã¤ã­ã³',
+    genre: 'アクロバット・ブレイキン',
     birthDate: '1995/11/22',
-    careerStart: '2012å¹´ãããã¬ã¤ã¯ãã³ã¹ãä¸­å¿ã«ã­ã£ãªã¢ã¹ã¿ã¼ã',
-    profile: 'å°å­¦çã®é ããã¬ãçªçµãã¹ã¼ãã¼ãã£ã³ãã«ããè¦ã¦ãã³ã¹ã«èå³ãæã¡ãé«2å¹´ã®å¬ã«æ¬æ ¼çã«ãã¬ã¤ã¯ãã³ã¹ãå§ãã¾ããã',
-    message: 'ãã¯ã¼ã ã¼ããããªã¼ãºãã¢ã¯ã­ããããå¾æã¨ãã¦ãã¾ããçå¾ä¸äººã²ã¨ãã«åããã¦æå°ããæ¥½ãã¿ãªããæ¬äººã®ç®æ¨ã«åãã¦ã¬ãã«ã¢ãããã¦ãããã¨ãå¤§åã«ãã¦ãã¾ãã',
+    careerStart: '2012年よりブレイクダンスを中心にキャリアスタート',
+    profile: '小学生の頃、テレビ番組「スーパーチャンプル」を見てダンスに興味を持ち、高2年の冬に本格的にブレイクダンスを始めました。',
+    message: 'パワームーブやフリーズ、アクロバットも得意としています。生徒一人ひとりに合わせて指導し、楽しみながら本人の目標に向けてレベルアップしていくことを大切にしています。',
     awards: [
-      '2017å¹´ SASEBO DANCE FES ç¹å¥è³STEEZ PRIZE',
-      '2018å¹´ Kirafes Cup Battle Jam Vol.12 Breakin Side åªå',
-      '2018å¹´ GABANERO Vol.19 åªå',
-      '2019å¹´ GABANEROVol.20 æºåªå',
-      '2019å¹´ UKä¹å·äºé¸ Best 4',
-      '2019å¹´ GRAND CHAMPION CARNIVAL Free Style ãã¡ã¤ããªã¹ã',
-      '2020å¹´ GABANERO Vol.22 åªå'
+      '2017年 SASEBO DANCE FES 特別賞STEEZ PRIZE',
+      '2018年 Kirafes Cup Battle Jam Vol.12 Breakin Side 優勝',
+      '2018年 GABANERO Vol.19 優勝',
+      '2019年 GABANEROVol.20 準優勝',
+      '2019年 UK九州予選 Best 4',
+      '2019年 GRAND CHAMPION CARNIVAL Free Style ファイナリスト',
+      '2020年 GABANERO Vol.22 優勝'
     ],
     otherExperience: [
-      'TBSç³»åãã¤ãã¤ãè¦åãå¤§ä½æ¦inå«å¥³åºæ¼',
-      'Emotion rise kyushuæ¯é¨ ãã©ãã·ã¥ã¢ã åã­ã£ã¹ã',
-      'RKBTVããã£ã®ããXperiaååPR ãã³ãµã¼åºæ¼'
+      'TBS系列ナイナイお見合い大作戦in八女出演',
+      'Emotion rise kyushu支部 フラッシュモブ 元キャスト',
+      'RKBTV【チャギハ】Xperia商品PR ダンサー出演'
     ],
     lessons: [
-      'TUDIO COLOR 2015ã2020',
-      'STUDIO TRAX 2015ã2018',
-      'FUNKFUNDANCECOMPANY 2015ã2022',
-      'SPROUT production 2019ãç¾å¨'
+      'TUDIO COLOR 2015〜2020',
+      'STUDIO TRAX 2015〜2018',
+      'FUNKFUNDANCECOMPANY 2015〜2022',
+      'SPROUT production 2019〜現在'
     ]
   },
   {
-    name: 'ä¼è¤ åå²',
+    name: '伊藤 厚史',
     stageName: 'Ryce',
     genre: "BREAKIN'",
     birthDate: '1986/10/18',
-    careerStart: '2004å¹´ããä¸­å­¦ã®é ã«ãã¬ã¤ã¯ãã³ã¹ãå§ãã',
-    profile: 'ç¦å²¡ãæ ç¹ã«ä¹å·ãã¬ãã¼ãã¦ã¬»åãã¦ããBboyã',
-    message: 'æ¥½ãã¿ãªããæ¬äººã®ç®æ¨ã«åãã¦ã¬ãã«ã¢ãããã¦ãããã¨ãå¤§åã«ãã¦ãã¾ãã',
+    careerStart: '2004年より中学の頃にブレイクダンスを始める',
+    profile: '福岡を拠点に九州をレベれして活動しているBboy。',
+    message: '楽しみながら未人の目標に向けてレベルアップしていくことを大切にしています。',
     awards: [
-      '2007å¹´ BIG WAX',
-      '2009å¹´ Buzz Style',
-      '2011å¹´ R-16 ä¸çå¤§ä¼',
-      '2013å¹´ UK bboy'
+      '2007年 BIG WAX',
+      '2009年 Buzz Style',
+      '2011年 R-16 世界大会',
+      '2013年 UK bboy'
     ],
     otherExperience: [
-      'ãªã¼ã¹ãã©ãªã¢ã»ã¿ã¤ã»ãã®ä»å¤æ°ã®æµ·å¤çµé¨'
+      'オーストラリア・タイ・その他多数の海外経験'
     ],
     lessons: [
-      'æå°æ­´8å¹´è¿ããç¦å²¡ä»¥å¤ã«ãä½è³ãçæ¬ã§ãã¬ãã¹ã³çµé¨ãã'
+      '指導歴8年近く。福岡以外にも佐賀や犊本でもレッスン経験あり'
     ]
   }
 ];
 
 // Navigation items
 export const navItems = [
-  { id: 'home', label: 'HOME', icon: 'ð ' },
-  { id: 'customers', label: 'é¡§å®¢ä¸è¦§', icon: 'ð¥' },
-  { id: 'attendance', label: 'åºå¸­åç°¿', icon: 'ð' },
-  { id: 'schedule', label: 'ã¹ã±ã¸ã¥ã¼ã«', icon: 'ð' },
-  { id: 'instructors', label: 'è¬å¸«ãã­ãã£ã¼ã«', icon: 'ð¤' }
+  { id: 'home', label: 'HOME', icon: '🏠' },
+  { id: 'customers', label: '顧客一覧', icon: '👥' },
+  { id: 'attendance', label: '出席名簿', icon: '📋' },
+  { id: 'schedule', label: 'スケジュール', icon: '📅' },
+  { id: 'instructors', label: '講師プロフィール', icon: '👤' }
 ];
 
 // Day order for consistent display
-export const dayOrder = ['æææ¥', 'ç«ææ¥', 'æ°´ææ¥', 'æ¨ææ¥', 'éææ¥'];
+export const dayOrder = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
