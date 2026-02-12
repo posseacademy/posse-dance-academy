@@ -24,7 +24,7 @@ export function renderCustomers(app) {
     const [, ca] = a;
     const [, cb] = b;
     if (app.sortField === 'plan') {
-      return (planOrder[ca.plan] || 99) - (planOrder[cb.plan] || 99);
+      return (planOrder[ca.course] || 99) - (planOrder[cb.course] || 99);
     }
     const nameA = `${ca.lastName || ''}${ca.firstName || ''}`;
     const nameB = `${cb.lastName || ''}${cb.firstName || ''}`;
@@ -91,7 +91,7 @@ export function renderCustomers(app) {
                 <tr>
                   <td>${i + 1}</td>
                   <td><strong>${c.lastName || ''} ${c.firstName || ''}</strong></td>
-                  <td>${c.plan || '-'}</td>
+                  <td>${c.course || '-'}</td>
                   <td>${statusBadge(c.status)}</td>
                   <td>${c.joinDate || '-'}</td>
                   <td>
@@ -131,7 +131,7 @@ function renderAddForm(app) {
             <select class="form-select" id="form-plan">
               <option value="">選択してください</option>
               ${Object.keys(pricing).filter((v,i,a) => a.indexOf(v) === i).map(p =>
-                `<option value="${p}" ${app.editForm?.plan === p ? 'selected' : ''}>${p}</option>`
+                `<option value="${p}" ${app.editForm?.course === p ? 'selected' : ''}>${p}</option>`
               ).join('')}
             </select>
           </div>
