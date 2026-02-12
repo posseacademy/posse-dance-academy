@@ -32,7 +32,7 @@ class DanceStudioApp {
 
     // Attendance view state
     this.selectedDay = dayOrder[0];
-    this.attendanceTab = 'classes';
+    this.attendanceTab = 'overview';
 
     // Schedule view state
     this.scheduleTab = 'time';
