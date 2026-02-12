@@ -39,12 +39,20 @@ export const visitorRevenueOverrides = {
 
 // Course prices for dashboard display (monthly tuition by class count)
 export const coursePrices = {
-  '１': 6000, '２': 10000, '３': 14400, '４': 18600
+  '1': 6000,
+  '2': 10000,
+  '3': 14400,
+  '4': 18600,
+  'visitor': 0
 };
 
 // Course colors for dashboard
 export const courseColors = {
-  '１': '#3B82F6', '２': '#8B5CF6', '３': '#F59E0B', '４': '#EF4444'
+  '1': '#3B82F6',
+  '2': '#8B5CF6',
+  '3': '#F59E0B',
+  '4': '#EF4444',
+  'visitor': '#6B7280'
 };
 
 // Default schedule - EXACT student names from the live system
