@@ -79,7 +79,7 @@ function renderClassesTab(app, days, selectedDay, dayClasses, attendanceData) {
               </thead>
               <tbody>
                 ${students.sort((a, b) => (planOrder[a.plan] || 99) - (planOrder[b.plan] || 99)).map(s => {
-                  const studentKey = \`\${selectedDay}_\${cls.location}_\${cls.name}_\${s.lastName}\${s.firstName}\`;
+                  const studentKey = `${selectedDay}_${cls.location}_${cls.name}_${s.lastName}${s.firstName}`;
                   const att = attendanceData[studentKey] || {};
                   const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
                   const attended = weeks.filter(w => att[w] === '○').length;
@@ -87,24 +87,24 @@ function renderClassesTab(app, days, selectedDay, dayClasses, attendanceData) {
                   const total = attended + absent;
                   const rate = total > 0 ? Math.round((attended / total) * 100) : '-';
 
-                  return \`
+                  return `
                     <tr>
-                      <td><strong>\${s.lastName} \${s.firstName}</strong></td>
-                      <td><span class="badge">\${s.plan}</span></td>
-                      \${weeks.map(w => {
+                      <td><strong>${s.lastName} ${s.firstName}</strong></td>
+                      <td><span class="badge">${s.plan}</span></td>
+                      ${weeks.map(w => {
                         const val = att[w] || '-';
                         const cls2 = val === '○' ? 'attendance-present' : val === '×' ? 'attendance-absent' : val === '休講' ? 'attendance-cancel' : '';
-                        return \`<td style="text-align:center">
-                          <span class="attendance-mark \${cls2}"
-                            onclick="app.toggleAttendance('\${studentKey}','\${w}')"
-                            style="cursor:pointer">\${val}</span>
-                        </td>\`;
+                        return `<td style="text-align:center">
+                          <span class="attendance-mark ${cls2}"
+                            onclick="app.toggleAttendance('${studentKey}','${w}')"
+                            style="cursor:pointer">${val}</span>
+                        </td>`;
                       }).join('')}
                       <td style="text-align:center">
-                        <strong>\${rate === '-' ? '-' : rate + '%'}</strong>
+                        <strong>${rate === '-' ? '-' : rate + '%'}</strong>
                       </td>
                     </tr>
-                  \`;
+                  `;
                 }).join('')}
               </tbody>
             </table>
@@ -137,14 +137,14 @@ function renderSummaryTab(visitorRevenue, detailed, practice) {
           <tbody>
             ${Object.entries(detailed).map(([cat, data]) => {
               const price = pricing[cat] || 0;
-              return \`
+              return `
                 <tr>
-                  <td>\${cat}</td>
-                  <td style="text-align:center">\${data.count}回</td>
-                  <td style="text-align:right">\${formatCurrency(price)}</td>
-                  <td style="text-align:right"><strong>\${formatCurrency(data.revenue)}</strong></td>
+                  <td>${cat}</td>
+                  <td style="text-align:center">${data.count}回</td>
+                  <td style="text-align:right">${formatCurrency(price)}</td>
+                  <td style="text-align:right"><strong>${formatCurrency(data.revenue)}</strong></td>
                 </tr>
-              \`;
+              `;
             }).join('')}
           </tbody>
         </table>
@@ -167,44 +167,44 @@ function renderPracticeTab(app, attendanceData) {
   const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
   const practiceDays = ['月曜日', '木曜日'];
 
-  return \`
-    \${practiceDays.map(day => {
-      const key = \`練習会_\${day}\`;
+  return `
+    ${practiceDays.map(day => {
+      const key = `練習会_${day}`;
       const data = attendanceData[key] || {};
-      return \`
+      return `
         <div class="card" style="margin-bottom:var(--spacing-4)">
           <div class="card-header">
-            <h3 class="card-title">\${day} 練習会</h3>
+            <h3 class="card-title">${day} 練習会</h3>
           </div>
           <div class="card-body">
             <table class="data-table">
               <thead>
                 <tr>
                   <th></th>
-                  \${weeks.map((_, i) => \`<th style="text-align:center">第\${i+1}週</th>\`).join('')}
+                  ${weeks.map((_, i) => `<th style="text-align:center">第${i+1}週</th>`).join('')}
                   <th style="text-align:center">合計</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td>参加人数</td>
-                  \${weeks.map(w => {
+                  ${weeks.map(w => {
                     const count = data[w] || 0;
-                    return \`<td style="text-align:center">
+                    return `<td style="text-align:center">
                       <input type="number" class="form-input" style="width:60px;text-align:center"
-                        value="\${count}" min="0"
-                        onchange="app.updatePractice('\${key}','\${w}',parseInt(this.value)||0)">
-                    </td>\`;
+                        value="${count}" min="0"
+                        onchange="app.updatePractice('${key}','${w}',parseInt(this.value)||0)">
+                    </td>`;
                   }).join('')}
                   <td style="text-align:center">
-                    <strong>\${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}名</strong>
+                    <strong>${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}名</strong>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      \`;
+      `;
     }).join('')}
-  \`;
+  `;
 }
