@@ -131,7 +131,7 @@ class DanceStudioApp {
     const data = {
       lastName: document.getElementById('form-lastName')?.value || '',
       firstName: document.getElementById('form-firstName')?.value || '',
-      plan: document.getElementById('form-plan')?.value || '',
+      course: document.getElementById('form-plan')?.value || '',
       status: document.getElementById('form-status')?.value || '入会中',
       joinDate: document.getElementById('form-joinDate')?.value || '',
       phone: document.getElementById('form-phone')?.value || '',
