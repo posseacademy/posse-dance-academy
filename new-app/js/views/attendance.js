@@ -267,7 +267,7 @@ function renderAddStudentForm(app, classInfo) {
 
   return `
     <div style="background:#eff6ff;padding:var(--spacing-4);border-radius:var(--radius-lg);margin-bottom:var(--spacing-4);border:1px solid #bfdbfe">
-      <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u751G\u5F92\u8FFD\u52A0 - ${classInfo.location} ${classInfo.className}</h3>
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u751F\u5F92\u8FFD\u52A0 - ${classInfo.location} ${classInfo.className}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
         <div>
           <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u59D3 *</label>
