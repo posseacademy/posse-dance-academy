@@ -96,7 +96,7 @@ export function renderHome(app) {
               <tbody>
                 ${tuitionRows.map(r => `
                   <tr>
-                    <td><span class="badge" style="background:${r.color};color:white">${r.num}クラス</span></td>
+                    <td><span class="badge" style="background:${r.color};color:white">${r.num === 'visitor' ? 'ビジター' : r.num + 'クラス'}</span></td>
                     <td style="text-align:right">${formatCurrency(r.price)}</td>
                     <td style="text-align:center">${r.count}名</td>
                     <td style="text-align:right"><strong>${formatCurrency(r.subtotal)}</strong></td>
