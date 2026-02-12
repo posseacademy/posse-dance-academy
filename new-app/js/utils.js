@@ -200,27 +200,27 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
 }
 
 /**
+ * Calculate monthly tuition s/**
  * Calculate monthly tuition summary by course type
  */
 export function calculateTuitionSummary(customers) {
-  const summary = {};
   const planCounts = {};
-
   Object.values(customers).forEach(c => {
     if (c.status === '入会中' && c.plan) {
-      // Extract the number from the plan (e.g., "3クラス" -> "3")
+      // Extract the number from the plan (e.g., "3クラス" -> "3", "３" -> "3")
       const match = c.plan.match(/([１２３４1234])/);
       if (match) {
         const num = match[1]
           .replace('１', '1').replace('２', '2')
           .replace('３', '3').replace('４', '4');
-        const key = num;
-        if (!planCounts[key]) planCounts[key] = 0;
-        planCounts[key]++;
+        if (!planCounts[num]) planCounts[num] = 0;
+        planCounts[num]++;
+      } else if (c.plan.includes('ビジター')) {
+        if (!planCounts['visitor']) planCounts['visitor'] = 0;
+        planCounts['visitor']++;
       }
     }
   });
-
   return planCounts;
 }
 
