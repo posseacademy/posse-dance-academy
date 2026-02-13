@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { firebaseConfig, defaultSchedule } from './config.js';
+import { firebaseConfig } from './config.js?v=2';
 
 // Initialize Firebase
 const fireApp = initializeApp(firebaseConfig);
@@ -48,12 +48,8 @@ export async function loadScheduleData() {
   try {
     const querySnapshot = await getDocs(collection(db, 'schedule'));
     if (querySnapshot.empty) {
-      console.log('スケジュールデータが見つかりません。初期データを保存します。');
-      // Save default schedule to Firestore
-      for (const [day, classes] of Object.entries(defaultSchedule)) {
-        await setDoc(doc(db, 'schedule', day), { classes: classes });
-      }
-      return { ...defaultSchedule };
+      console.warn('スケジュールデータが見つかりません。空のデータを返します。');
+      return {};
     }
     querySnapshot.forEach(docSnap => {
       // Firestore stores as { classes: [...] }, unwrap to flat array
