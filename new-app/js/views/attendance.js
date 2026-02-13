@@ -1,4 +1,5 @@
-import { planOrder, dayOrder } from '../config.js';
+import { planOrder, dayOrder, pricing } from '../config.js';
+import { formatCurrency } from '../utils.js';
 
 export function renderAttendance(app) {
   const days = dayOrder;
@@ -10,7 +11,7 @@ export function renderAttendance(app) {
   return `
    <div class="attendance-view">
     <div class="page-header">
-      <h1 class="page-title">\u51FA\u5E2D\u540D\u7C3F</h1>
+      <h1 class="page-title">\u51FA\u5E2D\u8A18\u9332</h1>
       <div style="display:flex;gap:var(--spacing-3);align-items:center">
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
           onchange="app.changeMonth(this.value)">
@@ -205,6 +206,8 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
     }).join('')}
 
     ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">\u3053\u306E\u66DC\u65E5\u306B\u306F\u30AF\u30E9\u30B9\u304C\u3042\u308A\u307E\u305B\u3093</div></div>' : ''}
+
+    ${renderPracticeSection(app, selectedDay, attendanceData, weeks)}
   `;
 }
 
@@ -292,6 +295,53 @@ function renderAddStudentForm(app, classInfo) {
           class="btn btn-primary" style="font-size:0.875rem">\u8FFD\u52A0</button>
         <button onclick="app.cancelAddStudent()"
           class="btn btn-secondary" style="font-size:0.875rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPracticeSection(app, selectedDay, attendanceData, weeks) {
+  const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
+  if (!practiceDays.includes(selectedDay)) return '';
+
+  const key = '\u7DF4\u7FD2\u4F1A_' + selectedDay;
+  const data = attendanceData[key] || {};
+  const weekLabels = ['\u7B2C1\u9031', '\u7B2C2\u9031', '\u7B2C3\u9031', '\u7B2C4\u9031', '\u4E88\u5099'];
+  const totalParticipants = weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0);
+  const practicePrice = pricing['\u7DF4\u7FD2\u4F1A'] || 500;
+  const practiceRevenue = totalParticipants * practicePrice;
+
+  return `
+    <div class="card" style="margin-top:var(--spacing-4);overflow:hidden">
+      <div style="background:#6b7280;color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-size:1rem;font-weight:700;margin:0">${selectedDay} \u7DF4\u7FD2\u4F1A</h3>
+        <div style="display:flex;gap:var(--spacing-3);align-items:center">
+          <span style="font-size:0.75rem;opacity:0.9">${totalParticipants}\u540D\u53C2\u52A0</span>
+          <span style="font-size:0.875rem;font-weight:600">${formatCurrency(practiceRevenue)}</span>
+        </div>
+      </div>
+      <div class="card-body" style="padding:var(--spacing-3)">
+        <table class="data-table" style="font-size:0.75rem">
+          <thead>
+            <tr>
+              <th style="padding:var(--spacing-2)"></th>
+              ${weekLabels.map(label => '<th style="text-align:center;width:70px;padding:var(--spacing-2)">' + label + '</th>').join('')}
+              <th style="text-align:center;width:70px;padding:var(--spacing-2)">\u5408\u8A08</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:var(--spacing-2);font-weight:600">\u53C2\u52A0\u4EBA\u6570</td>
+              ${weeks.map(w => {
+                const count = data[w] || 0;
+                return '<td style="text-align:center;padding:var(--spacing-2)"><input type="number" class="form-input" style="width:60px;text-align:center" value="' + count + '" min="0" onchange="app.updatePractice(\x27' + key + '\x27,\x27' + w + '\x27,parseInt(this.value)||0)"></td>';
+              }).join('')}
+              <td style="text-align:center;padding:var(--spacing-2)">
+                <strong>${totalParticipants}\u540D</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   `;
