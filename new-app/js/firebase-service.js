@@ -105,5 +105,44 @@ export async function saveAttendance(selectedMonth, studentId, weekData) {
   }
 }
 
+// Load events data from Firestore
+export async function loadEvents(selectedMonth) {
+  const eventsData = {};
+  try {
+    const monthKey = selectedMonth.replace('-', '');
+    const querySnapshot = await getDocs(collection(db, `events_${monthKey}`));
+    querySnapshot.forEach(docSnap => {
+      eventsData[docSnap.id] = docSnap.data();
+    });
+  } catch (error) {
+    console.error('イベントデータの読み込みに失敗:', error);
+  }
+  return eventsData;
+}
+
+// Save event data to Firestore
+export async function saveEvent(selectedMonth, eventId, data) {
+  try {
+    const monthKey = selectedMonth.replace('-', '');
+    await setDoc(doc(db, `events_${monthKey}`, eventId), data);
+    return true;
+  } catch (error) {
+    console.error('イベントデータの保存に失敗:', error);
+    return false;
+  }
+}
+
+// Delete event from Firestore
+export async function deleteEvent(selectedMonth, eventId) {
+  try {
+    const monthKey = selectedMonth.replace('-', '');
+    await deleteDoc(doc(db, `events_${monthKey}`, eventId));
+    return true;
+  } catch (error) {
+    console.error('イベントデータの削除に失敗:', error);
+    return false;
+  }
+}
+
 // Export db for direct access if needed
 export { db };
