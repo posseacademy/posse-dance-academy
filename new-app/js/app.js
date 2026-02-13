@@ -3,7 +3,7 @@ import { loadCustomers, saveCustomer, deleteCustomer as fbDeleteCustomer, loadSc
 import { calculateVisitorRevenue, calculatePracticeRevenue, formatCurrency, downloadJSON, generateCustomerCSV, downloadCSV } from './utils.js';
 import { renderHome } from './views/home.js?v=3';
 import { renderCustomers } from './views/customers.js?v=3';
-import { renderAttendance } from './views/attendance.js?v=7';
+import { renderAttendance } from './views/attendance.js?v=8';
 import { renderSchedule } from './views/schedule.js';
 import { renderInstructors } from './views/instructors.js';
 
