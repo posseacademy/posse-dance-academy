@@ -134,7 +134,7 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
       return `
         <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
           <div style="background:${headerBg};color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-            <h3 style="font-size:1rem;font-weight:700;margin:0">${location} - ${className}</h3>
+            <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${location} - ${className}</h3>
             <div style="display:flex;gap:var(--spacing-2);align-items:center">
               <span style="font-size:0.75rem;opacity:0.9">${filteredStudents.length}\u540D</span>
               <button onclick="app.addStudentToClass('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}')"
