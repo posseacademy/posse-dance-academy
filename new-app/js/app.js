@@ -1,9 +1,9 @@
 import { pricing, planOrder, defaultSchedule, navItems, dayOrder } from './config.js';
 import { loadCustomers, saveCustomer, deleteCustomer as fbDeleteCustomer, loadScheduleData, saveScheduleData, loadAttendance, saveAttendance, db } from './firebase-service.js';
 import { calculateVisitorRevenue, calculatePracticeRevenue, formatCurrency, downloadJSON, generateCustomerCSV, downloadCSV } from './utils.js';
-import { renderHome } from './views/home.js?v=2';
+import { renderHome } from './views/home.js?v=3';
 import { renderCustomers } from './views/customers.js';
-import { renderAttendance } from './views/attendance.js?v=6';
+import { renderAttendance } from './views/attendance.js?v=7';
 import { renderSchedule } from './views/schedule.js';
 import { renderInstructors } from './views/instructors.js';
 
