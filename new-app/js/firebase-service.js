@@ -61,7 +61,7 @@ export async function loadScheduleData() {
     });
   } catch (error) {
     console.error('スケジュールデータの読み込みに失敗:', error);
-    return { ...defaultSchedule };
+    return {};
   }
   return scheduleData;
 }
