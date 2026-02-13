@@ -126,49 +126,6 @@ export function renderHome(app) {
         </div>
       </div>
 
-      <!-- Practice sessions -->
-      <div class="card" style="margin-top:var(--spacing-4)">
-        <div class="card-header">
-          <h2 class="card-title">\u7DF4\u7FD2\u4F1A</h2>
-          <span class="card-badge">${formatCurrency(practiceTotal)}</span>
-        </div>
-        <div class="card-body">
-          ${practiceDays.map(day => {
-            const key = `\u7DF4\u7FD2\u4F1A_${day}`;
-            const data = attendanceData[key] || {};
-            return `
-              <div style="margin-bottom:var(--spacing-4)">
-                <h3 style="font-size:1rem;margin-bottom:var(--spacing-2)">${day} \u7DF4\u7FD2\u4F1A</h3>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      ${weeks.map((_, i) => `<th style="text-align:center">\u7B2C${i+1}\u9031</th>`).join('')}
-                      <th style="text-align:center">\u5408\u8A08</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>\u53C2\u52A0\u4EBA\u6570</td>
-                      ${weeks.map(w => {
-                        const count = data[w] || 0;
-                        return `<td style="text-align:center">
-                          <input type="number" class="form-input" style="width:60px;text-align:center"
-                            value="${count}" min="0"
-                            onchange="app.updatePractice('${key}','${w}',parseInt(this.value)||0)">
-                        </td>`;
-                      }).join('')}
-                      <td style="text-align:center">
-                        <strong>${weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0)}\u540D</strong>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
     </div>
   `;
 }
