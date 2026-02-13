@@ -118,7 +118,7 @@ export function renderCustomers(app) {
         </div>\
       </div>\
 \
-      ' + (app.showAddForm ? renderAddForm(app) : '') + '\\
+      ' + (app.showAddForm ? renderAddForm(app) : '') + '\
       <div class="card">\
         <div class="card-body" style="overflow-x:auto;padding:0">\
           <table class="data-table" style="font-size:12px;white-space:nowrap">\
