@@ -56,7 +56,9 @@ export const courseColors = {
   'visitor': '#6B7280'
 };
 
-// Default schedule - EXACT student names from the live system
+// Default schedule - 完成版 (2026-02-14確定)
+// ※参照用のみ。このデータはコードから使用されません。
+// 実際のデータはFirestoreに保存されています。
 export const defaultSchedule = {
   'イベント': [],
   '月曜日': [
