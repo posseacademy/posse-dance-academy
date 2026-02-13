@@ -80,6 +80,7 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
   const selectedClassForAdd = app.selectedClassForAdd || null;
 
   const isPracticeTab = selectedDay === '\u7DF4\u7FD2\u4F1A';
+  const isEventTab = selectedDay === '\u30A4\u30D9\u30F3\u30C8';
 
   return `
     <!-- Day tabs -->
@@ -94,9 +95,14 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
         onclick="app.selectedDay='\u7DF4\u7FD2\u4F1A';app.render()">
         \u7DF4\u7FD2\u4F1A
       </div>
+      <div class="tab-item ${isEventTab ? 'active' : ''}"
+        onclick="app.selectedDay='\u30A4\u30D9\u30F3\u30C8';app.render()">
+        \u30A4\u30D9\u30F3\u30C8
+      </div>
     </div>
 
-    ${isPracticeTab ? renderPracticeTab(app, attendanceData, weeks, weekLabels) : `
+    ${isPracticeTab ? renderPracticeTab(app, attendanceData, weeks, weekLabels) :
+     isEventTab ? renderEventTab(app) : `
 
     <!-- Add student form -->
     ${showAddForm && selectedClassForAdd && selectedClassForAdd.day === selectedDay ? renderAddStudentForm(app, selectedClassForAdd) : ''}
@@ -250,7 +256,7 @@ function renderEditingRow(app, student, studentKey, attData, rate, weeks, select
       <td style="text-align:center;padding:var(--spacing-2)">
         <div style="display:flex;flex-direction:column;gap:4px">
           <button onclick="app.saveEditStudent()"
-            style="background:none;border:none;color:#16a34a;cursor:pointer;font-size:0.75rem">\u4FDD\u5B58</button>
+            style="background:none;border:none;color:#16a34a;cursor:pointer;font-size:0.75rem">\u4FDDU�5B58</button>
           <button onclick="app.cancelEditStudent()"
             style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:0.75rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
           <button onclick="app.deleteStudent('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}','${escapeAttr(student.lastName)}','${escapeAttr(student.firstName)}')"
@@ -280,11 +286,11 @@ function renderAddStudentForm(app, classInfo) {
       <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u751F\u5F92\u8FFD\u52A0 - ${classInfo.location} ${classInfo.className}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u59D3 *</label>
+          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u59D3\u2008*</label>
           <input type="text" id="new_student_lastName" class="form-input" style="width:100%;font-size:0.875rem">
         </div>
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u540D *</label>
+          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u540D\u2008*</label>
           <input type="text" id="new_student_firstName" class="form-input" style="width:100%;font-size:0.875rem">
         </div>
         <div>
@@ -353,4 +359,168 @@ function renderPracticeCard(app, dayLabel, attendanceData, weeks, weekLabels) {
 function renderPracticeTab(app, attendanceData, weeks, weekLabels) {
   const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
   return practiceDays.map(day => renderPracticeCard(app, day, attendanceData, weeks, weekLabels)).join('');
+}
+
+function renderEventTab(app) {
+  const eventsData = app.eventsData || {};
+  const events = Object.entries(eventsData).sort((a, b) => (a[1].date || '').localeCompare(b[1].date || ''));
+  const showAddForm = app.showAddEventForm || false;
+  const addingParticipantTo = app.addingParticipantToEvent || null;
+
+  let totalRevenue = 0;
+  events.forEach(([id, evt]) => {
+    (evt.participants || []).forEach(p => {
+      totalRevenue += parseInt(p.amount) || 0;
+    });
+  });
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-4)">
+      <div style="display:flex;align-items:center;gap:var(--spacing-3)">
+        <span style="font-size:0.875rem;color:var(--color-text-secondary)">
+          ${events.length}\u4EF6\u306E\u30A4\u30D9\u30F3\u30C8
+        </span>
+        <span style="font-size:0.875rem;font-weight:600;color:var(--color-primary)">
+          \u5408\u8A08: ${formatCurrency(totalRevenue)}
+        </span>
+      </div>
+      <button onclick="app.toggleAddEventForm()"
+        class="btn btn-primary" style="font-size:0.875rem">
+        ${showAddForm ? '\u30AD\u30E3\u30F3\u30BE\u30EB' : '+ \u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u8FFD\u52A0'}
+      </button>
+    </div>
+
+    ${showAddForm ? `
+      <div style="background:#eff6ff;padding:var(--spacing-4);border-radius:var(--radius-lg);margin-bottom:var(--spacing-4);border:1px solid #bfdbfe">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u4F5C\u6210</h3>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
+          <div>
+            <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u30A4\u30D9\u30F3\u30C8\u540D *</label>
+            <input type="text" id="new_event_name" class="form-input" style="width:100%;font-size:0.875rem" placeholder="\u4F8B: \u30EF\u30FC\u30AF\u30B7\u30E7\u30C3\u30D7\u3001\u767A\u8868\u4F1A\u7B49">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u958B\u50AC\u65E5</label>
+            <input type="date" id="new_event_date" class="form-input" style="width:100%;font-size:0.875rem">
+          </div>
+        </div>
+        <button onclick="app.createEvent()" class="btn btn-primary" style="font-size:0.875rem">\u4F5C\u6210</button>
+      </div>
+    ` : ''}
+
+    ${events.map(([eventId, evt]) => {
+      const participants = evt.participants || [];
+      const eventRevenue = participants.reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+      const isAddingParticipant = addingParticipantTo === eventId;
+
+      return `
+        <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
+          <div style="background:#7c3aed;color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${evt.name || '\u30A4\u30D9\u30F3\u30C8'}</h3>
+              ${evt.date ? `<span style="font-size:0.75rem;opacity:0.8">${evt.date}</span>` : ''}
+            </div>
+            <div style="display:flex;gap:var(--spacing-3);align-items:center">
+              <span style="font-size:0.75rem;opacity:0.9">${participants.length}\u540D\u53C2\u52A0</span>
+              <span style="font-size:0.875rem;font-weight:600">${formatCurrency(eventRevenue)}</span>
+              <button onclick="app.deleteEvent('${escapeAttr(eventId)}')"
+                style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">
+                \u524A\u9664
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:var(--spacing-3);overflow-x:auto">
+            <table class="data-table" style="font-size:0.75rem">
+              <thead>
+                <tr>
+                  <th style="padding:var(--spacing-2)">\u6C0F\u540D</th>
+                  <th style="padding:var(--spacing-2);width:100px">\u4F1A\u54E1\u533A\u5206</th>
+                  <th style="padding:var(--spacing-2);width:80px;text-align:center">\u30D7\u30E9\u30F3</th>
+                  <th style="padding:var(--spacing-2);width:100px;text-align:right">\u91D1\u984D</th>
+                  <th style="padding:var(--spacing-2);width:50px;text-align:center">\u64CD\u4F5C</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${participants.map((p, idx) => `
+                  <tr style="border-bottom:1px solid var(--color-gray-200)">
+                    <td style="padding:var(--spacing-2);font-size:0.75rem">${p.name || ''}</td>
+                    <td style="padding:var(--spacing-2);font-size:0.75rem">
+                      <span style="padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:500;${p.memberType === '\u4F1A\u54E1' ? 'background:#dcfce7;color:#166534' : 'background:#fee2e2;color:#991b1b'}">
+                        ${p.memberType || ''}
+                      </span>
+                    </td>
+                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:center">${p.plan || '-'}</td>
+                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:right;font-weight:600">${formatCurrency(parseInt(p.amount) || 0)}</td>
+                    <td style="text-align:center;padding:var(--spacing-2)">
+                      <button onclick="app.deleteParticipant('${escapeAttr(eventId)}',${idx})"
+                        style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">\u524A\u9664</button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${participants.length === 0 ? `
+                  <tr><td colspan="5" style="text-align:center;padding:var(--spacing-4);color:var(--color-text-secondary);font-size:0.75rem">
+                    \u53C2\u52A0\u8005\u304C\u307E\u3060\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093
+                  </td></tr>
+                ` : ''}
+              </tbody>
+            </table>
+
+            ${isAddingParticipant ? `
+              <div style="background:#f5f3ff;padding:var(--spacing-3);border-radius:var(--radius-md);margin-top:var(--spacing-3);border:1px solid #ddd6fe">
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+                  <div>
+                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u6C0F\u540D *</label>
+                    <input type="text" id="evt_participant_name" class="form-input" style="width:100%;font-size:0.8rem">
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u4F1A\u54E1\u533A\u5206 *</label>
+                    <select id="evt_participant_memberType" class="form-input" style="width:100%;font-size:0.8rem">
+                      <option value="\u4F1A\u54E1">\u4F1A\u54E1</option>
+                      <option value="\u975E\u4F1A\u54E1">\u975E\u4F1A\u54E1</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u30D7\u30E9\u30F3</label>
+                    <select id="evt_participant_plan" class="form-input" style="width:100%;font-size:0.8rem">
+                      <option value="">-</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u91D1\u984D *</label>
+                    <input type="number" id="evt_participant_amount" class="form-input" style="width:100%;font-size:0.8rem" min="0">
+                  </div>
+                </div>
+                <div style="display:flex;gap:var(--spacing-2)">
+                  <button onclick="app.saveNewParticipant('${escapeAttr(eventId)}')"
+                    class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px">\u8FFD\u52A0</button>
+                  <button onclick="app.cancelAddParticipant()"
+                    class="btn btn-secondary" style="font-size:0.75rem;padding:4px 12px">\u30AD\u30E3\u30F3\u30BE\u30EB</button>
+                </div>
+              </div>
+            ` : `
+              <div style="margin-top:var(--spacing-3)">
+                <button onclick="app.showAddParticipant('${escapeAttr(eventId)}')"
+                  style="background:none;border:1px dashed var(--color-gray-300);color:var(--color-primary);padding:var(--spacing-2) var(--spacing-3);border-radius:var(--radius-md);font-size:0.75rem;cursor:pointer;width:100%">
+                  + \u53C2\u52A0\u8005\u8FFD\u52A0
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('')}
+
+    ${events.length === 0 && !showAddForm ? `
+      <div class="card">
+        <div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">
+          <p style="margin-bottom:var(--spacing-3)">\u3053\u306E\u6708\u306B\u306F\u30A4\u30D9\u30F3\u30C8\u304C\u307E\u3060\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093</p>
+          <button onclick="app.toggleAddEventForm()" class="btn btn-primary" style="font-size:0.875rem">
+            + \u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u8FFD\u52A0
+          </button>
+        </div>
+      </div>
+    ` : ''}
+  `;
 }
