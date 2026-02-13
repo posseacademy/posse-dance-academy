@@ -63,19 +63,20 @@ class DanceStudioApp {
     this.render();
     try {
       // Load data in parallel
-      const [customers, scheduleData, attendanceData, eventsData] = await Promise.all([
+      // Load each data source independently to avoid one failure losing all data
+      const [customers, scheduleData, attendanceData, eventsData] = await Promise.allSettled([
         loadCustomers(),
         loadScheduleData(),
         loadAttendance(this.selectedMonth),
         loadEvents(this.selectedMonth)
       ]);
-      this.customers = customers;
-      this.scheduleData = scheduleData;
-      this.attendanceData = attendanceData;
-      this.eventsData = eventsData;
+      this.customers = customers.status === 'fulfilled' ? customers.value : {};
+      this.scheduleData = scheduleData.status === 'fulfilled' ? scheduleData.value : {};
+      this.attendanceData = attendanceData.status === 'fulfilled' ? attendanceData.value : {};
+      this.eventsData = eventsData.status === 'fulfilled' ? eventsData.value : {};
     } catch (error) {
       console.error('Data init failed:', error);
-      this.scheduleData = { ...defaultSchedule };
+      // NEVER overwrite with defaultSchedule - keep empty to avoid data loss
     }
     this.isLoading = false;
     this.render();
