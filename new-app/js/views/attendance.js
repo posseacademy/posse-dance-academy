@@ -11,7 +11,7 @@ export function renderAttendance(app) {
   return `
    <div class="attendance-view">
     <div class="page-header">
-      <h1 class="page-title">åºå¸­è¨é</h1>
+      <h1 class="page-title">\u51FA\u5E2D\u8A18\u9332</h1>
       <div style="display:flex;gap:var(--spacing-3);align-items:center">
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
           onchange="app.changeMonth(this.value)">
@@ -24,14 +24,14 @@ export function renderAttendance(app) {
 }
 
 function isRegularPlan(plan) {
-  const regularPlans = ['1ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', '2ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', '3ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', '4ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', '1.5hã¯ã©ã¹'];
+  const regularPlans = ['1\u30AF\u30E9\u30B9', '\uFF11\u30AF\u30E9\u30B9', '2\u30AF\u30E9\u30B9', '\uFF12\u30AF\u30E9\u30B9', '3\u30AF\u30E9\u30B9', '\uFF13\u30AF\u30E9\u30B9', '4\u30AF\u30E9\u30B9', '\uFF14\u30AF\u30E9\u30B9', '1.5h\u30AF\u30E9\u30B9'];
   return regularPlans.includes(plan);
 }
 
 function sortStudentsByPlan(students) {
   return [...students].sort((a, b) => {
     const normalizePlan = (plan) => {
-      return plan.replace(/[ï¼-¾ï½]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+      return plan.replace(/[\uFF10-\uFF19]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
     };
     const planA = normalizePlan(a.plan || '');
     const planB = normalizePlan(b.plan || '');
@@ -44,20 +44,20 @@ function sortStudentsByPlan(students) {
 function getAttendanceRate(attendanceData, studentKey) {
   const data = attendanceData[studentKey] || {};
   const weeks = ['week1', 'week2', 'week3', 'week4'];
-  const attended = weeks.filter(w => data[w] === 'â').length;
-  const recorded = weeks.filter(w => data[w] === 'â' || data[w] === 'Ã' || data[w] === 'â' || data[w] === 'x' || data[w] === 'X').length;
+  const attended = weeks.filter(w => data[w] === '\u25CB').length;
+  const recorded = weeks.filter(w => data[w] === '\u25CB' || data[w] === '\u00D7' || data[w] === '\u2715' || data[w] === 'x' || data[w] === 'X').length;
   return recorded > 0 ? Math.round((attended / recorded) * 100) : 0;
 }
 
 function getAttBtnStyle(val) {
-  if (val === 'â') return 'background:#22c55e;border-color:#16a34a;color:white;';
-  if (val === 'Ã' || val === 'â' || val === 'x' || val === 'X') return 'background:#ef4444;border-color:#dc2626;color:white;';
-  if (val === 'ä¼è­»') return 'background:#6b7280;border-color:#4b5563;color:white;';
+  if (val === '\u25CB') return 'background:#22c55e;border-color:#16a34a;color:white;';
+  if (val === '\u00D7' || val === '\u2715' || val === 'x' || val === 'X') return 'background:#ef4444;border-color:#dc2626;color:white;';
+  if (val === '\u4F11\u8B1B') return 'background:#6b7280;border-color:#4b5563;color:white;';
   return 'background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;';
 }
 
 function getAttDisplay(val) {
-  if (val === 'ä¼è«') return 'ä¼';
+  if (val === '\u4F11\u8B1B') return '\u4F11';
   return val || '-';
 }
 
@@ -74,12 +74,12 @@ function escapeAttr(str) {
 
 function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, scheduleData) {
   const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-  const weekLabels = ['ç¬¬1é±', 'ç¬¬2é±', 'ç¬¬3é±', 'ç¬¬4é±', 'äºå'];
+  const weekLabels = ['\u7B2C1\u9031', '\u7B2C2\u9031', '\u7B2C3\u9031', '\u7B2C4\u9031', '\u4E88\u5099'];
   const editingStudent = app.editingStudent || null;
   const showAddForm = app.showAddStudentForm || false;
   const selectedClassForAdd = app.selectedClassForAdd || null;
 
-  const isPracticeTab = selectedDay === 'ç·´ç´¢ä¼';
+  const isPracticeTab = selectedDay === '\u7DF4\u7FD2\u4F1A';
 
   return `
     <!-- Day tabs -->
@@ -91,8 +91,8 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
         </div>
       `).join('')}
       <div class="tab-item ${isPracticeTab ? 'active' : ''}"
-        onclick="app.selectedDay='ç·´ç´¢ä¼';app.render()">
-        ç·´ç¿ä¼
+        onclick="app.selectedDay='\u7DF4\u7FD2\u4F1A';app.render()">
+        \u7DF4\u7FD2\u4F1A
       </div>
     </div>
 
@@ -126,7 +126,7 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
           const studentName = key.substring(classPrefix.length);
           if (!existingNames.has(studentName)) {
             const attEntry = attendanceData[key] || {};
-            const plan = attEntry._plan || 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼';
+            const plan = attEntry._plan || '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09';
             filteredStudents.push({lastName: studentName, firstName: '', plan: plan});
             existingNames.add(studentName);
           }
@@ -144,10 +144,10 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
           <div style="background:${headerBg};color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
             <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${location} - ${className}</h3>
             <div style="display:flex;gap:var(--spacing-2);align-items:center">
-              <span style="font-size:0.75rem;opacity:0.9">${filteredStudents.length}å</span>
+              <span style="font-size:0.75rem;opacity:0.9">${filteredStudents.length}\u540D</span>
               <button onclick="app.addStudentToClass('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}')"
                 style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">
-                + çå¾è¿½å 
+                + \u751F\u5F92\u8FFD\u52A0
               </button>
             </div>
           </div>
@@ -155,11 +155,11 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
             <table class="data-table" style="font-size:0.75rem">
               <thead>
                 <tr>
-                  <th style="width:100px;padding:var(--spacing-2)">æ°å</th>
-                  <th style="width:100px;padding:var(--spacing-2)">ãã©ã³</th>
+                  <th style="width:100px;padding:var(--spacing-2)">\u6C0F\u540D</th>
+                  <th style="width:100px;padding:var(--spacing-2)">\u30D7\u30E9\u30F3</th>
                   ${weekLabels.map(label => `<th style="text-align:center;width:50px;padding:var(--spacing-2)">${label}</th>`).join('')}
-                  <th style="text-align:center;width:60px;padding:var(--spacing-2)">åºå¸­ç</th>
-                  <th style="text-align:center;width:50px;padding:var(--spacing-2)">ç·¨é</th>
+                  <th style="text-align:center;width:60px;padding:var(--spacing-2)">\u51FA\u5E2D\u7387</th>
+                  <th style="text-align:center;width:50px;padding:var(--spacing-2)">\u7DE8\u96C6</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,7 +200,7 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
                       <td style="text-align:center;padding:var(--spacing-2)">
                         <button onclick="app.startEditStudent('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}','${escapeAttr(student.lastName)}','${escapeAttr(student.firstName)}')"
                           style="background:none;border:none;color:var(--color-primary);cursor:pointer;font-size:0.75rem">
-                          ç·¨é
+                          \u7DE8\u96C6
                         </button>
                       </td>
                     </tr>
@@ -213,16 +213,16 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
       `;
     }).join('')}
 
-    ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">ãã®ææ¥ã«ã¯ã¯ã©ã¹ãããã¾ãã</div></div>' : ''}
+    ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">\u3053\u306E\u66DC\u65E5\u306B\u306F\u30AF\u30E9\u30B9\u304C\u3042\u308A\u307E\u305B\u3093</div></div>' : ''}
     `}
   `;
 }
 
 function renderEditingRow(app, student, studentKey, attData, rate, weeks, selectedDay, location, className) {
   const planOptions = [
-    'ï¼ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', 'ï¼ã¯ã©ã¹', 'ï¼ã¯ã©ã¹',
-    'ãã¸ã¿ã¼ï¼ä¼å¡ï¼', 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼',
-    'ãã¸ã¿ã¼ï¼æ¯æ¿ï¼', 'ååä½é©', 'ååç¡æ'
+    '\uFF14\u30AF\u30E9\u30B9', '\uFF13\u30AF\u30E9\u30B9', '\uFF12\u30AF\u30E9\u30B9', '\uFF11\u30AF\u30E9\u30B9',
+    '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09', '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09',
+    '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09', '\u521D\u56DE\u4F53\u9A13', '\u521D\u56DE\u7121\u6599'
   ];
 
   return `
@@ -250,11 +250,11 @@ function renderEditingRow(app, student, studentKey, attData, rate, weeks, select
       <td style="text-align:center;padding:var(--spacing-2)">
         <div style="display:flex;flex-direction:column;gap:4px">
           <button onclick="app.saveEditStudent()"
-            style="background:none;border:none;color:#16a34a;cursor:pointer;font-size:0.75rem">ä¿å­</button>
+            style="background:none;border:none;color:#16a34a;cursor:pointer;font-size:0.75rem">\u4FDD\u5B58</button>
           <button onclick="app.cancelEditStudent()"
-            style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:0.75rem">ã­ã£ã³ã»ã«</button>
+            style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:0.75rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
           <button onclick="app.deleteStudent('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}','${escapeAttr(student.lastName)}','${escapeAttr(student.firstName)}')"
-            style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">åé©</button>
+            style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">\u524A\u9664</button>
         </div>
       </td>
     </tr>
@@ -263,63 +263,63 @@ function renderEditingRow(app, student, studentKey, attData, rate, weeks, select
 
 function renderAddStudentForm(app, classInfo) {
   const planOptions = [
-    {value: '', label: 'é¸æãã¦ãã ãã'},
-    {value: 'ï¼ã¯ã©ã¹', label: 'ï¼ã¯ã©ã¹'},
-    {value: '¾üã¯ã©ã¹', label: 'ï¼ã¯ã©ã¹'},
-    {value: 'ï¼ã¯ã©ã¹', label: 'ï¼ã¯ã©ã¹'},
-    {value: 'ï¼ã¯ã©ã¹', label: 'ï¼ã¯ã©ã¹'},
-    {value: 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼', label: 'ãã¸ã¿ã¼ï¼ä¼å¡ï¼'},
-    {value: 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼', label: 'ãã¸ã¿ã¼ï¼éä¼å¡ï¼'},
-    {value: 'ãã¸ã¿ã¼ï¼æ¯æ¿ï¼', label: 'ãã¸ã¿ã¼ï¼æ¯æ¿ï¼'},
-    {value: 'ååä½é©', label: 'ååä½é©3'},
-    {value: 'ååç¡æ', label: 'ååç¡æ'}
+    {value: '', label: '\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044'},
+    {value: '\uFF14\u30AF\u30E9\u30B9', label: '\uFF14\u30AF\u30E9\u30B9'},
+    {value: '\uFF13\u30AF\u30E9\u30B9', label: '\uFF13\u30AF\u30E9\u30B9'},
+    {value: '\uFF12\u30AF\u30E9\u30B9', label: '\uFF12\u30AF\u30E9\u30B9'},
+    {value: '\uFF11\u30AF\u30E9\u30B9', label: '\uFF11\u30AF\u30E9\u30B9'},
+    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09'},
+    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09'},
+    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09'},
+    {value: '\u521D\u56DE\u4F53\u9A13', label: '\u521D\u56DE\u4F53\u9A13'},
+    {value: '\u521D\u56DE\u7121\u6599', label: '\u521D\u56DE\u7121\u6599'}
   ];
 
   return `
     <div style="background:#eff6ff;padding:var(--spacing-4);border-radius:var(--radius-lg);margin-bottom:var(--spacing-4);border:1px solid #bfdbfe">
-      <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">çå¾è¿½å  - ${classInfo.location} ${classInfo.className}</h3>
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u751F\u5F92\u8FFD\u52A0 - ${classInfo.location} ${classInfo.className}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">å§ *</label>
+          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u59D3 *</label>
           <input type="text" id="new_student_lastName" class="form-input" style="width:100%;font-size:0.875rem">
         </div>
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">å *</label>
+          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u540D *</label>
           <input type="text" id="new_student_firstName" class="form-input" style="width:100%;font-size:0.875rem">
         </div>
         <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">ãã©ã³ *</label>
+          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u30D7\u30E9\u30F3 *</label>
           <select id="new_student_plan" class="form-input" style="width:100%;font-size:0.875rem">
             ${planOptions.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
           </select>
         </div>
       </div>
       <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-bottom:var(--spacing-3)">
-        â» ãã¸ã¿ã¼ãååä½é©3ã®æ¹ã¯é©åãªãã©ã³ãé¸æãã¦ãã ãã
+        \u203B \u30D3\u30B8\u30BF\u30FC\u3084\u521D\u56DE\u4F53\u9A13\u306E\u65B9\u306F\u9069\u5207\u306A\u30D7\u30E9\u30F3\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044
       </div>
       <div style="display:flex;gap:var(--spacing-2)">
         <button onclick="app.saveNewStudent()"
-          class="btn btn-primary" style="font-size:0.875rem">è¿½å </button>
+          class="btn btn-primary" style="font-size:0.875rem">\u8FFD\u52A0</button>
         <button onclick="app.cancelAddStudent()"
-          class="btn btn-secondary" style="font-size:0.875rem">ã­ã£ã³ã»ã«</button>
+          class="btn btn-secondary" style="font-size:0.875rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
       </div>
     </div>
   `;
 }
 
 function renderPracticeCard(app, dayLabel, attendanceData, weeks, weekLabels) {
-  const key = 'ç·´ç¿ä¼_' + dayLabel;
+  const key = '\u7DF4\u7FD2\u4F1A_' + dayLabel;
   const data = attendanceData[key] || {};
   const totalParticipants = weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0);
-  const practicePrice = pricing['ç·´ç¿ä¼'] || 500;
+  const practicePrice = pricing['\u7DF4\u7FD2\u4F1A'] || 500;
   const practiceRevenue = totalParticipants * practicePrice;
 
   return `
     <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
       <div style="background:#6b7280;color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-        <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${dayLabel} ç·´ç¿ä¼</h3>
+        <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${dayLabel} \u7DF4\u7FD2\u4F1A</h3>
         <div style="display:flex;gap:var(--spacing-3);align-items:center">
-          <span style="font-size:0.75rem;opacity:0.9">${totalParticipants}ååå </span>
+          <span style="font-size:0.75rem;opacity:0.9">${totalParticipants}\u540D\u53C2\u52A0</span>
           <span style="font-size:0.875rem;font-weight:600">${formatCurrency(practiceRevenue)}</span>
         </div>
       </div>
@@ -329,18 +329,18 @@ function renderPracticeCard(app, dayLabel, attendanceData, weeks, weekLabels) {
             <tr>
               <th style="padding:var(--spacing-2)"></th>
               ${weekLabels.map(label => '<th style="text-align:center;width:70px;padding:var(--spacing-2)">' + label + '</th>').join('')}
-              <th style="text-align:center;width:70px;padding:var(--spacing-2)">åè¨</th>
+              <th style="text-align:center;width:70px;padding:var(--spacing-2)">\u5408\u8A08</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style="padding:var(--spacing-2);font-weight:600">åå äººæ°</td>
+              <td style="padding:var(--spacing-2);font-weight:600">\u53C2\u52A0\u4EBA\u6570</td>
               ${weeks.map(w => {
                 const count = data[w] || 0;
                 return '<td style="text-align:center;padding:var(--spacing-2)"><input type="number" class="form-input" style="width:60px;text-align:center" value="' + count + '" min="0" onchange="app.updatePractice(\x27' + key + '\x27,\x27' + w + '\x27,parseInt(this.value)||0)"></td>';
               }).join('')}
               <td style="text-align:center;padding:var(--spacing-2)">
-                <strong>${totalParticipants}å</strong>
+                <strong>${totalParticipants}\u540D</strong>
               </td>
             </tr>
           </tbody>
@@ -351,6 +351,6 @@ function renderPracticeCard(app, dayLabel, attendanceData, weeks, weekLabels) {
 }
 
 function renderPracticeTab(app, attendanceData, weeks, weekLabels) {
-  const practiceDays = ['æææ¥', 'æ¨ææ¥'];
+  const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
   return practiceDays.map(day => renderPracticeCard(app, day, attendanceData, weeks, weekLabels)).join('');
 }
