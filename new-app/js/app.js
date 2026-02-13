@@ -1,9 +1,9 @@
 import { pricing, planOrder, defaultSchedule, navItems, dayOrder } from './config.js';
-import { loadCustomers, saveCustomer, deleteCustomer as fbDeleteCustomer, loadScheduleData, saveScheduleData, loadAttendance, saveAttendance, db } from './firebase-service.js';
+import { loadCustomers, saveCustomer, deleteCustomer as fbDeleteCustomer, loadScheduleData, saveScheduleData, loadAttendance, saveAttendance, loadEvents, saveEvent, deleteEvent as fbDeleteEvent, db } from './firebase-service.js';
 import { calculateVisitorRevenue, calculatePracticeRevenue, formatCurrency, downloadJSON, generateCustomerCSV, downloadCSV } from './utils.js';
 import { renderHome } from './views/home.js?v=3';
 import { renderCustomers } from './views/customers.js?v=3';
-import { renderAttendance } from './views/attendance.js?v=10';
+import { renderAttendance } from './views/attendance.js?v=11';
 import { renderSchedule } from './views/schedule.js';
 import { renderInstructors } from './views/instructors.js';
 
@@ -15,6 +15,7 @@ class DanceStudioApp {
     this.scheduleData = {};
     this.attendanceData = {};
     this.eventAttendanceData = {};
+    this.eventsData = {};
     this.isLoading = true;
 
     // Month selection - default to current month
@@ -39,6 +40,10 @@ class DanceStudioApp {
     this.selectedClassForAdd = null;
     this.editingStudent = null;
 
+    // Event view state
+    this.showAddEventForm = false;
+    this.addingParticipantToEvent = null;
+
     // Schedule view state
     this.scheduleTab = 'time';
 
@@ -58,14 +63,16 @@ class DanceStudioApp {
     this.render();
     try {
       // Load data in parallel
-      const [customers, scheduleData, attendanceData] = await Promise.all([
+      const [customers, scheduleData, attendanceData, eventsData] = await Promise.all([
         loadCustomers(),
         loadScheduleData(),
-        loadAttendance(this.selectedMonth)
+        loadAttendance(this.selectedMonth),
+        loadEvents(this.selectedMonth)
       ]);
       this.customers = customers;
       this.scheduleData = scheduleData;
       this.attendanceData = attendanceData;
+      this.eventsData = eventsData;
     } catch (error) {
       console.error('Data init failed:', error);
       this.scheduleData = { ...defaultSchedule };
@@ -85,7 +92,12 @@ class DanceStudioApp {
     this.selectedMonth = month;
     this.isLoading = true;
     this.render();
-    this.attendanceData = await loadAttendance(month);
+    const [attendanceData, eventsData] = await Promise.all([
+      loadAttendance(month),
+      loadEvents(month)
+    ]);
+    this.attendanceData = attendanceData;
+    this.eventsData = eventsData;
     this.isLoading = false;
     this.render();
   }
@@ -254,6 +266,83 @@ class DanceStudioApp {
     this.editingStudent = null;
     this.render();
     alert('\u751F\u5F92\u3092\u524A\u9664\u3057\u307E\u3057\u305F');
+  }
+
+  // === Event management methods ===
+
+  toggleAddEventForm() {
+    this.showAddEventForm = !this.showAddEventForm;
+    this.render();
+  }
+
+  async createEvent() {
+    const name = document.getElementById('new_event_name')?.value || '';
+    const date = document.getElementById('new_event_date')?.value || '';
+    if (!name) {
+      alert('\u30A4\u30D9\u30F3\u30C8\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044');
+      return;
+    }
+    const eventId = `event_${Date.now()}`;
+    const eventData = { name, date, participants: [] };
+    const success = await saveEvent(this.selectedMonth, eventId, eventData);
+    if (success) {
+      this.eventsData[eventId] = eventData;
+      this.showAddEventForm = false;
+      this.render();
+    }
+  }
+
+  async deleteEvent(eventId) {
+    const evt = this.eventsData[eventId];
+    if (!confirm(`\u300C${evt?.name || '\u30A4\u30D9\u30F3\u30C8'}\u300D\u3092\u524A\u9664\u3057\u3066\u3082\u3088\u308D\u3057\u3044\u3067\u3059\u304B\uFF1F`)) return;
+    const success = await fbDeleteEvent(this.selectedMonth, eventId);
+    if (success) {
+      delete this.eventsData[eventId];
+      this.render();
+    }
+  }
+
+  showAddParticipant(eventId) {
+    this.addingParticipantToEvent = eventId;
+    this.render();
+  }
+
+  cancelAddParticipant() {
+    this.addingParticipantToEvent = null;
+    this.render();
+  }
+
+  async saveNewParticipant(eventId) {
+    const name = document.getElementById('evt_participant_name')?.value || '';
+    const memberType = document.getElementById('evt_participant_memberType')?.value || '\u4F1A\u54E1';
+    const plan = document.getElementById('evt_participant_plan')?.value || '';
+    const amount = document.getElementById('evt_participant_amount')?.value || '0';
+    if (!name) {
+      alert('\u6C0F\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044');
+      return;
+    }
+    if (!this.eventsData[eventId]) return;
+    if (!this.eventsData[eventId].participants) {
+      this.eventsData[eventId].participants = [];
+    }
+    this.eventsData[eventId].participants.push({
+      name, memberType, plan, amount: parseInt(amount) || 0
+    });
+    await saveEvent(this.selectedMonth, eventId, this.eventsData[eventId]);
+    this.addingParticipantToEvent = null;
+    this.render();
+  }
+
+  async deleteParticipant(eventId, index) {
+    if (!this.eventsData[eventId]) return;
+    const participants = this.eventsData[eventId].participants || [];
+    if (index < 0 || index >= participants.length) return;
+    const p = participants[index];
+    if (!confirm(`${p.name}\u3092\u524A\u9664\u3057\u3066\u3082\u3088\u308D\u3057\u3044\u3067\u3059\u304B\uFF1F`)) return;
+    participants.splice(index, 1);
+    this.eventsData[eventId].participants = participants;
+    await saveEvent(this.selectedMonth, eventId, this.eventsData[eventId]);
+    this.render();
   }
 
   // Customer CRUD
