@@ -2,7 +2,7 @@ import { pricing, planOrder, defaultSchedule, navItems, dayOrder } from './confi
 import { loadCustomers, saveCustomer, deleteCustomer as fbDeleteCustomer, loadScheduleData, saveScheduleData, loadAttendance, saveAttendance, db } from './firebase-service.js';
 import { calculateVisitorRevenue, calculatePracticeRevenue, formatCurrency, downloadJSON, generateCustomerCSV, downloadCSV } from './utils.js';
 import { renderHome } from './views/home.js?v=3';
-import { renderCustomers } from './views/customers.js';
+import { renderCustomers } from './views/customers.js?v=2';
 import { renderAttendance } from './views/attendance.js?v=7';
 import { renderSchedule } from './views/schedule.js';
 import { renderInstructors } from './views/instructors.js';
@@ -24,7 +24,7 @@ class DanceStudioApp {
     // Customer view state
     this.searchTerm = '';
     this.statusFilter = 'all';
-    this.sortField = 'name';
+    this.sortField = 'memberNumber';
     this.sortOrder = 'asc';
     this.showAddForm = false;
     this.editingId = null;
@@ -265,14 +265,29 @@ class DanceStudioApp {
   }
 
   async saveCustomerForm() {
+    const existing = this.editingId ? (this.customers[this.editingId] || {}) : {};
     const data = {
+      ...existing,
+      memberNumber: document.getElementById('form-memberNumber')?.value || '',
+      status: document.getElementById('form-status')?.value || '\u5165\u4F1A\u4E2D',
+      course: document.getElementById('form-course')?.value || '',
+      annualFee: document.getElementById('form-annualFee')?.value || '',
       lastName: document.getElementById('form-lastName')?.value || '',
       firstName: document.getElementById('form-firstName')?.value || '',
-      course: document.getElementById('form-plan')?.value || '',
-      status: document.getElementById('form-status')?.value || '\u5165\u4F1A\u4E2D',
+      reading: document.getElementById('form-reading')?.value || '',
+      guardianName: document.getElementById('form-guardianName')?.value || '',
+      hakomonoName: document.getElementById('form-hakomonoName')?.value || '',
+      gender: document.getElementById('form-gender')?.value || '',
+      birthDate: document.getElementById('form-birthDate')?.value || '',
+      phone1: document.getElementById('form-phone1')?.value || '',
+      email: document.getElementById('form-email')?.value || '',
       joinDate: document.getElementById('form-joinDate')?.value || '',
-      phone: document.getElementById('form-phone')?.value || '',
-      notes: document.getElementById('form-notes')?.value || ''
+      postalCode: document.getElementById('form-postalCode')?.value || '',
+      prefecture: document.getElementById('form-prefecture')?.value || '',
+      city: document.getElementById('form-city')?.value || '',
+      address: document.getElementById('form-address')?.value || '',
+      building: document.getElementById('form-building')?.value || '',
+      memo: document.getElementById('form-memo')?.value || ''
     };
     const id = this.editingId || `customer_${Date.now()}`;
     const success = await saveCustomer(id, data);
