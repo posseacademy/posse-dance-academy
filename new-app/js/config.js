@@ -67,9 +67,7 @@ export const defaultSchedule = {
       { lastName: '四井', firstName: '陽音', plan: '３クラス' },
       { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
       { lastName: '嶋川', firstName: '陽大', plan: '３クラス' },
-      { lastName: '上田', firstName: '大空', plan: '２クラス' },
       { lastName: '津留', firstName: '創真', plan: '２クラス' },
-      { lastName: 'ひわたし', firstName: 'こうた', plan: '２クラス' },
       { lastName: '伊藤', firstName: '和馬', plan: '1クラス' },
       { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
       { lastName: '堤', firstName: '勇仁', plan: '３クラス' },
@@ -112,7 +110,6 @@ export const defaultSchedule = {
       { lastName: '古賀', firstName: '文人', plan: '1クラス' },
       { lastName: '古賀', firstName: '卯月妃', plan: '1クラス' },
       { lastName: '原口', firstName: '省吾', plan: '1クラス' },
-      { lastName: 'わたなべ', firstName: 'いとし', plan: '1クラス' },
       { lastName: '富井', firstName: '藍', plan: '1クラス' }
     ]},
     { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
@@ -129,18 +126,13 @@ export const defaultSchedule = {
   ],
   '水曜日': [
     { location: '天神', name: 'ブレイキン初級 HARUHIKO', color: 'red', students: [
-      { lastName: '田島', firstName: '渚', plan: '1クラス' },
       { lastName: '吉田', firstName: '智幸', plan: '1クラス' },
       { lastName: '本橋', firstName: '廉士', plan: '1クラス' },
       { lastName: '酒井', firstName: '天優', plan: '1クラス' },
       { lastName: '新藤', firstName: '大希', plan: '1クラス' },
-      { lastName: '荒巻', firstName: '大和', plan: '1クラス' },
-      { lastName: 'しん', firstName: 'よしと', plan: '1クラス' },
-      { lastName: '藤野', firstName: '蒼士', plan: '1クラス' }
+      { lastName: '荒巻', firstName: '大和', plan: '1クラス' }
     ]},
     { location: '天神', name: 'ブレイキン中上級 HARUHIKO', color: 'orange', students: [
-      { lastName: '', firstName: '大空', plan: '３クラス' },
-      { lastName: '森田', firstName: '翔真', plan: '1クラス' },
       { lastName: '中山', firstName: '結愛', plan: '1クラス' },
       { lastName: '迫田', firstName: 'りりあ', plan: '1クラス' }
     ]}
@@ -174,15 +166,12 @@ export const defaultSchedule = {
       { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
       { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
       { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
-      { lastName: '長谷川', firstName: '丈', plan: '２クラス' },
-      { lastName: 'しぎょう', firstName: 'とうま', plan: '1クラス' },
-      { lastName: 'しぎょう', firstName: 'ゆうま', plan: '1クラス' }
+      { lastName: '長谷川', firstName: '丈', plan: '２クラス' }
     ]},
     { location: '照葉', name: 'アクロ＆パワー リュウセイ', color: 'green', students: [
       { lastName: '吉武', firstName: '凛保', plan: '２クラス' },
       { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
       { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
-      { lastName: '工藤', firstName: '大地', plan: '２クラス' },
       { lastName: '長谷川', firstName: '丈', plan: '２クラス' },
       { lastName: '梅野', firstName: '壮大', plan: '２クラス' },
       { lastName: '梅野', firstName: '絢音', plan: '２クラス' }
@@ -192,16 +181,10 @@ export const defaultSchedule = {
     { location: '天神', name: 'アクロ＆パワー SOYA', color: 'red', students: [
       { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
       { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
-      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-      { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' },
-      { lastName: '藤野', firstName: '蒼士', plan: '1クラス' },
-      { lastName: '中山', firstName: '隼', plan: '1クラス' }
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' }
     ]},
     { location: '天神', name: 'ブレイキン初中級 HARUHIKO', color: 'orange', students: [
-      { lastName: '中島', firstName: '竜吾', plan: '３クラス' },
-      { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
-      { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
-      { lastName: 'よこやま', firstName: 'ゆめ', plan: '２クラス' }
+      { lastName: '三重野', firstName: '琉生', plan: '３クラス' }
     ]},
     { location: '大橋', name: 'ブレイキン入門 HARUHIKO', color: 'blue', students: [
       { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
@@ -209,7 +192,7 @@ export const defaultSchedule = {
       { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
       { lastName: '三重野', firstName: 'かな', plan: '２クラス' },
       { lastName: '矢野', firstName: '新', plan: '1クラス' },
-      { lastName: '伊豆永', firstName: '晄逢', plan: '1クラス' },
+      { lastName: '伊豆永', firstName: '晃逢', plan: '1クラス' },
       { lastName: '久保田', firstName: '朱里', plan: '1クラス' },
       { lastName: '古賀', firstName: '心太郎', plan: '1クラス' }
     ]},
@@ -366,7 +349,7 @@ export const instructors = [
       'オーストラリア・タイ・その他多数の海外経験'
     ],
     lessons: [
-      '指導歴8年近く。福岡以外にも佐賀や犊本でもレッスン経験あり'
+      '指導歴8年近く。福岡以外にも佐賀や犢本でもレッスン経験あり'
     ]
   }
 ];
