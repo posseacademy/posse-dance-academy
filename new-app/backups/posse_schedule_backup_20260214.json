@@ -1,0 +1,150 @@
+{
+  "exportDate": "2026-02-14",
+  "description": "POSSE Dance Academy - スケジュール完成版 (永久保存・手修正済み)",
+  "scheduleData": {
+    "イベント": [],
+    "月曜日": [
+      { "location": "天神", "name": "アクロバット SOYA", "color": "red", "students": [
+        { "lastName": "中島", "firstName": "竜吾", "plan": "３クラス" },
+        { "lastName": "四井", "firstName": "陽音", "plan": "３クラス" },
+        { "lastName": "三重野", "firstName": "琉生", "plan": "３クラス" },
+        { "lastName": "嶋川", "firstName": "陽大", "plan": "３クラス" },
+        { "lastName": "津留", "firstName": "創真", "plan": "２クラス" },
+        { "lastName": "伊藤", "firstName": "和馬", "plan": "1クラス" },
+        { "lastName": "豊福", "firstName": "悠成", "plan": "４クラス" },
+        { "lastName": "堤", "firstName": "勇仁", "plan": "３クラス" },
+        { "lastName": "森田", "firstName": "翔真", "plan": "３クラス" },
+        { "lastName": "樋渡", "firstName": "皓太", "plan": "３クラス" }
+      ]},
+      { "location": "天神", "name": "ブレイキン入門 SOYA", "color": "orange", "students": [
+        { "lastName": "津留", "firstName": "創真", "plan": "２クラス" },
+        { "lastName": "榊", "firstName": "花梨", "plan": "２クラス" },
+        { "lastName": "樋渡", "firstName": "皓太", "plan": "３クラス" }
+      ]},
+      { "location": "天神", "name": "トップロック フットワーク DAZ", "color": "blue", "students": [
+        { "lastName": "中島", "firstName": "竜吾", "plan": "３クラス" },
+        { "lastName": "四井", "firstName": "陽音", "plan": "３クラス" },
+        { "lastName": "三重野", "firstName": "琉生", "plan": "３クラス" },
+        { "lastName": "上田", "firstName": "大空", "plan": "２クラス" },
+        { "lastName": "伊藤", "firstName": "和馬", "plan": "1クラス" },
+        { "lastName": "戸田", "firstName": "唯斗", "plan": "1クラス" },
+        { "lastName": "森脇", "firstName": "鳳仁", "plan": "1クラス" },
+        { "lastName": "豊福", "firstName": "悠成", "plan": "４クラス" },
+        { "lastName": "堤", "firstName": "勇仁", "plan": "３クラス" }
+      ]},
+      { "location": "天神", "name": "K-POP AI", "color": "green", "students": [
+        { "lastName": "石原", "firstName": "美黎", "plan": "２クラス" },
+        { "lastName": "平嶋", "firstName": "彩佳", "plan": "1クラス" },
+        { "lastName": "杉村", "firstName": "早紀", "plan": "1クラス" },
+        { "lastName": "田代", "firstName": "杏奈", "plan": "1クラス" },
+        { "lastName": "唯野", "firstName": "萌維", "plan": "1クラス" }
+      ]},
+      { "location": "天神", "name": "hiphop HIMEKA", "color": "purple", "students": [
+        { "lastName": "中川", "firstName": "凛音", "plan": "２クラス" },
+        { "lastName": "石原", "firstName": "美黎", "plan": "1クラス" }
+      ]},
+      { "location": "大橋", "name": "hiphop HIMEKA", "color": "purple", "students": [
+        { "lastName": "清水", "firstName": "くるみ", "plan": "1クラス" }
+      ]}
+    ],
+    "火曜日": [
+      { "location": "大橋", "name": "キッズダンス AYANO", "color": "red", "students": [
+        { "lastName": "古賀", "firstName": "文人", "plan": "1クラス" },
+        { "lastName": "古賀", "firstName": "卯月妃", "plan": "1クラス" },
+        { "lastName": "原口", "firstName": "省吾", "plan": "1クラス" },
+        { "lastName": "富井", "firstName": "藍", "plan": "1クラス" }
+      ]},
+      { "location": "大橋", "name": "Bgirlクラス AYANO HARUHIKO", "color": "orange", "students": [
+        { "lastName": "愛甲", "firstName": "大輪", "plan": "1クラス" }
+      ]},
+      { "location": "照葉", "name": "ブレイキン入門 SOYA", "color": "blue", "students": [
+        { "lastName": "榊", "firstName": "花梨", "plan": "２クラス" },
+        { "lastName": "西園", "firstName": "千晃", "plan": "1クラス" }
+      ]},
+      { "location": "照葉", "name": "アクロ＆パワー SOYA", "color": "green", "students": [
+        { "lastName": "吉武", "firstName": "凛保", "plan": "３クラス" },
+        { "lastName": "堤", "firstName": "勇仁", "plan": "1クラス" }
+      ]}
+    ],
+    "水曜日": [
+      { "location": "天神", "name": "ブレイキン初級 HARUHIKO", "color": "red", "students": [
+        { "lastName": "吉田", "firstName": "智幸", "plan": "1クラス" },
+        { "lastName": "本橋", "firstName": "廉士", "plan": "1クラス" },
+        { "lastName": "酒井", "firstName": "天優", "plan": "1クラス" },
+        { "lastName": "新藤", "firstName": "大希", "plan": "1クラス" },
+        { "lastName": "荒巻", "firstName": "大和", "plan": "1クラス" }
+      ]},
+      { "location": "天神", "name": "ブレイキン中上級 HARUHIKO", "color": "orange", "students": [
+        { "lastName": "中山", "firstName": "結愛", "plan": "1クラス" },
+        { "lastName": "迫田", "firstName": "りりあ", "plan": "1クラス" }
+      ]}
+    ],
+    "木曜日": [
+      { "location": "大橋", "name": "ブレイキン入門 SOYA", "color": "red", "students": [
+        { "lastName": "吉村", "firstName": "太壱", "plan": "２クラス" },
+        { "lastName": "原口", "firstName": "賢伸", "plan": "２クラス" },
+        { "lastName": "渡邉", "firstName": "創太", "plan": "２クラス" },
+        { "lastName": "藤田", "firstName": "将舞", "plan": "２クラス" },
+        { "lastName": "藤田", "firstName": "凌羽", "plan": "２クラス" },
+        { "lastName": "小柳", "firstName": "友陽", "plan": "２クラス" },
+        { "lastName": "豊福", "firstName": "悠成", "plan": "1クラス" },
+        { "lastName": "池田", "firstName": "全", "plan": "1クラス" },
+        { "lastName": "澤江", "firstName": "悠", "plan": "1クラス" },
+        { "lastName": "山下", "firstName": "幸四郎", "plan": "1クラス" }
+      ]},
+      { "location": "大橋", "name": "アクロ＆パワー SOYA", "color": "orange", "students": [
+        { "lastName": "中山", "firstName": "結愛", "plan": "２クラス" },
+        { "lastName": "豊福", "firstName": "悠成", "plan": "２クラス" },
+        { "lastName": "吉村", "firstName": "太壱", "plan": "２クラス" },
+        { "lastName": "原口", "firstName": "賢伸", "plan": "２クラス" },
+        { "lastName": "四井", "firstName": "陽音", "plan": "２クラス" },
+        { "lastName": "渡邉", "firstName": "創太", "plan": "２クラス" },
+        { "lastName": "小柳", "firstName": "友陽", "plan": "２クラス" },
+        { "lastName": "萩原", "firstName": "聖香", "plan": "1クラス" },
+        { "lastName": "澤江", "firstName": "悠", "plan": "1クラス" }
+      ]},
+      { "location": "照葉", "name": "ブレイキン入門 リュウセイ", "color": "blue", "students": [
+        { "lastName": "楊", "firstName": "ビンチェンエイデン", "plan": "２クラス" },
+        { "lastName": "楊", "firstName": "エクソ", "plan": "２クラス" },
+        { "lastName": "梅野", "firstName": "壮大", "plan": "２クラス" },
+        { "lastName": "梅野", "firstName": "絢音", "plan": "２クラス" },
+        { "lastName": "長谷川", "firstName": "丈", "plan": "２クラス" }
+      ]},
+      { "location": "照葉", "name": "アクロ＆パワー リュウセイ", "color": "green", "students": [
+        { "lastName": "吉武", "firstName": "凛保", "plan": "２クラス" },
+        { "lastName": "楊", "firstName": "ビンチェンエイデン", "plan": "２クラス" },
+        { "lastName": "楊", "firstName": "エクソ", "plan": "２クラス" },
+        { "lastName": "長谷川", "firstName": "丈", "plan": "２クラス" },
+        { "lastName": "梅野", "firstName": "壮大", "plan": "２クラス" },
+        { "lastName": "梅野", "firstName": "絢音", "plan": "２クラス" }
+      ]}
+    ],
+    "金曜日": [
+      { "location": "天神", "name": "アクロ＆パワー SOYA", "color": "red", "students": [
+        { "lastName": "中島", "firstName": "竜吾", "plan": "３クラス" },
+        { "lastName": "伊藤", "firstName": "和馬", "plan": "３クラス" },
+        { "lastName": "三重野", "firstName": "琉生", "plan": "３クラス" }
+      ]},
+      { "location": "天神", "name": "ブレイキン初中級 HARUHIKO", "color": "orange", "students": [
+        { "lastName": "三重野", "firstName": "琉生", "plan": "３クラス" }
+      ]},
+      { "location": "大橋", "name": "ブレイキン入門 HARUHIKO", "color": "blue", "students": [
+        { "lastName": "萩尾", "firstName": "郁海", "plan": "２クラス" },
+        { "lastName": "藤川", "firstName": "悠利", "plan": "２クラス" },
+        { "lastName": "藤川", "firstName": "柊利", "plan": "２クラス" },
+        { "lastName": "三重野", "firstName": "かな", "plan": "２クラス" },
+        { "lastName": "矢野", "firstName": "新", "plan": "1クラス" },
+        { "lastName": "伊豆永", "firstName": "晃逢", "plan": "1クラス" },
+        { "lastName": "久保田", "firstName": "朱里", "plan": "1クラス" },
+        { "lastName": "古賀", "firstName": "心太郎", "plan": "1クラス" }
+      ]},
+      { "location": "大橋", "name": "アクロ＆パワー ryusei", "color": "green", "students": [
+        { "lastName": "萩尾", "firstName": "郁海", "plan": "２クラス" },
+        { "lastName": "藤川", "firstName": "悠利", "plan": "２クラス" },
+        { "lastName": "藤川", "firstName": "柊利", "plan": "２クラス" },
+        { "lastName": "三重野", "firstName": "かな", "plan": "２クラス" },
+        { "lastName": "児玉", "firstName": "蛍斗", "plan": "1クラス" }
+      ]}
+    ]
+  }
+}
