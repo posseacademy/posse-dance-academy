@@ -1,13 +1,10 @@
-import { pricing, visitorRevenueOverrides } from './config.js';
+import { pricing } from './config.js';
 
 /**
  * Calculate visitor revenue for the selected month
- * CRITICAL: This is the corrected version - only counts visitor/trial/free/transfer/practice plans
+ * ALWAYS calculates from actual attendance data - no hardcoded overrides
  */
 export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleData) {
-  const _ovr = visitorRevenueOverrides?.[(selectedMonth || '').replace(/-/g, '')];
-  if (_ovr) return _ovr.total;
-
   let revenue = 0;
 
   Object.keys(attendanceData).forEach(key => {
@@ -40,8 +37,12 @@ export function calculateVisitorRevenue(selectedMonth, attendanceData, scheduleD
             attPlan === '練習会'
           );
 
-          if (_isVT && pricing[attPlan]) {
-            revenue += pricing[attPlan];
+          if (_isVT) {
+            // Map ビジター（振替）to 月謝クラス振替 for pricing
+            const resolvedPlan = attPlan === 'ビジター（振替）' ? '月謝クラス振替' : attPlan;
+            if (pricing[resolvedPlan]) {
+              revenue += pricing[resolvedPlan];
+            }
           } else if (!attPlan) {
             const pMap = {
               '初回体験': '初回体験',
@@ -114,15 +115,7 @@ export function calculatePracticeRevenue(attendanceData) {
  * Calculate detailed revenue breakdown by category
  */
 export function calculateDetailedRevenue(selectedMonth, attendanceData, scheduleData) {
-  const _ovr = visitorRevenueOverrides?.[(selectedMonth || '').replace(/-/g, '')];
-  if (_ovr) {
-    const r = {};
-    ['練習会', 'ビジター（会員）', 'ビジター（非会員）', 'ビジター1.5h（会員）', 'ビジター1.5h（非会員）', '月謝クラス振替', '初回体験', '初回無料'].forEach(k => r[k] = { count: 0, revenue: 0 });
-    if (_ovr.visitor > 0) r['ビジター（会員）'] = { count: Math.round(_ovr.visitor / 2000), revenue: _ovr.visitor };
-    if (_ovr.trial > 0) r['初回体験'] = { count: Math.round(_ovr.trial / 1000), revenue: _ovr.trial };
-    return r;
-  }
-
+  // ALWAYS calculate from actual attendance data - no hardcoded overrides
   const categories = {
     '練習会': { count: 0, revenue: 0 },
     'ビジター（会員）': { count: 0, revenue: 0 },
@@ -185,6 +178,11 @@ export function calculateDetailedRevenue(selectedMonth, attendanceData, schedule
             });
             return _m2 ? '月謝クラス振替' : 'ビジター（会員）';
           })();
+        }
+
+        // Map ビジター（振替）to 月謝クラス振替 for revenue calculation
+        if (plan === 'ビジター（振替）') {
+          plan = '月謝クラス振替';
         }
 
         if (plan && categories[plan] !== undefined) {
