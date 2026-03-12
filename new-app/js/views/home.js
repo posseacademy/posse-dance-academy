@@ -1,171 +1,131 @@
-import { pricing, coursePrices, courseColors, visitorRevenueOverrides } from '../config.js';
-import { calculateVisitorRevenue, calculatePracticeRevenue } from '../utils.js';
+import { pricing, dayOrder } from '../config.js';
+import { calculateVisitorRevenue, calculateDetailedRevenue, calculatePracticeRevenue, formatCurrency } from '../utils.js';
 
-export function renderDashboard(app) {
-  // Calculate customer statistics
-  const totalCustomers = app.customers.length;
-  const activeCustomers = app.customers.filter(c => c.status === '入会中').length;
-  const pausedCustomers = app.customers.filter(c => c.status === '休会中').length;
-  const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
+/**
+ * Render the HOME dashboard (overview of attendance/revenue)
+ * Moved from attendance.js overview tab
+ */
+export function renderHome(app) {
+  const scheduleData = app.scheduleData || {};
+  const attendanceData = app.attendanceData || {};
+  const days = dayOrder;
+  const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
+  const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
 
-  // Calculate course breakdown for active customers
-  const courseCountsMap = {};
-  app.customers
-    .filter(c => c.status === '入会中')
-    .forEach(c => {
-      const course = c.course || '１';
-      courseCountsMap[course] = (courseCountsMap[course] || 0) + 1;
-    });
+  // Revenue calculations
+  const visitorRevenue = calculateVisitorRevenue(app.selectedMonth, attendanceData, scheduleData);
+  const detailed = calculateDetailedRevenue(app.selectedMonth, attendanceData, scheduleData);
 
-  // Sort courses in order: ４, ３, ２, １
-  const courseOrder = ['４', '３', '２', '１'];
-  const courseCounts = courseOrder
-    .filter(course => courseCountsMap[course])
-    .map(course => ({
-      course,
-      count: courseCountsMap[course],
-      price: coursePrices[course] || 0,
-      color: courseColors[course] || '#999999'
-    }));
-
-  // Calculate total monthly tuition
-  const monthlyTuitionTotal = courseCounts.reduce((sum, item) => {
-    return sum + (item.price * item.count);
-  }, 0);
-
-  // Calculate schedule statistics
+  // Calculate total classes and total students from scheduleData
   let totalClasses = 0;
   let totalStudents = 0;
-  Object.entries(app.scheduleData || {}).forEach(([day, dayClasses]) => {
-    if (day === 'イベント' || !Array.isArray(dayClasses)) return;
-    dayClasses.forEach(cls => {
-      totalClasses++;
-      totalStudents += (cls.students || []).length;
+  days.forEach(day => {
+    const dc = Array.isArray(scheduleData[day]) ? scheduleData[day] : [];
+    totalClasses += dc.length;
+    dc.forEach(cls => {
+      const students = cls.students || [];
+      totalStudents += students.length;
     });
   });
 
-  // Calculate visitor revenue
-  const visitorRevenue = calculateVisitorRevenue(app.attendanceData, app.scheduleData, app.pricing, visitorRevenueOverrides, app.selectedMonth);
-
   // Calculate practice revenue
-  const practiceData = calculatePracticeRevenue(app.attendanceData);
-  const practiceRevenue = practiceData.revenue;
-
-  // Parse selected month for display
-  const [year, month] = app.selectedMonth.split('-');
-  const monthDisplay = `${year}年${month}月`;
+  let practiceTotal = 0;
+  practiceDays.forEach(day => {
+    const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+    const data = attendanceData[key] || {};
+    weeks.forEach(w => {
+      practiceTotal += (parseInt(data[w]) || 0) * (pricing['\u7DF4\u7FD2\u4F1A'] || 500);
+    });
+  });
 
   return `
-    <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h2>HOME</h2>
-        <p class="subtitle">posse dance academy の概要</p>
-      </div>
-      <div class="date-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        ${monthDisplay}
-      </div>
-    </div>
-
-    <!-- Stat Grid -->
-    <div class="stat-grid">
-      <!-- Total Customers -->
-      <div class="stat-card">
-        <div class="stat-icon blue">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <div class="attendance-view">
+      <div class="page-header">
+        <h1 class="page-title">HOME</h1>
+        <div style="display:flex;gap:var(--spacing-3);align-items:center">
+          <input type="month" class="form-input" value="${app.selectedMonth || ''}"
+            onchange="app.changeMonth(this.value)">
+          <button class="btn btn-sm" onclick="app.downloadBackup()">\u30D0\u30C3\u30AF\u30A2\u30C3\u30D7</button>
         </div>
-        <div class="stat-label">総顧客数</div>
-        <div class="stat-value">${totalCustomers}</div>
       </div>
 
-      <!-- Active Customers -->
-      <div class="stat-card">
-        <div class="stat-icon green">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <!-- Summary Cards -->
+      <div class="stat-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--spacing-4);margin-bottom:var(--spacing-6)">
+        <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+            <span style="font-size:1.5rem">\uD83D\uDCC5</span>
+            <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DCF\u30AF\u30E9\u30B9\u6570</span>
+          </div>
+          <div style="font-size:2rem;font-weight:700">${totalClasses}</div>
+          <div style="color:var(--color-text-secondary);font-size:0.875rem">\u30AF\u30E9\u30B9</div>
         </div>
-        <div class="stat-label">入会中</div>
-        <div class="stat-value" style="color: #10b981;">${activeCustomers}</div>
-      </div>
-
-      <!-- Paused Customers -->
-      <div class="stat-card">
-        <div class="stat-icon orange">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+        <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+            <span style="font-size:1.5rem">\uD83D\uDC65</span>
+            <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DCF\u751F\u5F92\u6570\uFF08\u5EF6\u3079\uFF09</span>
+          </div>
+          <div style="font-size:2rem;font-weight:700;color:var(--color-primary)">${totalStudents}</div>
+          <div style="color:var(--color-text-secondary);font-size:0.875rem">\u540D</div>
         </div>
-        <div class="stat-label">休会中</div>
-        <div class="stat-value" style="color: #f59e0b;">${pausedCustomers}</div>
-      </div>
-
-      <!-- Withdrawn Customers -->
-      <div class="stat-card">
-        <div class="stat-icon red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+            <span style="font-size:1.5rem">\uD83D\uDCB0</span>
+            <span style="color:var(--color-text-secondary);font-size:0.875rem">\u30D3\u30B8\u30BF\u30FC\u58F2\u4E0A</span>
+          </div>
+          <div style="font-size:2rem;font-weight:700;color:var(--color-danger)">${formatCurrency(visitorRevenue)}</div>
         </div>
-        <div class="stat-label">退会済み</div>
-        <div class="stat-value" style="color: var(--text-secondary);">${withdrawnCustomers}</div>
+        <div class="stat-card" style="background:white;border-radius:var(--radius-lg);padding:var(--spacing-4);box-shadow:var(--shadow-sm)">
+          <div style="display:flex;align-items:center;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+            <span style="font-size:1.5rem">\u23F0</span>
+            <span style="color:var(--color-text-secondary);font-size:0.875rem">\u7DF4\u7FD2\u4F1A\u58F2\u4E0A</span>
+          </div>
+          <div style="font-size:2rem;font-weight:700">${formatCurrency(practiceTotal)}</div>
+          <div style="color:var(--color-text-secondary);font-size:0.875rem">${practiceDays.reduce((sum, day) => {
+            const key = `\u7DF4\u7FD2\u4F1A_${day}`;
+            const data = attendanceData[key] || {};
+            return sum + weeks.reduce((s, w) => s + (parseInt(data[w]) || 0), 0);
+          }, 0)}\u540D\u53C2\u52A0</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Content Grid -->
-    <div class="content-grid">
-      <!-- Left: Course Breakdown -->
-      <div class="content-card">
+      <!-- Revenue breakdown -->
+      <div class="card">
         <div class="card-header">
-          <h3 class="card-title">コース別内訳（入会中）</h3>
+          <h2 class="card-title">\u58F2\u4E0A\u5185\u8A33\uFF08\u53D7\u8B1B\u4EBA\u6570\u30FB\u58F2\u4E0A\uFF09</h2>
         </div>
-        <div class="card-content">
-          ${courseCounts.map(item => `
-            <div class="revenue-row">
-              <div class="rev-label">
-                <span class="rev-dot" style="background-color: ${item.color};"></span>
-                コース${item.course}
-              </div>
-              <div class="rev-amount">¥${(item.price * item.count).toLocaleString('ja-JP')}</div>
-              <div class="rev-detail">${item.count}名</div>
-            </div>
-          `).join('')}
-          <div class="revenue-total">
-            <div class="rev-label" style="font-weight: 600;">月謝合計</div>
-            <div class="rev-amount" style="font-weight: 600;">¥${monthlyTuitionTotal.toLocaleString('ja-JP')}</div>
-          </div>
+        <div class="card-body">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>\u30AB\u30C6\u30B4\u30EA</th>
+                <th style="text-align:center">\u53D7\u8B1B\u4EBA\u6570</th>
+                <th style="text-align:right">\u5358\u4FA1</th>
+                <th style="text-align:right">\u58F2\u4E0A</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.entries(detailed).map(([cat, data]) => {
+                const price = pricing[cat] || 0;
+                return `
+                  <tr>
+                    <td>${cat}</td>
+                    <td style="text-align:center">${data.count > 0 ? `<span class="badge badge-green">${data.count}\u56DE</span>` : '-'}</td>
+                    <td style="text-align:right">${formatCurrency(price)}</td>
+                    <td style="text-align:right">${data.revenue > 0 ? `<strong style="color:var(--color-danger)">${formatCurrency(data.revenue)}</strong>` : '-'}</td>
+                  </tr>
+                `;
+              }).join('')}
+              <tr style="font-weight:700;border-top:2px solid var(--color-gray-300)">
+                <td>\u5408\u8A08</td>
+                <td></td>
+                <td></td>
+                <td style="text-align:right">${formatCurrency(visitorRevenue)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Right: Visitor and Summary -->
-      <div>
-        <!-- Visitor Highlight Card -->
-        <div class="content-card visitor-highlight">
-          <div class="card-header">
-            <h3 class="card-title">ビジター売上（今月）</h3>
-          </div>
-          <div class="card-content">
-            <div class="vh-value">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
-            <div class="vh-detail">売上</div>
-          </div>
-        </div>
-
-        <!-- Summary Card -->
-        <div class="content-card" style="margin-top: 1rem;">
-          <div class="card-header">
-            <h3 class="card-title">今月の概要</h3>
-          </div>
-          <div class="card-content">
-            <div class="revenue-row">
-              <div class="rev-label">レッスン数</div>
-              <div class="rev-amount">${totalClasses}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">受講生数</div>
-              <div class="rev-amount">${totalStudents}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">練習会売上</div>
-              <div class="rev-amount">¥${practiceRevenue.toLocaleString('ja-JP')}</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   `;
 }
