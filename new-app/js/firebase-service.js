@@ -1,144 +1,317 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getFirestore, collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { firebaseConfig } from './config.js?v=2';
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    doc,
+    updateDoc,
+    deleteDoc,
+    setDoc
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { firebaseConfig } from './config.js';
 
 // Initialize Firebase
-const fireApp = initializeApp(firebaseConfig);
-const db = getFirestore(fireApp);
+const firebaseApp = initializeApp(firebaseConfig);
+export const db = getFirestore(firebaseApp);
 
-// Load all customers from Firestore
+/**
+ * Load all customers from Firestore
+ * @returns {Promise<Array>} Array of customer objects with id property
+ */
 export async function loadCustomers() {
-  const customers = {};
-  try {
-    const querySnapshot = await getDocs(collection(db, 'customers'));
-    querySnapshot.forEach(doc => {
-      customers[doc.id] = doc.data();
-    });
-  } catch (error) {
-    console.error('顧客データの読み込みに失敗:', error);
-  }
-  return customers;
-}
+    try {
+        const customersRef = collection(db, 'customers');
+        const snapshot = await getDocs(customersRef);
 
-// Save a customer to Firestore
-export async function saveCustomer(id, data) {
-  try {
-    await setDoc(doc(db, 'customers', id), data);
-    return true;
-  } catch (error) {
-    console.error('顧客データの保存に失敗:', error);
-    return false;
-  }
-}
+        const customers = [];
+        snapshot.forEach(doc => {
+            customers.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
 
-// Delete a customer from Firestore
-export async function deleteCustomer(id) {
-  try {
-    await deleteDoc(doc(db, 'customers', id));
-    return true;
-  } catch (error) {
-    console.error('顧客データの削除に失敗:', error);
-    return false;
-  }
-}
+        // Sort by memberNumber
+        customers.sort((a, b) => {
+            const numA = parseInt(a.memberNumber) || 0;
+            const numB = parseInt(b.memberNumber) || 0;
+            return numA - numB;
+        });
 
-// Load schedule data from Firestore
-export async function loadScheduleData() {
-  const scheduleData = {};
-  try {
-    const querySnapshot = await getDocs(collection(db, 'schedule'));
-    if (querySnapshot.empty) {
-      console.warn('スケジュールデータが見つかりません。空のデータを返します。');
-      return {};
+        return customers;
+    } catch (error) {
+        console.error('Error loading customers:', error);
+        return [];
     }
-    querySnapshot.forEach(docSnap => {
-      // Firestore stores as { classes: [...] }, unwrap to flat array
-      scheduleData[docSnap.id] = docSnap.data().classes || [];
-    });
-  } catch (error) {
-    console.error('スケジュールデータの読み込みに失敗:', error);
-    return {};
-  }
-  return scheduleData;
 }
 
-// Save schedule data to Firestore
-export async function saveScheduleData(day, classes) {
-  try {
-    // Wrap flat array in { classes: [...] } for Firestore storage
-    await setDoc(doc(db, 'schedule', day), { classes: classes });
-    return true;
-  } catch (error) {
-    console.error('スケジュールデータの保存に失敗:', error);
-    return false;
-  }
+/**
+ * Add a new customer to Firestore
+ * @param {Object} customerData - Customer object
+ * @returns {Promise<string>} Document ID of the new customer
+ */
+export async function addCustomer(customerData) {
+    try {
+        const customersRef = collection(db, 'customers');
+        const docRef = await addDoc(customersRef, customerData);
+        console.log('Customer added with ID:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding customer:', error);
+        throw error;
+    }
 }
 
-// Load attendance data from Firestore
+/**
+ * Update an existing customer
+ * @param {string} id - Document ID
+ * @param {Object} data - Updated customer data
+ * @returns {Promise<void>}
+ */
+export async function updateCustomer(id, data) {
+    try {
+        const customerRef = doc(db, 'customers', id);
+        await updateDoc(customerRef, data);
+        console.log('Customer updated:', id);
+    } catch (error) {
+        console.error('Error updating customer:', error);
+        throw error;
+    }
+}
+
+/**
+ * Delete a customer
+ * @param {string} id - Document ID
+ * @returns {Promise<void>}
+ */
+export async function deleteCustomer(id) {
+    try {
+        const customerRef = doc(db, 'customers', id);
+        await deleteDoc(customerRef);
+        console.log('Customer deleted:', id);
+    } catch (error) {
+        console.error('Error deleting customer:', error);
+        throw error;
+    }
+}
+
+/**
+ * Load schedule data from Firestore
+ * @param {Object} defaultSchedule - Default schedule to use as fallback
+ * @returns {Promise<Object>} Schedule data
+ */
+export async function loadScheduleData(defaultSchedule) {
+    try {
+        const scheduleRef = collection(db, 'schedule');
+        const snapshot = await getDocs(scheduleRef);
+
+        if (snapshot.empty) {
+            console.log('No schedule data found, using default');
+            return defaultSchedule;
+        }
+
+        const loadedSchedule = {};
+        snapshot.forEach(doc => {
+            loadedSchedule[doc.id] = doc.data().classes || [];
+        });
+
+        return Object.keys(loadedSchedule).length > 0 ? loadedSchedule : defaultSchedule;
+    } catch (error) {
+        console.error('Error loading schedule data:', error);
+        return defaultSchedule;
+    }
+}
+
+/**
+ * Save schedule data to Firestore
+ * @param {Object} scheduleData - Schedule object with days as keys
+ * @returns {Promise<void>}
+ */
+export async function saveScheduleData(scheduleData) {
+    try {
+        for (const [day, classes] of Object.entries(scheduleData)) {
+            const scheduleRef = doc(db, 'schedule', day);
+            await setDoc(scheduleRef, {
+                classes: Array.isArray(classes) ? classes : []
+            });
+        }
+        console.log('Schedule data saved');
+    } catch (error) {
+        console.error('Error saving schedule data:', error);
+        throw error;
+    }
+}
+
+/**
+ * Load attendance records for a specific month
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @returns {Promise<Array>} Array of attendance records
+ */
 export async function loadAttendance(selectedMonth) {
-  const attendanceData = {};
-  try {
-    const monthKey = selectedMonth.replace('-', '');
-    const querySnapshot = await getDocs(collection(db, `attendance_${monthKey}`));
-    querySnapshot.forEach(docSnap => {
-      attendanceData[docSnap.id] = docSnap.data();
-    });
-  } catch (error) {
-    console.error('出席データの読み込みに失敗:', error);
-  }
-  return attendanceData;
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `attendance_${monthKey}`;
+        const attendanceRef = collection(db, collectionName);
+        const snapshot = await getDocs(attendanceRef);
+
+        const attendanceData = {};
+        snapshot.forEach(doc => {
+            attendanceData[doc.id] = doc.data();
+        });
+
+        return attendanceData;
+    } catch (error) {
+        console.error('Error loading attendance:', error);
+        return {};
+    }
 }
 
-// Save attendance data to Firestore
+/**
+ * Save attendance record for a student
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @param {string} studentId - Student identifier
+ * @param {Object} weekData - Week attendance data
+ * @returns {Promise<void>}
+ */
 export async function saveAttendance(selectedMonth, studentId, weekData) {
-  try {
-    const monthKey = selectedMonth.replace('-', '');
-    await setDoc(doc(db, `attendance_${monthKey}`, studentId), weekData);
-    return true;
-  } catch (error) {
-    console.error('出席データの保存に失敗:', error);
-    return false;
-  }
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `attendance_${monthKey}`;
+        const attendanceRef = doc(db, collectionName, studentId);
+
+        await setDoc(attendanceRef, weekData, { merge: true });
+        console.log('Attendance saved for:', studentId);
+    } catch (error) {
+        console.error('Error saving attendance:', error);
+        throw error;
+    }
 }
 
-// Load events data from Firestore
-export async function loadEvents(selectedMonth) {
-  const eventsData = {};
-  try {
-    const monthKey = selectedMonth.replace('-', '');
-    const querySnapshot = await getDocs(collection(db, `events_${monthKey}`));
-    querySnapshot.forEach(docSnap => {
-      eventsData[docSnap.id] = docSnap.data();
-    });
-  } catch (error) {
-    console.error('イベントデータの読み込みに失敗:', error);
-  }
-  return eventsData;
+/**
+ * Delete an attendance record
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @param {string} studentKey - Student key/ID
+ * @returns {Promise<void>}
+ */
+export async function deleteAttendanceRecord(selectedMonth, studentKey) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `attendance_${monthKey}`;
+        const attendanceRef = doc(db, collectionName, studentKey);
+
+        await deleteDoc(attendanceRef);
+        console.log('Attendance record deleted:', studentKey);
+    } catch (error) {
+        console.error('Error deleting attendance record:', error);
+        throw error;
+    }
 }
 
-// Save event data to Firestore
-export async function saveEvent(selectedMonth, eventId, data) {
-  try {
-    const monthKey = selectedMonth.replace('-', '');
-    await setDoc(doc(db, `events_${monthKey}`, eventId), data);
-    return true;
-  } catch (error) {
-    console.error('イベントデータの保存に失敗:', error);
-    return false;
-  }
+/**
+ * Load event attendance records for a specific month
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @returns {Promise<Array>} Array of event attendance records
+ */
+export async function loadEventAttendance(selectedMonth) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `event_attendance_${monthKey}`;
+        const eventAttendanceRef = collection(db, collectionName);
+        const snapshot = await getDocs(eventAttendanceRef);
+
+        const eventRecords = [];
+        snapshot.forEach(doc => {
+            eventRecords.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        return eventRecords;
+    } catch (error) {
+        console.error('Error loading event attendance:', error);
+        return [];
+    }
 }
 
-// Delete event from Firestore
-export async function deleteEvent(selectedMonth, eventId) {
-  try {
-    const monthKey = selectedMonth.replace('-', '');
-    await deleteDoc(doc(db, `events_${monthKey}`, eventId));
-    return true;
-  } catch (error) {
-    console.error('イベントデータの削除に失敗:', error);
-    return false;
-  }
+/**
+ * Save event attendance data
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @param {Array} eventData - Array of event participant objects
+ * @returns {Promise<void>}
+ */
+export async function saveEventAttendance(selectedMonth, eventData) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `event_attendance_${monthKey}`;
+
+        for (const event of eventData) {
+            const eventRef = doc(db, collectionName, event.id || event.eventId);
+            await setDoc(eventRef, event, { merge: true });
+        }
+        console.log('Event attendance saved');
+    } catch (error) {
+        console.error('Error saving event attendance:', error);
+        throw error;
+    }
 }
 
-// Export db for direct access if needed
-export { db };
+/**
+ * Delete an event attendance document
+ * @param {string} selectedMonth - Month in format 'YYYY-MM'
+ * @param {string} docId - Document ID
+ * @returns {Promise<void>}
+ */
+export async function deleteEventParticipantDoc(selectedMonth, docId) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const collectionName = `event_attendance_${monthKey}`;
+        const eventRef = doc(db, collectionName, docId);
+
+        await deleteDoc(eventRef);
+        console.log('Event participant deleted:', docId);
+    } catch (error) {
+        console.error('Error deleting event participant:', error);
+        throw error;
+    }
+}
+
+/**
+ * Create a backup of all collections as JSON
+ * @returns {Promise<void>} Downloads backup file
+ */
+export async function createBackup() {
+    try {
+        // Load attendance for the current month
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const attendance = await loadAttendance(currentMonth);
+        const eventAttendance = await loadEventAttendance(currentMonth);
+
+        const backup = {
+            timestamp: new Date().toISOString(),
+            backupMonth: currentMonth,
+            customers: await loadCustomers(),
+            schedule: await loadScheduleData({}),
+            attendance: attendance,
+            eventAttendance: eventAttendance
+        };
+
+        // Convert to JSON and download
+        const dataStr = JSON.stringify(backup, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `posse-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        console.log('Backup created successfully');
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        throw error;
+    }
+}

@@ -1,526 +1,390 @@
-import { planOrder, dayOrder, pricing } from '../config.js';
-import { formatCurrency } from '../utils.js';
+// POSSE Dance Academy - Attendance View Module
+// ES module for attendance recording and tracking
 
+import { pricing, visitorRevenueOverrides } from '../config.js';
+import { calculateVisitorRevenue, calculateDetailedRevenue, getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js';
+import { planOrder } from '../config.js';
+
+/**
+ * Main attendance wrapper with subtabs
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for attendance view
+ */
 export function renderAttendance(app) {
-  const days = dayOrder;
-  const selectedDay = app.selectedDay || days[0];
-  const scheduleData = app.scheduleData || {};
-  const dayClasses = Array.isArray(scheduleData[selectedDay]) ? scheduleData[selectedDay] : [];
-  const attendanceData = app.attendanceData || {};
+  const subtabs = ['概要', '出席記録', '練習会', 'イベント'];
+  const currentSubtab = app.attendanceSubtab || '出席記録';
+
+  let content = '';
+  switch (currentSubtab) {
+    case '概要':
+      content = renderAttendanceOverview(app);
+      break;
+    case '出席記録':
+      content = renderAttendanceRecord(app);
+      break;
+    case '練習会':
+      content = renderPracticeSession(app);
+      break;
+    case 'イベント':
+      content = renderEventRecord(app);
+      break;
+  }
 
   return `
-   <div class="attendance-view">
+    <!-- Page Header -->
     <div class="page-header">
-      <h1 class="page-title">\u51FA\u5E2D\u8A18\u9332</h1>
-      <div style="display:flex;gap:var(--spacing-3);align-items:center">
+      <div>
+        <h2>出席管理</h2>
+        <p class="subtitle">レッスン出席とレベニュー管理</p>
+      </div>
+      <div class="header-actions">
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
-          onchange="app.changeMonth(this.value)">
+               onchange="window.app.setSelectedMonth(this.value)"
+               style="width: 150px;">
       </div>
     </div>
 
-    ${renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, scheduleData)}
-   </div>
-  `;
-}
-
-function isRegularPlan(plan) {
-  const regularPlans = ['1\u30AF\u30E9\u30B9', '\uFF11\u30AF\u30E9\u30B9', '2\u30AF\u30E9\u30B9', '\uFF12\u30AF\u30E9\u30B9', '3\u30AF\u30E9\u30B9', '\uFF13\u30AF\u30E9\u30B9', '4\u30AF\u30E9\u30B9', '\uFF14\u30AF\u30E9\u30B9', '1.5h\u30AF\u30E9\u30B9'];
-  return regularPlans.includes(plan);
-}
-
-function sortStudentsByPlan(students) {
-  return [...students].sort((a, b) => {
-    const normalizePlan = (plan) => {
-      return plan.replace(/[\uFF10-\uFF19]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-    };
-    const planA = normalizePlan(a.plan || '');
-    const planB = normalizePlan(b.plan || '');
-    const orderA = planOrder[planA] || 999;
-    const orderB = planOrder[planB] || 999;
-    return orderA - orderB;
-  });
-}
-
-function getAttendanceRate(attendanceData, studentKey) {
-  const data = attendanceData[studentKey] || {};
-  const weeks = ['week1', 'week2', 'week3', 'week4'];
-  const attended = weeks.filter(w => data[w] === '\u25CB').length;
-  const recorded = weeks.filter(w => data[w] === '\u25CB' || data[w] === '\u00D7' || data[w] === '\u2715' || data[w] === 'x' || data[w] === 'X').length;
-  return recorded > 0 ? Math.round((attended / recorded) * 100) : 0;
-}
-
-function getAttBtnStyle(val) {
-  if (val === '\u25CB') return 'background:#22c55e;border-color:#16a34a;color:white;';
-  if (val === '\u00D7' || val === '\u2715' || val === 'x' || val === 'X') return 'background:#ef4444;border-color:#dc2626;color:white;';
-  if (val === '\u4F11\u8B1B') return 'background:#6b7280;border-color:#4b5563;color:white;';
-  return 'background:#f3f4f6;border-color:#d1d5db;color:#9ca3af;';
-}
-
-function getAttDisplay(val) {
-  if (val === '\u4F11\u8B1B') return '\u4F11';
-  return val || '-';
-}
-
-function getRateBadgeStyle(rate) {
-  if (rate >= 80) return 'background:#dcfce7;color:#166534;';
-  if (rate >= 50) return 'background:#fef9c3;color:#854d0e;';
-  if (rate > 0) return 'background:#fee2e2;color:#991b1b;';
-  return 'background:#f3f4f6;color:#4b5563;';
-}
-
-function escapeAttr(str) {
-  return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, scheduleData) {
-  const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'];
-  const weekLabels = ['\u7B2C1\u9031', '\u7B2C2\u9031', '\u7B2C3\u9031', '\u7B2C4\u9031', '\u4E88\u5099'];
-  const editingStudent = app.editingStudent || null;
-  const showAddForm = app.showAddStudentForm || false;
-  const selectedClassForAdd = app.selectedClassForAdd || null;
-
-  const isPracticeTab = selectedDay === '\u7DF4\u7FD2\u4F1A';
-  const isEventTab = selectedDay === '\u30A4\u30D9\u30F3\u30C8';
-
-  return `
-    <!-- Day tabs -->
-    <div class="tab-bar" style="margin-bottom:var(--spacing-4)">
-      ${days.map(day => `
-        <div class="tab-item ${day === selectedDay ? 'active' : ''}"
-          onclick="app.selectedDay='${day}';app.render()">
-          ${day}
-        </div>
+    <!-- Attendance Subtabs -->
+    <div class="tab-nav">
+      ${subtabs.map(tab => `
+        <button class="tab-btn ${tab === currentSubtab ? 'active' : ''}"
+                onclick="window.app.setAttendanceSubtab('${tab}')">
+          ${tab}
+        </button>
       `).join('')}
-      <div class="tab-item ${isPracticeTab ? 'active' : ''}"
-        onclick="app.selectedDay='\u7DF4\u7FD2\u4F1A';app.render()">
-        \u7DF4\u7FD2\u4F1A
-      </div>
-      <div class="tab-item ${isEventTab ? 'active' : ''}"
-        onclick="app.selectedDay='\u30A4\u30D9\u30F3\u30C8';app.render()">
-        \u30A4\u30D9\u30F3\u30C8
-      </div>
     </div>
 
-    ${isPracticeTab ? renderPracticeTab(app, attendanceData, weeks, weekLabels) :
-     isEventTab ? renderEventTab(app) : `
-
-    <!-- Add student form -->
-    ${showAddForm && selectedClassForAdd && selectedClassForAdd.day === selectedDay ? renderAddStudentForm(app, selectedClassForAdd) : ''}
-
-    ${dayClasses.map((cls, classIdx) => {
-      const students = cls.students || [];
-      const location = cls.location || '';
-      const className = cls.name || '';
-      const classColor = cls.color || 'blue';
-
-      // Sort students by plan
-      const sortedStudents = sortStudentsByPlan(students);
-
-      // Filter: regular plan students always show; visitors only if they have attendance data this month
-      const filteredStudents = sortedStudents.filter(student => {
-        if (isRegularPlan(student.plan)) return true;
-        const key = selectedDay + '_' + location + '_' + className + '_' + (student.lastName || '') + (student.firstName || '');
-        return attendanceData.hasOwnProperty(key);
-      });
-
-      // Also add attendance-only entries (visitors/trial added via attendance data)
-      const classPrefix = selectedDay + '_' + location + '_' + className + '_';
-      const existingNames = new Set(filteredStudents.map(s => (s.lastName || '') + (s.firstName || '')));
-
-      Object.keys(attendanceData).forEach(key => {
-        if (key.startsWith(classPrefix)) {
-          const studentName = key.substring(classPrefix.length);
-          if (!existingNames.has(studentName)) {
-            const attEntry = attendanceData[key] || {};
-            const plan = attEntry._plan || '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09';
-            filteredStudents.push({lastName: studentName, firstName: '', plan: plan});
-            existingNames.add(studentName);
-          }
-        }
-      });
-
-      const colorMap = {
-        red: '#dc2626', orange: '#ea580c', blue: '#2563eb',
-        green: '#16a34a', purple: '#9333ea', yellow: '#eab308'
-      };
-      const headerBg = colorMap[classColor] || '#2563eb';
-
-      return `
-        <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
-          <div style="background:${headerBg};color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-            <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${location} - ${className}</h3>
-            <div style="display:flex;gap:var(--spacing-2);align-items:center">
-              <span style="font-size:0.75rem;opacity:0.9">${filteredStudents.length}\u540D</span>
-              <button onclick="app.addStudentToClass('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}')"
-                style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">
-                + \u751F\u5F92\u8FFD\u52A0
-              </button>
-            </div>
-          </div>
-          <div class="card-body" style="padding:var(--spacing-3);overflow-x:auto">
-            <table class="data-table" style="font-size:0.75rem">
-              <thead>
-                <tr>
-                  <th style="width:100px;padding:var(--spacing-2)">\u6C0F\u540D</th>
-                  <th style="width:100px;padding:var(--spacing-2)">\u30D7\u30E9\u30F3</th>
-                  ${weekLabels.map(label => `<th style="text-align:center;width:50px;padding:var(--spacing-2)">${label}</th>`).join('')}
-                  <th style="text-align:center;width:60px;padding:var(--spacing-2)">\u51FA\u5E2D\u7387</th>
-                  <th style="text-align:center;width:50px;padding:var(--spacing-2)">\u7DE8\u96C6</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${filteredStudents.map(student => {
-                  const studentName = (student.lastName || '') + (student.firstName || '');
-                  const studentKey = selectedDay + '_' + location + '_' + className + '_' + studentName;
-                  const attData = attendanceData[studentKey] || {};
-                  const rate = getAttendanceRate(attendanceData, studentKey);
-                  const isEditing = editingStudent &&
-                    editingStudent.day === selectedDay &&
-                    editingStudent.location === location &&
-                    editingStudent.className === className &&
-                    editingStudent.lastName === student.lastName &&
-                    editingStudent.firstName === student.firstName;
-
-                  if (isEditing) {
-                    return renderEditingRow(app, student, studentKey, attData, rate, weeks, selectedDay, location, className);
-                  }
-
-                  return `
-                    <tr style="border-bottom:1px solid var(--color-gray-200)">
-                      <td style="padding:var(--spacing-2);font-size:0.75rem">${student.lastName} ${student.firstName}</td>
-                      <td style="padding:var(--spacing-2);font-size:0.75rem">${student.plan || '-'}</td>
-                      ${weeks.map(w => {
-                        const val = attData[w] || '';
-                        return `<td style="text-align:center;padding:var(--spacing-2)">
-                          <button onclick="app.toggleAttendance('${escapeAttr(studentKey)}','${w}')"
-                            style="width:32px;height:32px;border-radius:4px;border:1px solid;font-size:0.75rem;font-weight:700;cursor:pointer;${getAttBtnStyle(val)}">
-                            ${getAttDisplay(val)}
-                          </button>
-                        </td>`;
-                      }).join('')}
-                      <td style="text-align:center;padding:var(--spacing-2)">
-                        <span style="padding:2px 8px;border-radius:9999px;font-size:0.75rem;font-weight:600;${getRateBadgeStyle(rate)}">
-                          ${rate > 0 ? rate + '%' : '-'}
-                        </span>
-                      </td>
-                      <td style="text-align:center;padding:var(--spacing-2)">
-                        <button onclick="app.startEditStudent('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}','${escapeAttr(student.lastName)}','${escapeAttr(student.firstName)}')"
-                          style="background:none;border:none;color:var(--color-primary);cursor:pointer;font-size:0.75rem">
-                          \u7DE8\u96C6
-                        </button>
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }).join('')}
-
-    ${dayClasses.length === 0 ? '<div class="card"><div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">\u3053\u306E\u66DC\u65E5\u306B\u306F\u30AF\u30E9\u30B9\u304C\u3042\u308A\u307E\u305B\u3093</div></div>' : ''}
-    `}
+    ${content}
   `;
 }
 
-function renderEditingRow(app, student, studentKey, attData, rate, weeks, selectedDay, location, className) {
-  const planOptions = [
-    '\uFF14\u30AF\u30E9\u30B9', '\uFF13\u30AF\u30E9\u30B9', '\uFF12\u30AF\u30E9\u30B9', '\uFF11\u30AF\u30E9\u30B9',
-    '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09', '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09',
-    '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09', '\u521D\u56DE\u4F53\u9A13', '\u521D\u56DE\u7121\u6599'
-  ];
-
-  return `
-    <tr style="border-bottom:1px solid var(--color-gray-200);background:#eff6ff">
-      <td style="padding:var(--spacing-2);font-size:0.75rem">${student.lastName} ${student.firstName}</td>
-      <td style="padding:var(--spacing-2);font-size:0.75rem">
-        <select id="edit_student_plan" class="form-input" style="font-size:0.75rem;padding:2px 4px">
-          ${planOptions.map(p => `<option value="${p}" ${student.plan === p ? 'selected' : ''}>${p}</option>`).join('')}
-        </select>
-      </td>
-      ${weeks.map(w => {
-        const val = attData[w] || '';
-        return `<td style="text-align:center;padding:var(--spacing-2)">
-          <button onclick="app.toggleAttendance('${escapeAttr(studentKey)}','${w}')"
-            style="width:32px;height:32px;border-radius:4px;border:1px solid;font-size:0.75rem;font-weight:700;cursor:pointer;${getAttBtnStyle(val)}">
-            ${getAttDisplay(val)}
-          </button>
-        </td>`;
-      }).join('')}
-      <td style="text-align:center;padding:var(--spacing-2)">
-        <span style="padding:2px 8px;border-radius:9999px;font-size:0.75rem;font-weight:600;${getRateBadgeStyle(rate)}">
-          ${rate > 0 ? rate + '%' : '-'}
-        </span>
-      </td>
-      <td style="text-align:center;padding:var(--spacing-2)">
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <button onclick="app.saveEditStudent()"
-            style="background:none;border:none;color:#16a34a;cursor:pointer;font-size:0.75rem">\u4FDDU�5B58</button>
-          <button onclick="app.cancelEditStudent()"
-            style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:0.75rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
-          <button onclick="app.deleteStudent('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}','${escapeAttr(student.lastName)}','${escapeAttr(student.firstName)}')"
-            style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">\u524A\u9664</button>
-        </div>
-      </td>
-    </tr>
-  `;
-}
-
-function renderAddStudentForm(app, classInfo) {
-  const planOptions = [
-    {value: '', label: '\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044'},
-    {value: '\uFF14\u30AF\u30E9\u30B9', label: '\uFF14\u30AF\u30E9\u30B9'},
-    {value: '\uFF13\u30AF\u30E9\u30B9', label: '\uFF13\u30AF\u30E9\u30B9'},
-    {value: '\uFF12\u30AF\u30E9\u30B9', label: '\uFF12\u30AF\u30E9\u30B9'},
-    {value: '\uFF11\u30AF\u30E9\u30B9', label: '\uFF11\u30AF\u30E9\u30B9'},
-    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u4F1A\u54E1\uFF09'},
-    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u975E\u4F1A\u54E1\uFF09'},
-    {value: '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09', label: '\u30D3\u30B8\u30BF\u30FC\uFF08\u632F\u66FF\uFF09'},
-    {value: '\u521D\u56DE\u4F53\u9A13', label: '\u521D\u56DE\u4F53\u9A13'},
-    {value: '\u521D\u56DE\u7121\u6599', label: '\u521D\u56DE\u7121\u6599'}
-  ];
-
-  return `
-    <div style="background:#eff6ff;padding:var(--spacing-4);border-radius:var(--radius-lg);margin-bottom:var(--spacing-4);border:1px solid #bfdbfe">
-      <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u751F\u5F92\u8FFD\u52A0 - ${classInfo.location} ${classInfo.className}</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
-        <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u59D3\u2008*</label>
-          <input type="text" id="new_student_lastName" class="form-input" style="width:100%;font-size:0.875rem">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u540D\u2008*</label>
-          <input type="text" id="new_student_firstName" class="form-input" style="width:100%;font-size:0.875rem">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u30D7\u30E9\u30F3 *</label>
-          <select id="new_student_plan" class="form-input" style="width:100%;font-size:0.875rem">
-            ${planOptions.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div style="font-size:0.75rem;color:var(--color-text-secondary);margin-bottom:var(--spacing-3)">
-        \u203B \u30D3\u30B8\u30BF\u30FC\u3084\u521D\u56DE\u4F53\u9A13\u306E\u65B9\u306F\u9069\u5207\u306A\u30D7\u30E9\u30F3\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044
-      </div>
-      <div style="display:flex;gap:var(--spacing-2)">
-        <button onclick="app.saveNewStudent()"
-          class="btn btn-primary" style="font-size:0.875rem">\u8FFD\u52A0</button>
-        <button onclick="app.cancelAddStudent()"
-          class="btn btn-secondary" style="font-size:0.875rem">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderPracticeCard(app, dayLabel, attendanceData, weeks, weekLabels) {
-  const key = '\u7DF4\u7FD2\u4F1A_' + dayLabel;
-  const data = attendanceData[key] || {};
-  const totalParticipants = weeks.reduce((sum, w) => sum + (parseInt(data[w]) || 0), 0);
-  const practicePrice = pricing['\u7DF4\u7FD2\u4F1A'] || 500;
-  const practiceRevenue = totalParticipants * practicePrice;
-
-  return `
-    <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
-      <div style="background:#6b7280;color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-        <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${dayLabel} \u7DF4\u7FD2\u4F1A</h3>
-        <div style="display:flex;gap:var(--spacing-3);align-items:center">
-          <span style="font-size:0.75rem;opacity:0.9">${totalParticipants}\u540D\u53C2\u52A0</span>
-          <span style="font-size:0.875rem;font-weight:600">${formatCurrency(practiceRevenue)}</span>
-        </div>
-      </div>
-      <div class="card-body" style="padding:var(--spacing-3)">
-        <table class="data-table" style="font-size:0.75rem">
-          <thead>
-            <tr>
-              <th style="padding:var(--spacing-2)"></th>
-              ${weekLabels.map(label => '<th style="text-align:center;width:70px;padding:var(--spacing-2)">' + label + '</th>').join('')}
-              <th style="text-align:center;width:70px;padding:var(--spacing-2)">\u5408\u8A08</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="padding:var(--spacing-2);font-weight:600">\u53C2\u52A0\u4EBA\u6570</td>
-              ${weeks.map(w => {
-                const count = data[w] || 0;
-                return '<td style="text-align:center;padding:var(--spacing-2)"><input type="number" class="form-input" style="width:60px;text-align:center" value="' + count + '" min="0" onchange="app.updatePractice(\x27' + key + '\x27,\x27' + w + '\x27,parseInt(this.value)||0)"></td>';
-              }).join('')}
-              <td style="text-align:center;padding:var(--spacing-2)">
-                <strong>${totalParticipants}\u540D</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function renderPracticeTab(app, attendanceData, weeks, weekLabels) {
-  const practiceDays = ['\u6708\u66DC\u65E5', '\u6728\u66DC\u65E5'];
-  return practiceDays.map(day => renderPracticeCard(app, day, attendanceData, weeks, weekLabels)).join('');
-}
-
-function renderEventTab(app) {
-  const eventsData = app.eventsData || {};
-  const events = Object.entries(eventsData).sort((a, b) => (a[1].date || '').localeCompare(b[1].date || ''));
-  const showAddForm = app.showAddEventForm || false;
-  const addingParticipantTo = app.addingParticipantToEvent || null;
+/**
+ * Overview with stats, revenue breakdown, instructor stats
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for overview
+ */
+export function renderAttendanceOverview(app) {
+  const revenueData = calculateDetailedRevenue(app.attendanceData, app.scheduleData, pricing, visitorRevenueOverrides, app.selectedMonth);
 
   let totalRevenue = 0;
-  events.forEach(([id, evt]) => {
-    (evt.participants || []).forEach(p => {
-      totalRevenue += parseInt(p.amount) || 0;
-    });
+  let totalCount = 0;
+  Object.values(revenueData).forEach(item => {
+    totalRevenue += item.revenue;
+    totalCount += item.count;
   });
 
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--spacing-4)">
-      <div style="display:flex;align-items:center;gap:var(--spacing-3)">
-        <span style="font-size:0.875rem;color:var(--color-text-secondary)">
-          ${events.length}\u4EF6\u306E\u30A4\u30D9\u30F3\u30C8
-        </span>
-        <span style="font-size:0.875rem;font-weight:600;color:var(--color-primary)">
-          \u5408\u8A08: ${formatCurrency(totalRevenue)}
-        </span>
+    <div class="content-card">
+      <div class="card-header">
+        <h3 class="card-title">今月の売上概要</h3>
       </div>
-      <button onclick="app.toggleAddEventForm()"
-        class="btn btn-primary" style="font-size:0.875rem">
-        ${showAddForm ? '\u30AD\u30E3\u30F3\u30BE\u30EB' : '+ \u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u8FFD\u52A0'}
+      <div class="card-content">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+          <div style="border-left: 4px solid #10b981; padding-left: 1rem;">
+            <div style="font-size: 0.875rem; color: var(--text-secondary);">総売上</div>
+            <div style="font-size: 1.875rem; font-weight: 600;">¥${totalRevenue.toLocaleString('ja-JP')}</div>
+          </div>
+          <div style="border-left: 4px solid #3b82f6; padding-left: 1rem;">
+            <div style="font-size: 0.875rem; color: var(--text-secondary);">参加者数</div>
+            <div style="font-size: 1.875rem; font-weight: 600;">${totalCount}</div>
+          </div>
+          <div style="border-left: 4px solid #f59e0b; padding-left: 1rem;">
+            <div style="font-size: 0.875rem; color: var(--text-secondary);">平均単価</div>
+            <div style="font-size: 1.875rem; font-weight: 600;">¥${totalCount > 0 ? Math.round(totalRevenue / totalCount).toLocaleString('ja-JP') : '0'}</div>
+          </div>
+          <div style="border-left: 4px solid #8b5cf6; padding-left: 1rem;">
+            <div style="font-size: 0.875rem; color: var(--text-secondary);">記録件数</div>
+            <div style="font-size: 1.875rem; font-weight: 600;">${Object.keys(app.attendanceData).length}</div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">売上内訳</h4>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            ${Object.entries(revenueData).map(([category, data]) => `
+              <div style="padding: 1rem; background-color: var(--bg-secondary); border-radius: 0.5rem;">
+                <div style="font-size: 0.875rem; color: var(--text-secondary);">${category}</div>
+                <div style="font-weight: 600;">¥${data.revenue.toLocaleString('ja-JP')}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">${data.count}人</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Detailed attendance recording with weekly ○/×/休講 buttons
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for attendance record
+ */
+export function renderAttendanceRecord(app) {
+  const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
+  const currentDay = app.selectedDay || '月曜日';
+  const schedule = app.scheduleData[currentDay] || [];
+
+  return `
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+      <button class="btn btn-secondary" onclick="window.app.previousMonth()">前月</button>
+      <button class="btn btn-secondary" onclick="window.app.nextMonth()">翌月</button>
+    </div>
+
+    <!-- Day Tabs -->
+    <div class="tab-nav">
+      ${daysOfWeek.map(day => `
+        <button class="tab-btn ${day === currentDay ? 'active' : ''}"
+                onclick="window.app.setAttendanceDay('${day}')">
+          ${day}
+        </button>
+      `).join('')}
+      <button class="tab-btn ${currentDay === 'イベント' ? 'active' : ''}"
+              onclick="window.app.setAttendanceDay('イベント')">
+        イベント
       </button>
     </div>
 
-    ${showAddForm ? `
-      <div style="background:#eff6ff;padding:var(--spacing-4);border-radius:var(--radius-lg);margin-bottom:var(--spacing-4);border:1px solid #bfdbfe">
-        <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--spacing-3)">\u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u4F5C\u6210</h3>
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--spacing-3);margin-bottom:var(--spacing-3)">
-          <div>
-            <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u30A4\u30D9\u30F3\u30C8\u540D *</label>
-            <input type="text" id="new_event_name" class="form-input" style="width:100%;font-size:0.875rem" placeholder="\u4F8B: \u30EF\u30FC\u30AF\u30B7\u30E7\u30C3\u30D7\u3001\u767A\u8868\u4F1A\u7B49">
+    <!-- Classes for Selected Day -->
+    <div>
+      ${schedule.map((cls, idx) => {
+        const classHTML = `
+        <div class="content-card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="background-color: ${cls.color || '#6b7280'}; color: white; border-radius: 0.5rem 0.5rem 0 0;">
+            <h3 class="card-title" style="color: white; margin: 0;">${cls.name} - ${cls.location || cls.venue}</h3>
+            <div style="font-size: 0.875rem; margin-top: 0.25rem;">${cls.time || ''}</div>
           </div>
-          <div>
-            <label style="display:block;font-size:0.75rem;font-weight:500;margin-bottom:4px">\u958B\u50AC\u65E5</label>
-            <input type="date" id="new_event_date" class="form-input" style="width:100%;font-size:0.875rem">
+          <div class="card-content">
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; font-size: 0.875rem;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="text-align: left; padding: 0.5rem;">学生名</th>
+                    <th style="padding: 0.5rem;">プラン</th>
+                    <th style="padding: 0.5rem;">Week1</th>
+                    <th style="padding: 0.5rem;">Week2</th>
+                    <th style="padding: 0.5rem;">Week3</th>
+                    <th style="padding: 0.5rem;">Week4</th>
+                    <th style="padding: 0.5rem;">Week5</th>
+                    <th style="padding: 0.5rem;">出席率</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(cls.students || []).map(student => {
+                    const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
+                    const attData = app.attendanceData[classId] || {};
+                    const rate = getAttendanceRate(app.attendanceData, classId);
+                    return `
+                      <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.5rem;">${student.lastName}${student.firstName}</td>
+                        <td style="padding: 0.5rem; font-size: 0.75rem;">${student.plan}</td>
+                        ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => {
+                          const current = attData[week] || '';
+                          const bgColor = current === '○' ? '#10b981' : current === '×' ? '#ef4444' : current === '休講' ? '#6b7280' : 'var(--bg-secondary)';
+                          const textColor = current === '○' || current === '×' || current === '休講' ? 'white' : 'black';
+                          return `
+                            <td style="padding: 0.5rem; text-align: center;">
+                              <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: 50px; background-color: ${bgColor}; color: ${textColor};"
+                                      onclick="window.app.cycleAttendance('${classId}', '${week}')">
+                                ${current || ''}
+                              </button>
+                            </td>
+                          `;
+                        }).join('')}
+                        <td style="padding: 0.5rem; text-align: center; font-weight: 600;">${rate}%</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Add Student Form -->
+            <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              ${renderAddStudentForm(app)}
+            </div>
           </div>
         </div>
-        <button onclick="app.createEvent()" class="btn btn-primary" style="font-size:0.875rem">\u4F5C\u6210</button>
+        `;
+        return classHTML;
+      }).join('')}
+    </div>
+  `;
+}
+
+/**
+ * Practice session section with number inputs
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for practice session
+ */
+export function renderPracticeSession(app) {
+  const days = ['月曜日', '木曜日'];
+
+  const practiceHTML = `
+    <div class="content-card">
+      <div class="card-header">
+        <h3 class="card-title">練習会参加者記録</h3>
       </div>
-    ` : ''}
+      <div class="card-content">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+          ${days.map(day => {
+            const key = `練習会_${day}`;
+            const data = app.attendanceData[key] || {};
+            const weekInputsHTML = ['week1', 'week2', 'week3', 'week4', 'week5'].map(week => {
+              const count = parseInt(data[week]) || 0;
+              return `
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+                  <label style="width: 60px; font-size: 0.875rem;">${week}:</label>
+                  <input type="number" min="0" value="${count}" class="practice-input"
+                         data-practice-day="${day}" data-practice-week="${week}"
+                         style="width: 60px; padding: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">人</span>
+                </div>
+              `;
+            }).join('');
+            return `
+              <div style="padding: 1rem; background-color: var(--bg-secondary); border-radius: 0.5rem;">
+                <h4 style="margin-bottom: 0.75rem; font-weight: 600;">${day} 練習会</h4>
+                ${weekInputsHTML}
+              </div>
+            `;
+          }).join('')}
+        </div>
 
-    ${events.map(([eventId, evt]) => {
-      const participants = evt.participants || [];
-      const eventRevenue = participants.reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
-      const isAddingParticipant = addingParticipantTo === eventId;
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            ${days.map(day => {
+              const key = `練習会_${day}`;
+              const total = ['week1', 'week2', 'week3', 'week4', 'week5'].reduce((sum, w) => sum + (parseInt(app.attendanceData[key]?.[w]) || 0), 0);
+              return `
+                <div style="padding: 1rem; background-color: #f3f4f6; border-radius: 0.5rem;">
+                  <div style="font-size: 0.875rem; color: var(--text-secondary);">${day}合計</div>
+                  <div style="font-size: 1.5rem; font-weight: 600;">${total} 人</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return practiceHTML;
+}
 
-      return `
-        <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
-          <div style="background:#7c3aed;color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${evt.name || '\u30A4\u30D9\u30F3\u30C8'}</h3>
-              ${evt.date ? `<span style="font-size:0.75rem;opacity:0.8">${evt.date}</span>` : ''}
-            </div>
-            <div style="display:flex;gap:var(--spacing-3);align-items:center">
-              <span style="font-size:0.75rem;opacity:0.9">${participants.length}\u540D\u53C2\u52A0</span>
-              <span style="font-size:0.875rem;font-weight:600">${formatCurrency(eventRevenue)}</span>
-              <button onclick="app.deleteEvent('${escapeAttr(eventId)}')"
-                style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">
-                \u524A\u9664
-              </button>
+/**
+ * Form to add students to classes
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for add student form
+ */
+export function renderAddStudentForm(app) {
+  return `
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <input type="text" placeholder="学生を追加..."
+             id="addStudentSearch"
+             style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;"
+             onkeyup="window.app.searchAddStudent(this.value)">
+      <button class="btn btn-primary" style="padding: 0.5rem 1rem;"
+              onclick="window.app.addStudentToClass()">
+        追加
+      </button>
+    </div>
+  `;
+}
+
+/**
+ * Event attendance tracking
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for event record
+ */
+export function renderEventRecord(app) {
+  const eventData = app.scheduleData['イベント'] || [];
+
+  return `
+    <div class="content-card">
+      <div class="card-header">
+        <h3 class="card-title">イベント参加者</h3>
+      </div>
+      <div class="card-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+          <div style="padding: 1rem; background-color: var(--bg-secondary); border-radius: 0.5rem;">
+            <h4 style="margin-bottom: 1rem; font-weight: 600;">イベント参加者追加</h4>
+            <div style="display: grid; gap: 0.75rem;">
+              <div>
+                <label class="form-label">姓</label>
+                <input type="text" class="form-input" id="eventLastName" placeholder="姓">
+              </div>
+              <div>
+                <label class="form-label">名</label>
+                <input type="text" class="form-input" id="eventFirstName" placeholder="名">
+              </div>
+              <div>
+                <label class="form-label">参加者区分</label>
+                <select class="form-input" id="eventIsMember">
+                  <option value="false">非会員</option>
+                  <option value="true">会員</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="addEventParticipantBtn">参加者追加</button>
             </div>
           </div>
-          <div class="card-body" style="padding:var(--spacing-3);overflow-x:auto">
-            <table class="data-table" style="font-size:0.75rem">
-              <thead>
-                <tr>
-                  <th style="padding:var(--spacing-2)">\u6C0F\u540D</th>
-                  <th style="padding:var(--spacing-2);width:100px">\u4F1A\u54E1\u533A\u5206</th>
-                  <th style="padding:var(--spacing-2);width:80px;text-align:center">\u30D7\u30E9\u30F3</th>
-                  <th style="padding:var(--spacing-2);width:100px;text-align:right">\u91D1\u984D</th>
-                  <th style="padding:var(--spacing-2);width:50px;text-align:center">\u64CD\u4F5C</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${participants.map((p, idx) => `
-                  <tr style="border-bottom:1px solid var(--color-gray-200)">
-                    <td style="padding:var(--spacing-2);font-size:0.75rem">${p.name || ''}</td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem">
-                      <span style="padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:500;${p.memberType === '\u4F1A\u54E1' ? 'background:#dcfce7;color:#166534' : 'background:#fee2e2;color:#991b1b'}">
-                        ${p.memberType || ''}
-                      </span>
-                    </td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:center">${p.plan || '-'}</td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:right;font-weight:600">${formatCurrency(parseInt(p.amount) || 0)}</td>
-                    <td style="text-align:center;padding:var(--spacing-2)">
-                      <button onclick="app.deleteParticipant('${escapeAttr(eventId)}',${idx})"
-                        style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">\u524A\u9664</button>
-                    </td>
-                  </tr>
-                `).join('')}
-                ${participants.length === 0 ? `
-                  <tr><td colspan="5" style="text-align:center;padding:var(--spacing-4);color:var(--color-text-secondary);font-size:0.75rem">
-                    \u53C2\u52A0\u8005\u304C\u307E\u3060\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093
-                  </td></tr>
-                ` : ''}
-              </tbody>
-            </table>
+        </div>
 
-            ${isAddingParticipant ? `
-              <div style="background:#f5f3ff;padding:var(--spacing-3);border-radius:var(--radius-md);margin-top:var(--spacing-3);border:1px solid #ddd6fe">
-                <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
-                  <div>
-                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u6C0F\u540D *</label>
-                    <input type="text" id="evt_participant_name" class="form-input" style="width:100%;font-size:0.8rem">
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u4F1A\u54E1\u533A\u5206 *</label>
-                    <select id="evt_participant_memberType" class="form-input" style="width:100%;font-size:0.8rem">
-                      <option value="\u4F1A\u54E1">\u4F1A\u54E1</option>
-                      <option value="\u975E\u4F1A\u54E1">\u975E\u4F1A\u54E1</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u30D7\u30E9\u30F3</label>
-                    <select id="evt_participant_plan" class="form-input" style="width:100%;font-size:0.8rem">
-                      <option value="">-</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px">\u91D1\u984D *</label>
-                    <input type="number" id="evt_participant_amount" class="form-input" style="width:100%;font-size:0.8rem" min="0">
-                  </div>
-                </div>
-                <div style="display:flex;gap:var(--spacing-2)">
-                  <button onclick="app.saveNewParticipant('${escapeAttr(eventId)}')"
-                    class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px">\u8FFD\u52A0</button>
-                  <button onclick="app.cancelAddParticipant()"
-                    class="btn btn-secondary" style="font-size:0.75rem;padding:4px 12px">\u30AD\u30E3\u30F3\u30BE\u30EB</button>
-                </div>
+        <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+          <h4 style="margin-bottom: 1rem; font-weight: 600;">参加者一覧</h4>
+          <div style="display: grid; gap: 1rem;">
+            ${(app.eventAttendanceData || []).length > 0 ? `
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; font-size: 0.875rem;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                      <th style="padding: 0.5rem; text-align: left;">姓名</th>
+                      <th style="padding: 0.5rem; text-align: left;">区分</th>
+                      <th style="padding: 0.5rem;">Week1</th>
+                      <th style="padding: 0.5rem;">Week2</th>
+                      <th style="padding: 0.5rem;">Week3</th>
+                      <th style="padding: 0.5rem;">料金</th>
+                      <th style="padding: 0.5rem;">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(app.eventAttendanceData || []).map((p, idx) => `
+                      <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 0.5rem;">${p.lastName || ''} ${p.firstName || ''}</td>
+                        <td style="padding: 0.5rem;">${p.isMember ? '会員' : '非会員'}</td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                          <button class="event-attendance-btn" data-event-index="${idx}" data-event-week="week1" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            ${p.week1 || '×'}
+                          </button>
+                        </td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                          <button class="event-attendance-btn" data-event-index="${idx}" data-event-week="week2" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            ${p.week2 || '×'}
+                          </button>
+                        </td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                          <button class="event-attendance-btn" data-event-index="${idx}" data-event-week="week3" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                            ${p.week3 || '×'}
+                          </button>
+                        </td>
+                        <td style="padding: 0.5rem;">
+                          <input type="number" data-event-index="${idx}" data-event-field="fee" value="${p.fee || 0}" style="width: 60px; padding: 0.25rem;">
+                        </td>
+                        <td style="padding: 0.5rem;">
+                          <button class="delete-event-participant-btn btn btn-danger" data-delete-event-index="${idx}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">削除</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
               </div>
             ` : `
-              <div style="margin-top:var(--spacing-3)">
-                <button onclick="app.showAddParticipant('${escapeAttr(eventId)}')"
-                  style="background:none;border:1px dashed var(--color-gray-300);color:var(--color-primary);padding:var(--spacing-2) var(--spacing-3);border-radius:var(--radius-md);font-size:0.75rem;cursor:pointer;width:100%">
-                  + \u53C2\u52A0\u8005\u8FFD\u52A0
-                </button>
+              <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                参加者がまだ登録されていません
               </div>
             `}
           </div>
         </div>
-      `;
-    }).join('')}
-
-    ${events.length === 0 && !showAddForm ? `
-      <div class="card">
-        <div class="card-body" style="text-align:center;padding:var(--spacing-8);color:var(--color-text-secondary)">
-          <p style="margin-bottom:var(--spacing-3)">\u3053\u306E\u6708\u306B\u306F\u30A4\u30D9\u30F3\u30C8\u304C\u307E\u3060\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093</p>
-          <button onclick="app.toggleAddEventForm()" class="btn btn-primary" style="font-size:0.875rem">
-            + \u65B0\u898F\u30A4\u30D9\u30F3\u30C8\u8FFD\u52A0
-          </button>
-        </div>
       </div>
-    ` : ''}
+    </div>
   `;
 }

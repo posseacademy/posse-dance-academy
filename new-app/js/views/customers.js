@@ -1,306 +1,412 @@
-import { pricing, planOrder } from '../config.js';
-import { formatCurrency } from '../utils.js';
+// POSSE Dance Academy - Customers View Module
+// ES module for customer management page rendering
 
-function calculateAge(birthDate) {
-  if (!birthDate) return '';
-  const today = new Date();
-  const birth = new Date(birthDate);
-  if (isNaN(birth.getTime())) return '';
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-  return age >= 0 ? age : '';
-}
+import { calculateAge } from '../utils.js';
 
+/**
+ * Main customer list page
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for customer list view
+ */
 export function renderCustomers(app) {
-  const customers = app.customers || {};
-  let filtered = Object.entries(customers);
+  const statusOptions = ['入会中', '休会中', '退会済み'];
 
-  // Filter by status
+  // Filter by status and search
+  let filtered = app.customers;
   if (app.statusFilter && app.statusFilter !== 'all') {
-    filtered = filtered.filter(([_, c]) => c.status === app.statusFilter);
+    filtered = filtered.filter(c => c.status === app.statusFilter);
   }
-
-  // Filter by search term
   if (app.searchTerm) {
     const term = app.searchTerm.toLowerCase();
-    filtered = filtered.filter(([_, c]) => {
-      const name = ((c.lastName || '') + (c.firstName || '')).toLowerCase();
-      const mn = (c.memberNumber || '').toLowerCase();
-      const course = (c.course || '').toLowerCase();
-      const phone = (c.phone1 || c.phone || '').toLowerCase();
-      const email = (c.email || '').toLowerCase();
-      const reading = (c.reading || '').toLowerCase();
-      return name.includes(term) || mn.includes(term) || course.includes(term) || phone.includes(term) || email.includes(term) || reading.includes(term);
+    filtered = filtered.filter(c =>
+      (c.lastName + c.firstName).toLowerCase().includes(term) ||
+      (c.memberNumber || '').toLowerCase().includes(term) ||
+      (c.reading || '').toLowerCase().includes(term)
+    );
+  }
+
+  // Sort customers
+  if (app.sortField) {
+    filtered = [...filtered].sort((a, b) => {
+      let aVal = a[app.sortField] || '';
+      let bVal = b[app.sortField] || '';
+      if (aVal < bVal) return app.sortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return app.sortOrder === 'asc' ? 1 : -1;
+      return 0;
     });
   }
 
-  // Sort
-  filtered.sort((a, b) => {
-    const [, ca] = a;
-    const [, cb] = b;
-    const field = app.sortField || 'memberNumber';
-    const order = app.sortOrder === 'desc' ? -1 : 1;
-
-    if (field === 'memberNumber') {
-      return ((ca.memberNumber || '9999').localeCompare(cb.memberNumber || '9999')) * order;
-    }
-    if (field === 'name') {
-      const nameA = (ca.lastName || '') + (ca.firstName || '');
-      const nameB = (cb.lastName || '') + (cb.firstName || '');
-      return nameA.localeCompare(nameB) * order;
-    }
-    if (field === 'plan') {
-      return ((planOrder[ca.course] || 99) - (planOrder[cb.course] || 99)) * order;
-    }
-    const va = ca[field] || '';
-    const vb = cb[field] || '';
-    return va.localeCompare(vb) * order;
-  });
-
-  // Status counts
-  const allEntries = Object.values(customers);
-  const activeCount = allEntries.filter(c => c.status === '\u5165\u4F1A\u4E2D').length;
-  const pausedCount = allEntries.filter(c => c.status === '\u4F11\u4F1A\u4E2D').length;
-  const withdrawnCount = allEntries.filter(c => c.status === '\u9000\u4F1A\u6E08\u307F').length;
-  const statusBadge = (status) => {
-    const map = {
-      '\u5165\u4F1A\u4E2D': 'badge-active',
-      '\u4F11\u4F1A\u4E2D': 'badge-paused',
-      '\u9000\u4F1A\u6E08\u307F': 'badge-withdrawn'
-    };
-    return '<span class="badge ' + (map[status] || '') + '">' + (status || '\u4E0D\u660E') + '</span>';
+  // Count by status
+  const statusCounts = {
+    '入会中': app.customers.filter(c => c.status === '入会中').length,
+    '休会中': app.customers.filter(c => c.status === '休会中').length,
+    '退会済み': app.customers.filter(c => c.status === '退会済み').length
   };
 
-  const sortIcon = (field) => {
-    if (app.sortField === field) return app.sortOrder === 'asc' ? ' \u25B2' : ' \u25BC';
-    return '';
-  };
+  return `
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h2>顧客管理</h2>
+        <p class="subtitle">会員情報の管理と編集</p>
+      </div>
+      <div class="header-actions">
+        <button id="exportBtn" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV エクスポート
+        </button>
+        <button id="toggleAddFormBtn" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          新規登録
+        </button>
+      </div>
+    </div>
 
-  const sortClick = (field) => {
-    return 'app.sortField=\x27' + field + '\x27;app.sortOrder=app.sortField===\x27' + field + '\x27&&app.sortOrder===\x27asc\x27?\x27desc\x27:\x27asc\x27;app.render()';
-  };
+    ${app.showAddForm ? renderAddForm(app) : ''}
 
-  const genderClass = (gender) => {
-    if (gender === '\u7537') return 'color:#4A90D9';
-    if (gender === '\u5973') return 'color:#E91E8C';
-    return '';
-  };
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      ${statusOptions.map(status => `
+        <button id="status-${status}" class="tab-btn ${app.statusFilter === status ? 'active' : ''}">
+          ${status} <span class="tab-count">${statusCounts[status]}</span>
+        </button>
+      `).join('')}
+    </div>
 
-  const statusTabClass = (status) => {
-    if (app.statusFilter === status) return 'btn btn-primary';
-    return 'btn';
-  };
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="氏名、会員番号、読みで検索..."
+             value="${app.searchTerm || ''}">
+    </div>
 
-  return '\
-    <div class="customers-view">\
-      <div class="page-header">\
-        <h1 class="page-title">\u9867\u5BA2\u4E00\u89A7</h1>\
-        <div style="display:flex;gap:8px">\
-          <button class="btn" onclick="app.exportCSV()">\u{1F4E5} CSV</button>\
-          <button class="btn btn-primary" onclick="app.showAddForm=true;app.editingId=null;app.editForm={};app.render()">\uFF0B \u65B0\u898F\u767B\u9332</button>\
-        </div>\
-      </div>\
-\
-      <div style="display:flex;gap:8px;margin-bottom:16px">\
-        <button class="' + statusTabClass('all') + '" onclick="app.statusFilter=\x27all\x27;app.render()">\u5168\u3066 (' + allEntries.length + ')</button>\
-        <button class="' + statusTabClass('\u5165\u4F1A\u4E2D') + '" onclick="app.statusFilter=\x27\u5165\u4F1A\u4E2D\x27;app.render()">\u5165\u4F1A\u4E2D (' + activeCount + ')</button>\
-        <button class="' + statusTabClass('\u4F11\u4F1A\u4E2D') + '" onclick="app.statusFilter=\x27\u4F11\u4F1A\u4E2D\x27;app.render()">\u4F11\u4F1A\u4E2D (' + pausedCount + ')</button>\
-        <button class="' + statusTabClass('\u9000\u4F1A\u6E08\u307F') + '" onclick="app.statusFilter=\x27\u9000\u4F1A\u6E08\u307F\x27;app.render()">\u9000\u4F1A\u6E08\u307F (' + withdrawnCount + ')</button>\
-      </div>\
-\
-      <div class="card" style="margin-bottom:16px">\
-        <div class="card-body" style="padding:12px">\
-          <input type="text" class="form-input" placeholder="\u4F1A\u54E1\u756A\u53F7\u3001\u6C0F\u540D\u3001\u30B3\u30FC\u30B9\u3001\u96FB\u8A71\u756A\u53F7\u3001\u30E1\u30FC\u30EB\u3067\u691C\u7D22..."\
-            value="' + (app.searchTerm || '') + '"\
-            oninput="app.searchTerm=this.value;app.render()"\
-            style="width:100%">\
-        </div>\
-      </div>\
-\
-      ' + (app.showAddForm ? renderAddForm(app) : '') + '\
-      <div class="card">\
-        <div class="card-body" style="overflow-x:auto;padding:0">\
-          <table class="data-table" style="font-size:12px;white-space:nowrap">\
-            <thead>\
-              <tr>\
-                <th style="width:40px;padding:8px 4px">No</th>\
-                <th style="cursor:pointer;width:70px;padding:8px 4px" onclick="' + sortClick('memberNumber') + '">\u4F1A\u54E1\u756A\u53F7' + sortIcon('memberNumber') + '</th>\
-                <th style="cursor:pointer;width:80px;padding:8px 4px" onclick="' + sortClick('status') + '">\u30B9\u30C6\u30FC\u30BF\u30B9' + sortIcon('status') + '</th>\
-                <th style="cursor:pointer;width:60px;padding:8px 4px" onclick="' + sortClick('course') + '">\u30B3\u30FC\u30B9' + sortIcon('course') + '</th>\
-                <th style="cursor:pointer;width:100px;padding:8px 4px" onclick="' + sortClick('annualFee') + '">\u5E74\u4F1A\u8CBB\u66F4\u65B0\u65E5' + sortIcon('annualFee') + '</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('name') + '">\u6C0F\u540D' + sortIcon('name') + '</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('reading') + '">\u8AAD\u307F' + sortIcon('reading') + '</th>\
-                <th style="cursor:pointer;width:100px;padding:8px 4px" onclick="' + sortClick('guardianName') + '">\u4FDD\u8B77\u8005\u540D' + sortIcon('guardianName') + '</th>\
-                <th style="cursor:pointer;width:100px;padding:8px 4px" onclick="' + sortClick('hakomonoName') + '">\u30CF\u30B3\u30E2\u30CE\u767B\u9332\u540D' + sortIcon('hakomonoName') + '</th>\
-                <th style="cursor:pointer;width:50px;padding:8px 4px" onclick="' + sortClick('gender') + '">\u6027\u5225' + sortIcon('gender') + '</th>\
-                <th style="cursor:pointer;width:100px;padding:8px 4px" onclick="' + sortClick('birthDate') + '">\u751F\u5E74\u6708\u65E5' + sortIcon('birthDate') + '</th>\
-                <th style="width:50px;padding:8px 4px">\u5E74\u9F62</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('phone1') + '">\u96FB\u8A71\u756A\u53F7' + sortIcon('phone1') + '</th>\
-                <th style="cursor:pointer;width:180px;padding:8px 4px" onclick="' + sortClick('email') + '">\u30E1\u30FC\u30EB' + sortIcon('email') + '</th>\
-                <th style="cursor:pointer;width:100px;padding:8px 4px" onclick="' + sortClick('joinDate') + '">\u5165\u4F1A\u65E5' + sortIcon('joinDate') + '</th>\
-                <th style="cursor:pointer;width:80px;padding:8px 4px" onclick="' + sortClick('postalCode') + '">\u90F5\u4FBF\u756A\u53F7' + sortIcon('postalCode') + '</th>\
-                <th style="cursor:pointer;width:80px;padding:8px 4px" onclick="' + sortClick('prefecture') + '">\u90FD\u9053\u5E9C\u770C' + sortIcon('prefecture') + '</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('city') + '">\u5E02\u533A\u753A\u6751' + sortIcon('city') + '</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('address') + '">\u756A\u5730' + sortIcon('address') + '</th>\
-                <th style="cursor:pointer;width:120px;padding:8px 4px" onclick="' + sortClick('building') + '">\u5EFA\u7269\u30FB\u90E8\u5C4B\u756A\u53F7' + sortIcon('building') + '</th>\
-                <th style="width:200px;padding:8px 4px">\u5099\u8003</th>\
-                <th style="width:80px;padding:8px 4px">\u64CD\u4F5C</th>\
-              </tr>\
-            </thead>\
-            <tbody>\
-              ' + filtered.map(([id, c], i) => '\
-                <tr>\
-                  <td style="padding:6px 4px">' + (i + 1) + '</td>\
-                  <td style="padding:6px 4px;font-family:monospace">' + (c.memberNumber || '') + '</td>\
-                  <td style="padding:6px 4px">' + statusBadge(c.status) + '</td>\
-                  <td style="padding:6px 4px">' + (c.course || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.annualFee || '') + '</td>\
-                  <td style="padding:6px 4px;font-weight:500">' + (c.lastName || '') + ' ' + (c.firstName || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.reading || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.guardianName || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.hakomonoName || '') + '</td>\
-                  <td style="padding:6px 4px;text-align:center;' + genderClass(c.gender) + '">' + (c.gender || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.birthDate || '') + '</td>\
-                  <td style="padding:6px 4px;text-align:center">' + calculateAge(c.birthDate) + '</td>\
-                  <td style="padding:6px 4px">' + (c.phone1 || c.phone || '') + '</td>\
-                  <td style="padding:6px 4px;font-size:11px">' + (c.email || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.joinDate || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.postalCode || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.prefecture || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.city || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.address || '') + '</td>\
-                  <td style="padding:6px 4px">' + (c.building || '') + '</td>\
-                  <td style="padding:6px 4px;font-size:11px;white-space:normal;max-width:200px">' + (c.memo || '') + '</td>\
-                  <td style="padding:6px 4px">\
-                    <button class="btn btn-sm" onclick="app.startEdit(\x27' + id + '\x27)">\u7DE8Uõ96C6</button>\
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteCustomer(\x27' + id + '\x27)">\u524A\u9664</button>\
-                  </td>\
-                </tr>\
-              ').join('') + '\
-            </tbody>\
-          </table>\
-          ' + (filtered.length === 0 ? '<p style="text-align:center;padding:32px;color:var(--color-text-secondary)">\u9867\u5BA2\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093</p>' : '') + '\
-          <div style="padding:12px 16px;font-size:13px;color:var(--color-text-secondary);border-top:1px solid var(--color-border)">\
-            ' + (app.statusFilter === 'all' ? '\u5168\u3066' : app.statusFilter) + ': ' + filtered.length + '\u540D\
-          </div>\
-        </div>\
-      </div>\
-    </div>\
-  ';
+    <!-- Customers Table -->
+    <div class="content-card">
+      <div style="overflow-x: auto;">
+        <table class="customers-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" data-field="no">
+                No <span class="sort-icon">${app.sortField === 'no' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="memberNumber">
+                会員番号 <span class="sort-icon">${app.sortField === 'memberNumber' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="status">
+                ステータス <span class="sort-icon">${app.sortField === 'status' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="course">
+                コース <span class="sort-icon">${app.sortField === 'course' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="annualFee">
+                年会費更新日 <span class="sort-icon">${app.sortField === 'annualFee' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="lastName">
+                氏名 <span class="sort-icon">${app.sortField === 'lastName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="reading">
+                読み <span class="sort-icon">${app.sortField === 'reading' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="guardianName">
+                保護者名 <span class="sort-icon">${app.sortField === 'guardianName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="hakomonoName">
+                ハコモノ登録名 <span class="sort-icon">${app.sortField === 'hakomonoName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="gender">
+                性別 <span class="sort-icon">${app.sortField === 'gender' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="birthDate">
+                生年月日 <span class="sort-icon">${app.sortField === 'birthDate' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th>年齢</th>
+              <th class="sortable-header" data-field="phone1">
+                電話番号 <span class="sort-icon">${app.sortField === 'phone1' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="email">
+                メール <span class="sort-icon">${app.sortField === 'email' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th class="sortable-header" data-field="joinDate">
+                入会日 <span class="sort-icon">${app.sortField === 'joinDate' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th>郵便番号</th>
+              <th>都道府県</th>
+              <th>市区町村</th>
+              <th>番地</th>
+              <th>建物・部屋番号</th>
+              <th class="sortable-header" data-field="memo">
+                備考 <span class="sort-icon">${app.sortField === 'memo' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
+              </th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map((customer, idx) => renderCustomerRow(app, customer, idx + 1)).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
-function renderAddForm(app) {
-  const ef = app.editForm || {};
-  return '\
-    <div class="card" style="margin-bottom:16px;border-left:4px solid var(--color-primary)">\
-      <div class="card-header">\
-        <h3 class="card-title">' + (app.editingId? '\u9867\u5BA2\u7DE8\u96C6' : '\u65B0\u898F\u9867\u5BA2\u767B\u9332') + '</h3>\
-        <button class="btn btn-sm" onclick="app.showAddForm=false;app.editingId=null;app.editForm={};app.render()">\u2715</button>\
-      </div>\
-      <div class="card-body">\
-        <form onsubmit="event.preventDefault();app.saveCustomerForm()" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">\
-          <div class="form-group">\
-            <label class="form-label">\u4F1A\u54E1\u756A\u53F7 *</label>\
-            <input type="text" class="form-input" id="form-memberNumber" value="' + (ef.memberNumber || '') + '" placeholder="\u4F8B: 0001" required>\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u4F1A\u54E1\u30B9\u30C6\u30FC\u30BF\u30B9</label>\
-            <select class="form-select" id="form-status">\
-              <option value="\u5165\u4F1A\u4E2D"' + (ef.status === '\u5165\u4F1A\u4E2D' || !ef.status ? ' selected' : '') + '>\u5165\u4F1A\u4E2D</option>\
-              <option value="\u4F11\u4F1A\u4E2D"' + (ef.status === '\u4F11\u4F1A\u4E2D' ? ' selected' : '') + '>\u4F11\u4F1A\u4E2D</option>\
-              <option value="\u9000\u4F1A\u6E08\u307F"' + (ef.status === '\u9000\u4F1A\u6E08\u307F' ? ' selected' : '') + '>\u9000\u4F1A\u6E08\u307F</option>\
-            </select>\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u30B3\u30FC\u30B9</label>\
-            <select class="form-select" id="form-course">\
-              <option value="">\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044</option>\
-              <option value="\u30D3\u30B8\u30BF\u30FC"' + (ef.course === '\u30D3\u30B8\u30BF\u30FC' ? ' selected' : '') + '>\u30D3\u30B8\u30BF\u30FC</option>\
-              <option value="\uFF11"' + (ef.course === '\uFF11' ? ' selected' : '') + '>\uFF11</option>\
-              <option value="\uFF12"' + (ef.course === '\uFF12' ? ' selected' : '') + '>\uFF12</option>\
-              <option value="\uFF13"' + (ef.course === '\uFF13' ? ' selected' : '') + '>\uFF13</option>\
-              <option value="\uFF14"' + (ef.course === '\uFF14' ? ' selected' : '') + '>\uFF14</option>\
-            </select>\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u5E74\u4F1A\u8CBB\u66F4\u65B0\u65E5</label>\
-            <input type="date" class="form-input" id="form-annualFee" value="' + (ef.annualFee || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u6C0F\u540D(\u59D3) *</label>\
-            <input type="text" class="form-input" id="form-lastName" value="' + (ef.lastName || '') + '" required>\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u6C0F\u540D(\u540D) *</label>\
-            <input type="text" class="form-input" id="form-firstName" value="' + (ef.firstName || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u8AAD\u307F</label>\
-            <input type="text" class="form-input" id="form-reading" value="' + (ef.reading || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u4FDD\u8B77\u8005\u540D</label>\
-            <input type="text" class="form-input" id="form-guardianName" value="' + (ef.guardianName || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u30CF\u30B3\u30E2\u30CE\u767B\u9332\u540D</label>\
-            <input type="text" class="form-input" id="form-hakomonoName" value="' + (ef.hakomonoName || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u6027\u5225</label>\
-            <select class="form-select" id="form-gender">\
-              <option value="">\u9078\u629E</option>\
-              <option value="\u7537"' + (ef.gender === '\u7537' ? ' selected' : '') + '>\u7537</option>\
-              <option value="\u5973"' + (ef.gender === '\u5973' ? ' selected' : '') + '>\u5973</option>\
-            </select>\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u751F\u5E74\u6708\u65E5</label>\
-            <input type="date" class="form-input" id="form-birthDate" value="' + (ef.birthDate || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u96FB\u8A71\u756A\u53F7</label>\
-            <input type="tel" class="form-input" id="form-phone1" value="' + (ef.phone1 || ef.phone || '') + '">\
-          </div>\
-          <div class="form-group" style="grid-column:span 2">\
-            <label class="form-label">\u30E1\u30FC\u30EB</label>\
-            <input type="email" class="form-input" id="form-email" value="' + (ef.email || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u5165\u4F1A\u65E5</label>\
-            <input type="date" class="form-input" id="form-joinDate" value="' + (ef.joinDate || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u90F5\u4FBF\u756A\u53F7</label>\
-            <input type="text" class="form-input" id="form-postalCode" value="' + (ef.postalCode || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u90FD\u9053\u5E9C\u770C</label>\
-            <input type="text" class="form-input" id="form-prefecture" value="' + (ef.prefecture || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u5E02\u533A\u753A\u6751</label>\
-            <input type="text" class="form-input" id="form-city" value="' + (ef.city || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u756A\u5730</label>\
-            <input type="text" class="form-input" id="form-address" value="' + (ef.address || '') + '">\
-          </div>\
-          <div class="form-group">\
-            <label class="form-label">\u5EFA\u7269\u30FB\u90E8\u5C4B\u756A\u53F7</label>\
-            <input type="text" class="form-input" id="form-building" value="' + (ef.building || '') + '">\
-          </div>\
-          <div class="form-group" style="grid-column:span 3">\
-            <label class="form-label">\u5099\u8003</label>\
-            <input type="text" class="form-input" id="form-memo" value="' + (ef.memo || '') + '">\
-          </div>\
-          <div style="grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end">\
-            <button type="button" class="btn" onclick="app.showAddForm=false;app.editingId=null;app.editForm={};app.render()">\u30AD\u30E3\u30F3\u30BB\u30EB</button>\
-            <button type="submit" class="btn btn-primary">' + (app.editingId ? '\u66F4\u65B0' : '\u767B\u9332') + '</button>\
-          </div>\
-        </form>\
-      </div>\
-    </div>\
-  ';
+/**
+ * New customer registration form
+ * @param {Object} app - Application state
+ * @returns {string} HTML string for add form
+ */
+export function renderAddForm(app) {
+  const form = app.newCustomer || {};
+
+  return `
+    <div class="content-card" style="margin-bottom: 2rem;">
+      <div class="card-header">
+        <h3 class="card-title">新規会員登録</h3>
+      </div>
+      <div class="card-content">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+          <div>
+            <label class="form-label">会員番号</label>
+            <input type="text" class="form-input" id="new_memberNumber" value="${form.memberNumber || ''}">
+          </div>
+          <div>
+            <label class="form-label">ステータス</label>
+            <select class="form-input" id="new_status">
+              <option value="入会中" ${form.status === '入会中' ? 'selected' : ''}>入会中</option>
+              <option value="休会中" ${form.status === '休会中' ? 'selected' : ''}>休会中</option>
+              <option value="退会済み" ${form.status === '退会済み' ? 'selected' : ''}>退会済み</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">コース</label>
+            <input type="text" class="form-input" id="new_course" placeholder="例: ４" value="${form.course || ''}">
+          </div>
+          <div>
+            <label class="form-label">年会費更新日</label>
+            <input type="date" class="form-input" id="new_annualFee" value="${form.annualFee || ''}">
+          </div>
+
+          <div>
+            <label class="form-label">氏（姓）</label>
+            <input type="text" class="form-input" id="new_lastName" value="${form.lastName || ''}">
+          </div>
+          <div>
+            <label class="form-label">名（名前）</label>
+            <input type="text" class="form-input" id="new_firstName" value="${form.firstName || ''}">
+          </div>
+          <div>
+            <label class="form-label">読み</label>
+            <input type="text" class="form-input" id="new_reading" value="${form.reading || ''}">
+          </div>
+          <div>
+            <label class="form-label">保護者名</label>
+            <input type="text" class="form-input" id="new_guardianName" value="${form.guardianName || ''}">
+          </div>
+
+          <div>
+            <label class="form-label">ハコモノ登録名</label>
+            <input type="text" class="form-input" id="new_hakomonoName" value="${form.hakomonoName || ''}">
+          </div>
+          <div>
+            <label class="form-label">性別</label>
+            <input type="text" class="form-input" id="new_gender" value="${form.gender || ''}">
+          </div>
+          <div>
+            <label class="form-label">生年月日</label>
+            <input type="date" class="form-input" id="new_birthDate" value="${form.birthDate || ''}">
+          </div>
+          <div>
+            <label class="form-label">電話番号</label>
+            <input type="tel" class="form-input" id="new_phone1" value="${form.phone1 || ''}">
+          </div>
+
+          <div>
+            <label class="form-label">電話番号2</label>
+            <input type="tel" class="form-input" id="new_phone2" value="${form.phone2 || ''}">
+          </div>
+          <div>
+            <label class="form-label">メール</label>
+            <input type="email" class="form-input" id="new_email" value="${form.email || ''}">
+          </div>
+          <div>
+            <label class="form-label">入会日</label>
+            <input type="date" class="form-input" id="new_joinDate" value="${form.joinDate || ''}">
+          </div>
+          <div>
+            <label class="form-label">郵便番号</label>
+            <input type="text" class="form-input" id="new_postalCode" value="${form.postalCode || ''}">
+          </div>
+
+          <div>
+            <label class="form-label">都道府県</label>
+            <input type="text" class="form-input" id="new_prefecture" value="${form.prefecture || ''}">
+          </div>
+          <div>
+            <label class="form-label">市区町村</label>
+            <input type="text" class="form-input" id="new_city" value="${form.city || ''}">
+          </div>
+          <div>
+            <label class="form-label">番地</label>
+            <input type="text" class="form-input" id="new_address" value="${form.address || ''}">
+          </div>
+          <div>
+            <label class="form-label">建物・部屋番号</label>
+            <input type="text" class="form-input" id="new_building" value="${form.building || ''}">
+          </div>
+
+          <div style="grid-column: span 4;">
+            <label class="form-label">備考</label>
+            <textarea class="form-input" id="new_memo">${form.memo || ''}</textarea>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button id="addCustomerBtn" class="btn btn-primary">登録</button>
+          <button id="cancelAddBtn" class="btn btn-secondary">キャンセル</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Single customer row (edit mode or display mode)
+ * @param {Object} app - Application state
+ * @param {Object} customer - Customer data
+ * @param {number} no - Row number
+ * @returns {string} HTML string for customer row
+ */
+export function renderCustomerRow(app, customer, no) {
+  const isEditing = app.editingId === customer.id;
+  const editForm = app.editForm || customer;
+  const age = calculateAge(customer.birthDate);
+
+  if (isEditing) {
+    return `
+      <tr>
+        <td class="px-2 py-3 text-xs">${no}</td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 80px;" value="${editForm.memberNumber || ''}"
+                 onchange="window.app.updateEditForm('memberNumber', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <select class="form-input" style="width: 80px;" onchange="window.app.updateEditForm('status', this.value)">
+            <option value="入会中" ${editForm.status === '入会中' ? 'selected' : ''}>入会中</option>
+            <option value="休会中" ${editForm.status === '休会中' ? 'selected' : ''}>休会中</option>
+            <option value="退会済み" ${editForm.status === '退会済み' ? 'selected' : ''}>退会済み</option>
+          </select>
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 50px;" value="${editForm.course || ''}"
+                 onchange="window.app.updateEditForm('course', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="date" class="form-input" style="width: 120px;" value="${editForm.annualFee || ''}"
+                 onchange="window.app.updateEditForm('annualFee', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 60px;" value="${editForm.lastName || ''}"
+                 onchange="window.app.updateEditForm('lastName', this.value)">
+          <input type="text" class="form-input" style="width: 60px;" value="${editForm.firstName || ''}"
+                 onchange="window.app.updateEditForm('firstName', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.reading || ''}"
+                 onchange="window.app.updateEditForm('reading', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.guardianName || ''}"
+                 onchange="window.app.updateEditForm('guardianName', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.hakomonoName || ''}"
+                 onchange="window.app.updateEditForm('hakomonoName', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 50px;" value="${editForm.gender || ''}"
+                 onchange="window.app.updateEditForm('gender', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="date" class="form-input" style="width: 120px;" value="${editForm.birthDate || ''}"
+                 onchange="window.app.updateEditForm('birthDate', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">${age}</td>
+        <td class="px-2 py-3 text-xs">
+          <input type="tel" class="form-input" style="width: 120px;" value="${editForm.phone1 || ''}"
+                 onchange="window.app.updateEditForm('phone1', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="email" class="form-input" style="width: 150px;" value="${editForm.email || ''}"
+                 onchange="window.app.updateEditForm('email', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="date" class="form-input" style="width: 120px;" value="${editForm.joinDate || ''}"
+                 onchange="window.app.updateEditForm('joinDate', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 80px;" value="${editForm.postalCode || ''}"
+                 onchange="window.app.updateEditForm('postalCode', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 80px;" value="${editForm.prefecture || ''}"
+                 onchange="window.app.updateEditForm('prefecture', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.city || ''}"
+                 onchange="window.app.updateEditForm('city', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.address || ''}"
+                 onchange="window.app.updateEditForm('address', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 100px;" value="${editForm.building || ''}"
+                 onchange="window.app.updateEditForm('building', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <input type="text" class="form-input" style="width: 80px;" value="${editForm.memo || ''}"
+                 onchange="window.app.updateEditForm('memo', this.value)">
+        </td>
+        <td class="px-2 py-3 text-xs">
+          <button id="saveEditBtn" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">保存</button>
+          <button id="cancelEditBtn" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">キャンセル</button>
+          <button data-edit-action="delete" data-id="${customer.id}" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">削除</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Display mode
+  const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' :
+                          customer.status === '休会中' ? 'status-badge-paused' :
+                          'status-badge-withdrawn';
+
+  return `
+    <tr>
+      <td class="px-2 py-3 text-xs">${no}</td>
+      <td class="px-2 py-3 text-xs">${customer.memberNumber || ''}</td>
+      <td class="px-2 py-3 text-xs">
+        <span class="status-badge ${statusBadgeClass}">${customer.status || ''}</span>
+      </td>
+      <td class="px-2 py-3 text-xs">${customer.course || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.annualFee || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.lastName || ''} ${customer.firstName || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.reading || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.guardianName || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.hakomonoName || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.gender || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.birthDate || ''}</td>
+      <td class="px-2 py-3 text-xs">${age}</td>
+      <td class="px-2 py-3 text-xs">${customer.phone1 || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.email || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.joinDate || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.postalCode || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.prefecture || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.city || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.address || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.building || ''}</td>
+      <td class="px-2 py-3 text-xs">${customer.memo || ''}</td>
+      <td class="px-2 py-3 text-xs">
+        <button data-edit-action="start" data-id="${customer.id}" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">編集</button>
+      </td>
+    </tr>
+  `;
 }
