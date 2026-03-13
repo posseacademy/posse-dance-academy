@@ -1,4 +1,4 @@
-import { planOrder, dayOrder, pricing } from '../config.js';
+import { planOrder, dayOrder, pricing, timeSchedule } from '../config.js';
 import { formatCurrency } from '../utils.js';
 
 export function renderAttendance(app) {
@@ -145,10 +145,15 @@ function renderRecordTab(app, days, selectedDay, dayClasses, attendanceData, sch
       };
       const headerBg = colorMap[classColor] || '#2563eb';
 
+      const loc = location || '';
+      const timeEntry = (timeSchedule[selectedDay] || []).find(t => t.name === className && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+        || (timeSchedule[selectedDay] || []).find(t => t.name === className);
+      const timeStr = timeEntry ? timeEntry.time : '';
+
       return `
         <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
           <div style="background:${headerBg};color:white;padding:var(--spacing-3) var(--spacing-4);display:flex;justify-content:space-between;align-items:center">
-            <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${location} - ${className}</h3>
+            <h3 style="font-size:1rem;font-weight:700;margin:0;color:inherit">${location} - ${className}${timeStr ? ` <span style="font-size:0.8rem;font-weight:400;opacity:0.9;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:4px;margin-left:8px">${timeStr}</span>` : ''}</h3>
             <div style="display:flex;gap:var(--spacing-2);align-items:center">
               <span style="font-size:0.75rem;opacity:0.9">${filteredStudents.length}\u540D</span>
               <button onclick="app.addStudentToClass('${escapeAttr(selectedDay)}','${escapeAttr(location)}','${escapeAttr(className)}')"

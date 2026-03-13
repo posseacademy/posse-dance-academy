@@ -6,6 +6,7 @@ import { renderCustomers } from './views/customers.js?v=4';
 import { renderAttendance } from './views/attendance.js?v=12';
 import { renderSchedule } from './views/schedule.js?v=2';
 import { renderInstructors } from './views/instructors.js?v=2';
+import { renderRevenue } from './views/revenue.js?v=4';
 
 class DanceStudioApp {
   constructor() {
@@ -497,6 +498,9 @@ class DanceStudioApp {
         break;
       case 'attendance':
         mainContent.innerHTML = renderAttendance(this);
+        break;
+      case 'revenue':
+        mainContent.innerHTML = renderRevenue(this);
         break;
       case 'schedule':
         mainContent.innerHTML = renderSchedule(this);
