@@ -23,11 +23,11 @@ export function renderInstructors(app) {
       ${instructors.map(instructor => `
         <div class="instructor-card" style="background-color: white; border: 1px solid var(--border-color); border-radius: 0.75rem; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
           <!-- Card Header -->
-          <div class="instructor-header" style="padding: 1.5rem; background-color: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
+          <div class="instructor-header" style="padding: 1.5rem; background:#1d1d1f; border-bottom: 1px solid var(--border-color);">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h3 class="instructor-name" style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #1f2937;">${instructor.name}</h3>
-                <div class="instructor-stage" style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280; font-style: italic;">${instructor.stageName}</div>
+                <h3 class="instructor-name" style="margin: 0; font-size: 1.5rem; font-weight: 700; color: white;">${instructor.name}</h3>
+                <div class="instructor-stage" style="margin-top: 0.5rem; font-size: 0.875rem; color: rgba(255,255,255,0.7); font-style: italic;">${instructor.stageName}</div>
               </div>
               <div style="text-align: right;">
                 <span class="badge badge-blue" style="display: inline-block; background-color: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">${instructor.genre}</span>
@@ -37,12 +37,12 @@ export function renderInstructors(app) {
             <!-- Birth Date & Career -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
               <div>
-                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">生年月日</div>
-                <div style="font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem;">${instructor.birthDate}</div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">生年月日</div>
+                <div style="font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem; color:white;">${instructor.birthDate}</div>
               </div>
               <div>
-                <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">キャリア開始</div>
-                <div style="font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem;">${instructor.careerStart}</div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">キャリア開始</div>
+                <div style="font-size: 0.875rem; font-weight: 500; margin-top: 0.25rem; color:white;">${instructor.careerStart}</div>
               </div>
             </div>
           </div>
@@ -107,8 +107,8 @@ export function renderInstructors(app) {
 
     <!-- Instructor Statistics -->
     <div class="content-card" style="margin-top: 3rem;">
-      <div class="card-header">
-        <h3 class="card-title">講師統計</h3>
+      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+        <h3 class="card-title" style="color:white;">講師統計</h3>
       </div>
       <div class="card-content">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">

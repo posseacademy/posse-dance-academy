@@ -67,16 +67,17 @@ export function renderCustomers(app) {
     ${app.showAddForm ? renderAddForm(app) : ''}
 
     <!-- Tab Navigation -->
-    <div class="tab-nav">
+    <div class="tab-nav" style="background:#1d1d1f;border-bottom-color:#1d1d1f;">
       ${statusOptions.map(status => {
         const icons = {
           '入会中': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
           '休会中': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>',
           '退会済み': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
         };
+        const isActive = app.statusFilter === status;
         return `
-          <button id="status-${status}" class="tab-btn ${app.statusFilter === status ? 'active' : ''}">
-            ${icons[status] || ''}${status} <span class="tab-count">${statusCounts[status]}</span>
+          <button id="status-${status}" class="tab-btn ${isActive ? 'active' : ''}" style="color:${isActive ? 'white' : 'rgba(255,255,255,0.6)'};">
+            ${icons[status] || ''}${status} <span class="tab-count" style="background:${isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'};color:white;">${statusCounts[status]}</span>
           </button>
         `;
       }).join('')}
@@ -94,14 +95,14 @@ export function renderCustomers(app) {
       <div style="overflow-x: auto;">
         <table class="customer-table">
           <thead>
-            <tr>
-              <th class="sortable-header" data-field="memberNumber">会員番号${sortIcon('memberNumber')}</th>
-              <th class="sortable-header" data-field="lastName">氏名${sortIcon('lastName')}</th>
-              <th class="sortable-header" data-field="course">コース${sortIcon('course')}</th>
-              <th class="sortable-header" data-field="phone1">電話番号${sortIcon('phone1')}</th>
-              <th class="sortable-header" data-field="email">メール${sortIcon('email')}</th>
-              <th class="sortable-header" data-field="joinDate">入会日${sortIcon('joinDate')}</th>
-              <th style="width:120px;">操作</th>
+            <tr style="background:#1d1d1f;">
+              <th class="sortable-header" data-field="memberNumber" style="color:white;">会員番号${sortIcon('memberNumber')}</th>
+              <th class="sortable-header" data-field="lastName" style="color:white;">氏名${sortIcon('lastName')}</th>
+              <th class="sortable-header" data-field="course" style="color:white;">コース${sortIcon('course')}</th>
+              <th class="sortable-header" data-field="phone1" style="color:white;">電話番号${sortIcon('phone1')}</th>
+              <th class="sortable-header" data-field="email" style="color:white;">メール${sortIcon('email')}</th>
+              <th class="sortable-header" data-field="joinDate" style="color:white;">入会日${sortIcon('joinDate')}</th>
+              <th style="width:120px;color:white;">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -127,8 +128,8 @@ export function renderAddForm(app) {
 
   return `
     <div class="content-card" style="margin-bottom: 2rem;">
-      <div class="card-header">
-        <h3 class="card-title">新規会員登録</h3>
+      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+        <h3 class="card-title" style="color:white;">新規会員登録</h3>
       </div>
       <div class="card-content">
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">

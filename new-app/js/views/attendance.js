@@ -82,8 +82,8 @@ export function renderAttendanceOverview(app) {
 
   return `
     <div class="content-card">
-      <div class="card-header">
-        <h3 class="card-title">今月の売上概要</h3>
+      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+        <h3 class="card-title" style="color:white;">今月の売上概要</h3>
       </div>
       <div class="card-content">
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
@@ -167,7 +167,7 @@ export function renderAttendanceRecord(app) {
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
         <div class="content-card" style="margin-bottom: 1.5rem;">
-          <div class="card-header" style="background-color: ${cls.color || '#6b7280'}; color: white; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: space-between;">
+          <div class="card-header" style="background-color: #1d1d1f; color: white; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: space-between;">
             <h3 class="card-title" style="color: white; margin: 0; font-size: 1.1rem;">${cls.name} - ${cls.location || cls.venue}</h3>
             ${timeStr ? `<span style="font-size: 0.875rem; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 0.25rem; white-space: nowrap;">${timeStr}</span>` : ''}
           </div>
@@ -269,8 +269,8 @@ export function renderPracticeSession(app) {
 
   const practiceHTML = `
     <div class="content-card">
-      <div class="card-header">
-        <h3 class="card-title">練習会参加者記録</h3>
+      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+        <h3 class="card-title" style="color:white;">練習会参加者記録</h3>
       </div>
       <div class="card-content">
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">

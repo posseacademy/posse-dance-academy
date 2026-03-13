@@ -47,10 +47,10 @@ export function renderTimeSchedule(app) {
       <div style="overflow-x: auto;">
         <table class="schedule-table" style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="background-color: var(--bg-secondary);">
-              <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color); font-weight: 600;">時刻</th>
+            <tr style="background:#1d1d1f;">
+              <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color:white;">時刻</th>
               ${daysOfWeek.map(day => `
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; width: 15%;">${day}</th>
+                <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; width: 15%; color:white;">${day}</th>
               `).join('')}
             </tr>
           </thead>
@@ -140,14 +140,14 @@ export function renderMonthlySchedule(app) {
       <div style="overflow-x: auto;">
         <table class="schedule-table" style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="background-color: var(--bg-secondary);">
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">日</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">月</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">火</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">水</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">木</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">金</th>
-              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600;">土</th>
+            <tr style="background:#1d1d1f;">
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">日</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">月</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">火</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">水</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">木</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">金</th>
+              <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; color:white;">土</th>
             </tr>
           </thead>
           <tbody>
