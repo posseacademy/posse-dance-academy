@@ -90,9 +90,9 @@ export function renderRevenue(app) {
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
       <!-- Tuition -->
       <div class="content-card">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 class="card-title" style="margin:0;">月謝売上</h3>
-          <span style="font-size:1.1rem;font-weight:700;color:#3b82f6;white-space:nowrap;">¥${tuitionTotal.toLocaleString('ja-JP')}</span>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="margin:0;color:white;">月謝売上</h3>
+          <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${tuitionTotal.toLocaleString('ja-JP')}</span>
         </div>
         <div class="card-content">
           ${courseCounts.map(item => `
@@ -112,9 +112,9 @@ export function renderRevenue(app) {
 
       <!-- Visitor -->
       <div class="content-card">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 class="card-title" style="margin:0;">ビジター売上</h3>
-          <span style="font-size:1.1rem;font-weight:700;color:#f59e0b;white-space:nowrap;">¥${visitorTotal.toLocaleString('ja-JP')}</span>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="margin:0;color:white;">ビジター売上</h3>
+          <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${visitorTotal.toLocaleString('ja-JP')}</span>
         </div>
         <div class="card-content">
           ${Object.entries(visitorDetail).filter(([, d]) => d.count > 0).map(([cat, data]) => `
@@ -131,9 +131,9 @@ export function renderRevenue(app) {
 
       <!-- Practice -->
       <div class="content-card">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 class="card-title" style="margin:0;">練習会売上</h3>
-          <span style="font-size:1.1rem;font-weight:700;color:#8b5cf6;white-space:nowrap;">¥${practiceTotal.toLocaleString('ja-JP')}</span>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="margin:0;color:white;">練習会売上</h3>
+          <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${practiceTotal.toLocaleString('ja-JP')}</span>
         </div>
         <div class="card-content">
           ${['月曜日', '木曜日'].map(day => {
@@ -155,9 +155,9 @@ export function renderRevenue(app) {
 
       <!-- Events -->
       <div class="content-card">
-        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 class="card-title" style="margin:0;">イベント売上</h3>
-          <span style="font-size:1.1rem;font-weight:700;color:#ec4899;white-space:nowrap;">¥${eventTotal.toLocaleString('ja-JP')}</span>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="margin:0;color:white;">イベント売上</h3>
+          <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${eventTotal.toLocaleString('ja-JP')}</span>
         </div>
         <div class="card-content">
           ${eventList.length > 0 ? eventList.map(ev => `
