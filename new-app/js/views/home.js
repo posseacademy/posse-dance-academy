@@ -51,6 +51,17 @@ export function renderDashboard(app) {
   const practiceData = calculatePracticeRevenue(app.attendanceData);
   const practiceRevenue = practiceData.revenue;
 
+  // Calculate event revenue
+  let eventRevenue = 0;
+  Object.values(app.eventsData || {}).forEach(ev => {
+    eventRevenue += (ev.participants || []).reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
+  });
+
+  // Total revenue & goal
+  const totalRevenue = monthlyTuitionTotal + visitorRevenue + practiceRevenue + eventRevenue;
+  const revenueGoal = 1000000;
+  const progressPct = Math.min(Math.round((totalRevenue / revenueGoal) * 100), 100);
+
   // Parse selected month for display
   const [year, month] = app.selectedMonth.split('-');
   const monthDisplay = `${year}年${month}月`;
@@ -132,40 +143,53 @@ export function renderDashboard(app) {
         </div>
       </div>
 
-      <!-- Right: Visitor and Summary -->
+      <!-- Right: Revenue Goal & Summary -->
       <div>
-        <!-- Total Revenue Highlight Card -->
-        <div class="content-card visitor-highlight">
-          <div class="card-header">
-            <h3 class="card-title">総売上（${monthDisplay}）</h3>
+        <!-- Revenue Goal Card -->
+        <div class="content-card revenue-goal-card">
+          <div class="rg-header">
+            <span class="rg-month">${monthDisplay}</span>
+            <span class="rg-pct">${progressPct}%</span>
           </div>
-          <div class="card-content">
-            <div class="vh-value">¥${(monthlyTuitionTotal + visitorRevenue + practiceRevenue).toLocaleString('ja-JP')}</div>
-            <div class="vh-detail">月謝 + ビジター + 練習会</div>
+          <div class="rg-amount">¥${totalRevenue.toLocaleString('ja-JP')}</div>
+          <div class="rg-bar-track">
+            <div class="rg-bar-fill" style="width:${progressPct}%;"></div>
           </div>
+          <div class="rg-goal">目標 ¥${revenueGoal.toLocaleString('ja-JP')}</div>
+          <div class="rg-remaining">${totalRevenue >= revenueGoal
+            ? '目標達成!'
+            : `あと ¥${(revenueGoal - totalRevenue).toLocaleString('ja-JP')}`}</div>
         </div>
 
-        <!-- Summary Card -->
+        <!-- Breakdown Card -->
         <div class="content-card" style="margin-top: 1rem;">
           <div class="card-header">
-            <h3 class="card-title">今月の概要</h3>
+            <h3 class="card-title">売上内訳</h3>
           </div>
           <div class="card-content">
             <div class="revenue-row">
+              <div class="rev-label">月謝</div>
+              <div class="rev-amount">¥${monthlyTuitionTotal.toLocaleString('ja-JP')}</div>
+            </div>
+            <div class="revenue-row">
+              <div class="rev-label">ビジター</div>
+              <div class="rev-amount">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
+            </div>
+            <div class="revenue-row">
+              <div class="rev-label">イベント</div>
+              <div class="rev-amount">¥${eventRevenue.toLocaleString('ja-JP')}</div>
+            </div>
+            <div class="revenue-row">
+              <div class="rev-label">練習会</div>
+              <div class="rev-amount">¥${practiceRevenue.toLocaleString('ja-JP')}</div>
+            </div>
+            <div class="revenue-row" style="margin-top:0.5rem;">
               <div class="rev-label">レッスン数</div>
               <div class="rev-amount">${totalClasses}</div>
             </div>
             <div class="revenue-row">
               <div class="rev-label">受講生数</div>
               <div class="rev-amount">${totalStudents}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">ビジター売上</div>
-              <div class="rev-amount">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">練習会売上</div>
-              <div class="rev-amount">¥${practiceRevenue.toLocaleString('ja-JP')}</div>
             </div>
           </div>
         </div>
