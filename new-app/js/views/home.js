@@ -134,14 +134,14 @@ export function renderDashboard(app) {
 
       <!-- Right: Visitor and Summary -->
       <div>
-        <!-- Visitor Highlight Card -->
+        <!-- Total Revenue Highlight Card -->
         <div class="content-card visitor-highlight">
           <div class="card-header">
-            <h3 class="card-title">ビジター売上（今月）</h3>
+            <h3 class="card-title">総売上（${monthDisplay}）</h3>
           </div>
           <div class="card-content">
-            <div class="vh-value">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
-            <div class="vh-detail">売上</div>
+            <div class="vh-value">¥${(monthlyTuitionTotal + visitorRevenue + practiceRevenue).toLocaleString('ja-JP')}</div>
+            <div class="vh-detail">月謝 + ビジター + 練習会</div>
           </div>
         </div>
 
@@ -158,6 +158,10 @@ export function renderDashboard(app) {
             <div class="revenue-row">
               <div class="rev-label">受講生数</div>
               <div class="rev-amount">${totalStudents}</div>
+            </div>
+            <div class="revenue-row">
+              <div class="rev-label">ビジター売上</div>
+              <div class="rev-amount">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
             </div>
             <div class="revenue-row">
               <div class="rev-label">練習会売上</div>
