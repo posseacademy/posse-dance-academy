@@ -3,7 +3,7 @@ import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSched
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue } from './utils.js?v=4';
 import { renderDashboard } from './views/home.js?v=4';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=5';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=6';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=17';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=4';
 import { renderInstructors } from './views/instructors.js?v=4';
@@ -17,6 +17,7 @@ class DanceStudioApp {
         this.customers = [];
         this.editingId = null;
         this.editForm = {};
+        this.viewingCustomerId = null;
         this.showAddForm = false;
         this.searchTerm = '';
         this.sortField = 'memberNumber';
@@ -208,6 +209,22 @@ class DanceStudioApp {
             console.error('削除エラー:', error);
             alert('削除エラー: ' + error.message);
         }
+    }
+
+    viewCustomerDetail(id) {
+        this.viewingCustomerId = id;
+        this.render();
+    }
+
+    closeCustomerDetail() {
+        this.viewingCustomerId = null;
+        this.render();
+    }
+
+    editFromDetail() {
+        const id = this.viewingCustomerId;
+        this.viewingCustomerId = null;
+        this.startEdit(id);
     }
 
     handleExport() {
@@ -696,6 +713,17 @@ class DanceStudioApp {
             }
         });
 
+        // Detail modal events
+        document.querySelectorAll('[data-view-id]').forEach(btn => {
+            btn.addEventListener('click', () => { this.viewCustomerDetail(btn.getAttribute('data-view-id')); });
+        });
+        document.getElementById('closeDetailBtn')?.addEventListener('click', () => this.closeCustomerDetail());
+        document.getElementById('closeDetailBtn2')?.addEventListener('click', () => this.closeCustomerDetail());
+        document.getElementById('editFromDetailBtn')?.addEventListener('click', () => this.editFromDetail());
+        document.getElementById('detailOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'detailOverlay') this.closeCustomerDetail();
+        });
+
         // Edit events
         document.querySelectorAll('[data-edit-action="start"]').forEach(btn => {
             btn.addEventListener('click', () => { this.startEdit(btn.getAttribute('data-id')); });
@@ -705,8 +733,12 @@ class DanceStudioApp {
         });
         document.getElementById('saveEditBtn')?.addEventListener('click', () => this.saveEdit());
         document.getElementById('cancelEditBtn')?.addEventListener('click', () => this.cancelEdit());
+        document.getElementById('cancelEditBtn2')?.addEventListener('click', () => this.cancelEdit());
+        document.getElementById('editOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'editOverlay') this.cancelEdit();
+        });
 
-        const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo'];
+        const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'phone2', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'lastName', 'firstName'];
         editFields.forEach(field => {
             const el = document.getElementById(`edit_${field}`);
             if (el) {
@@ -714,14 +746,6 @@ class DanceStudioApp {
                 el.addEventListener('input', (e) => { this.updateEditField(field, e.target.value); });
             }
         });
-        const nameField = document.getElementById('edit_fullName');
-        if (nameField) {
-            nameField.addEventListener('input', (e) => {
-                const parts = e.target.value.split(' ');
-                this.editForm.lastName = parts[0] || '';
-                this.editForm.firstName = parts[1] || '';
-            });
-        }
     }
 
     // ===== EVENT SETUP (ATTENDANCE) =====

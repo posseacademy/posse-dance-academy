@@ -43,6 +43,8 @@ export function renderCustomers(app) {
     '退会済み': app.customers.filter(c => c.status === '退会済み').length
   };
 
+  const sortIcon = (field) => app.sortField === field ? (app.sortOrder === 'asc' ? ' ▲' : ' ▼') : '';
+
   return `
     <!-- Page Header -->
     <div class="page-header">
@@ -87,79 +89,38 @@ export function renderCustomers(app) {
              value="${app.searchTerm || ''}">
     </div>
 
-    <!-- Customers Table -->
+    <!-- Customers Table (Simplified) -->
     <div class="content-card">
       <div style="overflow-x: auto;">
-        <table class="customers-table">
+        <table class="customer-table">
           <thead>
             <tr>
-              <th class="sortable-header" data-field="no">
-                No <span class="sort-icon">${app.sortField === 'no' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="memberNumber">
-                会員番号 <span class="sort-icon">${app.sortField === 'memberNumber' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="status">
-                ステータス <span class="sort-icon">${app.sortField === 'status' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="course">
-                コース <span class="sort-icon">${app.sortField === 'course' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="annualFee">
-                年会費更新日 <span class="sort-icon">${app.sortField === 'annualFee' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="lastName">
-                氏名 <span class="sort-icon">${app.sortField === 'lastName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="reading">
-                読み <span class="sort-icon">${app.sortField === 'reading' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="guardianName">
-                保護者名 <span class="sort-icon">${app.sortField === 'guardianName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="hakomonoName">
-                ハコモノ登録名 <span class="sort-icon">${app.sortField === 'hakomonoName' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="gender">
-                性別 <span class="sort-icon">${app.sortField === 'gender' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="birthDate">
-                生年月日 <span class="sort-icon">${app.sortField === 'birthDate' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th>年齢</th>
-              <th class="sortable-header" data-field="phone1">
-                電話番号 <span class="sort-icon">${app.sortField === 'phone1' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="email">
-                メール <span class="sort-icon">${app.sortField === 'email' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th class="sortable-header" data-field="joinDate">
-                入会日 <span class="sort-icon">${app.sortField === 'joinDate' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th>郵便番号</th>
-              <th>都道府県</th>
-              <th>市区町村</th>
-              <th>番地</th>
-              <th>建物・部屋番号</th>
-              <th class="sortable-header" data-field="memo">
-                備考 <span class="sort-icon">${app.sortField === 'memo' ? (app.sortOrder === 'asc' ? '▲' : '▼') : ''}</span>
-              </th>
-              <th>操作</th>
+              <th class="sortable-header" data-field="memberNumber">会員番号${sortIcon('memberNumber')}</th>
+              <th class="sortable-header" data-field="lastName">氏名${sortIcon('lastName')}</th>
+              <th class="sortable-header" data-field="course">コース${sortIcon('course')}</th>
+              <th class="sortable-header" data-field="phone1">電話番号${sortIcon('phone1')}</th>
+              <th class="sortable-header" data-field="email">メール${sortIcon('email')}</th>
+              <th class="sortable-header" data-field="joinDate">入会日${sortIcon('joinDate')}</th>
+              <th style="width:120px;">操作</th>
             </tr>
           </thead>
           <tbody>
-            ${filtered.map((customer, idx) => renderCustomerRow(app, customer, idx + 1)).join('')}
+            ${filtered.map((customer) => renderCustomerRow(app, customer)).join('')}
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Detail Modal -->
+    ${app.viewingCustomerId ? renderCustomerDetailModal(app) : ''}
+
+    <!-- Edit Modal -->
+    ${app.editingId ? renderEditModal(app) : ''}
   `;
 }
 
 /**
  * New customer registration form
- * @param {Object} app - Application state
- * @returns {string} HTML string for add form
  */
 export function renderAddForm(app) {
   const form = app.newCustomer || {};
@@ -191,7 +152,6 @@ export function renderAddForm(app) {
             <label class="form-label">年会費更新日</label>
             <input type="date" class="form-input" id="new_annualFee" value="${form.annualFee || ''}">
           </div>
-
           <div>
             <label class="form-label">氏（姓）</label>
             <input type="text" class="form-input" id="new_lastName" value="${form.lastName || ''}">
@@ -208,7 +168,6 @@ export function renderAddForm(app) {
             <label class="form-label">保護者名</label>
             <input type="text" class="form-input" id="new_guardianName" value="${form.guardianName || ''}">
           </div>
-
           <div>
             <label class="form-label">ハコモノ登録名</label>
             <input type="text" class="form-input" id="new_hakomonoName" value="${form.hakomonoName || ''}">
@@ -225,11 +184,6 @@ export function renderAddForm(app) {
             <label class="form-label">電話番号</label>
             <input type="tel" class="form-input" id="new_phone1" value="${form.phone1 || ''}">
           </div>
-
-          <div>
-            <label class="form-label">電話番号2</label>
-            <input type="tel" class="form-input" id="new_phone2" value="${form.phone2 || ''}">
-          </div>
           <div>
             <label class="form-label">メール</label>
             <input type="email" class="form-input" id="new_email" value="${form.email || ''}">
@@ -242,7 +196,6 @@ export function renderAddForm(app) {
             <label class="form-label">郵便番号</label>
             <input type="text" class="form-input" id="new_postalCode" value="${form.postalCode || ''}">
           </div>
-
           <div>
             <label class="form-label">都道府県</label>
             <input type="text" class="form-input" id="new_prefecture" value="${form.prefecture || ''}">
@@ -259,13 +212,11 @@ export function renderAddForm(app) {
             <label class="form-label">建物・部屋番号</label>
             <input type="text" class="form-input" id="new_building" value="${form.building || ''}">
           </div>
-
           <div style="grid-column: span 4;">
             <label class="form-label">備考</label>
             <textarea class="form-input" id="new_memo">${form.memo || ''}</textarea>
           </div>
         </div>
-
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
           <button id="addCustomerBtn" class="btn btn-primary">登録</button>
           <button id="cancelAddBtn" class="btn btn-secondary">キャンセル</button>
@@ -276,145 +227,324 @@ export function renderAddForm(app) {
 }
 
 /**
- * Single customer row (edit mode or display mode)
- * @param {Object} app - Application state
- * @param {Object} customer - Customer data
- * @param {number} no - Row number
- * @returns {string} HTML string for customer row
+ * Simplified customer row
  */
-export function renderCustomerRow(app, customer, no) {
-  const isEditing = app.editingId === customer.id;
-  const editForm = app.editForm || customer;
+export function renderCustomerRow(app, customer) {
   const age = calculateAge(customer.birthDate);
-
-  if (isEditing) {
-    return `
-      <tr>
-        <td class="px-2 py-3 text-xs">${no}</td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 80px;" value="${editForm.memberNumber || ''}"
-                 onchange="window.app.updateEditForm('memberNumber', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <select class="form-input" style="width: 80px;" onchange="window.app.updateEditForm('status', this.value)">
-            <option value="入会中" ${editForm.status === '入会中' ? 'selected' : ''}>入会中</option>
-            <option value="休会中" ${editForm.status === '休会中' ? 'selected' : ''}>休会中</option>
-            <option value="退会済み" ${editForm.status === '退会済み' ? 'selected' : ''}>退会済み</option>
-          </select>
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 50px;" value="${editForm.course || ''}"
-                 onchange="window.app.updateEditForm('course', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="date" class="form-input" style="width: 120px;" value="${editForm.annualFee || ''}"
-                 onchange="window.app.updateEditForm('annualFee', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 60px;" value="${editForm.lastName || ''}"
-                 onchange="window.app.updateEditForm('lastName', this.value)">
-          <input type="text" class="form-input" style="width: 60px;" value="${editForm.firstName || ''}"
-                 onchange="window.app.updateEditForm('firstName', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.reading || ''}"
-                 onchange="window.app.updateEditForm('reading', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.guardianName || ''}"
-                 onchange="window.app.updateEditForm('guardianName', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.hakomonoName || ''}"
-                 onchange="window.app.updateEditForm('hakomonoName', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 50px;" value="${editForm.gender || ''}"
-                 onchange="window.app.updateEditForm('gender', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="date" class="form-input" style="width: 120px;" value="${editForm.birthDate || ''}"
-                 onchange="window.app.updateEditForm('birthDate', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">${age}</td>
-        <td class="px-2 py-3 text-xs">
-          <input type="tel" class="form-input" style="width: 120px;" value="${editForm.phone1 || ''}"
-                 onchange="window.app.updateEditForm('phone1', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="email" class="form-input" style="width: 150px;" value="${editForm.email || ''}"
-                 onchange="window.app.updateEditForm('email', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="date" class="form-input" style="width: 120px;" value="${editForm.joinDate || ''}"
-                 onchange="window.app.updateEditForm('joinDate', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 80px;" value="${editForm.postalCode || ''}"
-                 onchange="window.app.updateEditForm('postalCode', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 80px;" value="${editForm.prefecture || ''}"
-                 onchange="window.app.updateEditForm('prefecture', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.city || ''}"
-                 onchange="window.app.updateEditForm('city', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.address || ''}"
-                 onchange="window.app.updateEditForm('address', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 100px;" value="${editForm.building || ''}"
-                 onchange="window.app.updateEditForm('building', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <input type="text" class="form-input" style="width: 80px;" value="${editForm.memo || ''}"
-                 onchange="window.app.updateEditForm('memo', this.value)">
-        </td>
-        <td class="px-2 py-3 text-xs">
-          <button id="saveEditBtn" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">保存</button>
-          <button id="cancelEditBtn" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">キャンセル</button>
-          <button data-edit-action="delete" data-id="${customer.id}" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-left: 0.25rem;">削除</button>
-        </td>
-      </tr>
-    `;
-  }
-
-  // Display mode
-  const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' :
-                          customer.status === '休会中' ? 'status-badge-paused' :
-                          'status-badge-withdrawn';
+  const courseLabel = customer.course ? `コース${customer.course}` : '';
 
   return `
     <tr>
-      <td class="px-2 py-3 text-xs">${no}</td>
-      <td class="px-2 py-3 text-xs">${customer.memberNumber || ''}</td>
-      <td class="px-2 py-3 text-xs">
-        <span class="status-badge ${statusBadgeClass}">${customer.status || ''}</span>
+      <td>${customer.memberNumber || ''}</td>
+      <td class="customer-name-cell">
+        ${customer.lastName || ''} ${customer.firstName || ''}
+        ${customer.reading ? `<span class="reading">${customer.reading}</span>` : ''}
       </td>
-      <td class="px-2 py-3 text-xs">${customer.course || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.annualFee || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.lastName || ''} ${customer.firstName || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.reading || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.guardianName || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.hakomonoName || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.gender || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.birthDate || ''}</td>
-      <td class="px-2 py-3 text-xs">${age}</td>
-      <td class="px-2 py-3 text-xs">${customer.phone1 || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.email || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.joinDate || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.postalCode || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.prefecture || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.city || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.address || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.building || ''}</td>
-      <td class="px-2 py-3 text-xs">${customer.memo || ''}</td>
-      <td class="px-2 py-3 text-xs">
-        <button data-edit-action="start" data-id="${customer.id}" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">編集</button>
+      <td>${courseLabel}</td>
+      <td>${customer.phone1 || ''}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${customer.email || ''}</td>
+      <td>${customer.joinDate || ''}</td>
+      <td>
+        <div class="customer-action-btns">
+          <button class="btn-detail" data-view-id="${customer.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            詳細
+          </button>
+          <button class="btn-edit-icon" data-edit-action="start" data-id="${customer.id}" title="編集">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
       </td>
     </tr>
+  `;
+}
+
+/**
+ * Customer detail modal (view-only)
+ */
+function renderCustomerDetailModal(app) {
+  const customer = app.customers.find(c => c.id === app.viewingCustomerId);
+  if (!customer) return '';
+  const age = calculateAge(customer.birthDate);
+  const statusBadgeClass = customer.status === '入会中' ? 'status-badge-active' :
+                           customer.status === '休会中' ? 'status-badge-paused' : 'status-badge-withdrawn';
+
+  const val = (v) => v || '—';
+
+  return `
+    <div class="customer-detail-overlay" id="detailOverlay">
+      <div class="customer-detail-modal">
+        <div class="modal-header">
+          <h3>${customer.lastName} ${customer.firstName}</h3>
+          <button class="modal-close" id="closeDetailBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Basic Info -->
+          <div class="detail-section">
+            <div class="detail-section-title">基本情報</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>会員番号</label>
+                <div class="detail-value">${val(customer.memberNumber)}</div>
+              </div>
+              <div class="detail-item">
+                <label>ステータス</label>
+                <div class="detail-value"><span class="status-badge ${statusBadgeClass}">${val(customer.status)}</span></div>
+              </div>
+              <div class="detail-item">
+                <label>氏名</label>
+                <div class="detail-value">${val(customer.lastName)} ${val(customer.firstName)}</div>
+              </div>
+              <div class="detail-item">
+                <label>読み</label>
+                <div class="detail-value">${val(customer.reading)}</div>
+              </div>
+              <div class="detail-item">
+                <label>コース</label>
+                <div class="detail-value">${customer.course ? 'コース' + customer.course : '—'}</div>
+              </div>
+              <div class="detail-item">
+                <label>性別</label>
+                <div class="detail-value">${val(customer.gender)}</div>
+              </div>
+              <div class="detail-item">
+                <label>生年月日</label>
+                <div class="detail-value">${val(customer.birthDate)}${age ? ` (${age}歳)` : ''}</div>
+              </div>
+              <div class="detail-item">
+                <label>入会日</label>
+                <div class="detail-value">${val(customer.joinDate)}</div>
+              </div>
+              <div class="detail-item">
+                <label>年会費更新日</label>
+                <div class="detail-value">${val(customer.annualFee)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact -->
+          <div class="detail-section">
+            <div class="detail-section-title">連絡先</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>電話番号</label>
+                <div class="detail-value">${val(customer.phone1)}</div>
+              </div>
+              <div class="detail-item">
+                <label>電話番号2</label>
+                <div class="detail-value">${val(customer.phone2)}</div>
+              </div>
+              <div class="detail-item full-width">
+                <label>メール</label>
+                <div class="detail-value">${val(customer.email)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="detail-section">
+            <div class="detail-section-title">住所</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>郵便番号</label>
+                <div class="detail-value">${val(customer.postalCode)}</div>
+              </div>
+              <div class="detail-item">
+                <label>都道府県</label>
+                <div class="detail-value">${val(customer.prefecture)}</div>
+              </div>
+              <div class="detail-item">
+                <label>市区町村</label>
+                <div class="detail-value">${val(customer.city)}</div>
+              </div>
+              <div class="detail-item">
+                <label>番地</label>
+                <div class="detail-value">${val(customer.address)}</div>
+              </div>
+              <div class="detail-item full-width">
+                <label>建物・部屋番号</label>
+                <div class="detail-value">${val(customer.building)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Other -->
+          <div class="detail-section">
+            <div class="detail-section-title">その他</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>保護者名</label>
+                <div class="detail-value">${val(customer.guardianName)}</div>
+              </div>
+              <div class="detail-item">
+                <label>ハコモノ登録名</label>
+                <div class="detail-value">${val(customer.hakomonoName)}</div>
+              </div>
+              <div class="detail-item full-width">
+                <label>備考</label>
+                <div class="detail-value">${val(customer.memo)}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="closeDetailBtn2">閉じる</button>
+          <button class="btn btn-primary" id="editFromDetailBtn" data-id="${customer.id}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            編集
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Edit modal
+ */
+function renderEditModal(app) {
+  const customer = app.customers.find(c => c.id === app.editingId);
+  if (!customer) return '';
+  const ef = app.editForm || customer;
+
+  return `
+    <div class="customer-detail-overlay" id="editOverlay">
+      <div class="customer-detail-modal">
+        <div class="modal-header">
+          <h3>${ef.lastName || ''} ${ef.firstName || ''} — 編集</h3>
+          <button class="modal-close" id="cancelEditBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Basic Info -->
+          <div class="detail-section">
+            <div class="detail-section-title">基本情報</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>会員番号</label>
+                <input type="text" class="form-input" id="edit_memberNumber" value="${ef.memberNumber || ''}">
+              </div>
+              <div class="detail-item">
+                <label>ステータス</label>
+                <select class="form-input" id="edit_status">
+                  <option value="入会中" ${ef.status === '入会中' ? 'selected' : ''}>入会中</option>
+                  <option value="休会中" ${ef.status === '休会中' ? 'selected' : ''}>休会中</option>
+                  <option value="退会済み" ${ef.status === '退会済み' ? 'selected' : ''}>退会済み</option>
+                </select>
+              </div>
+              <div class="detail-item">
+                <label>姓</label>
+                <input type="text" class="form-input" id="edit_lastName" value="${ef.lastName || ''}" onchange="window.app.updateEditField('lastName', this.value)">
+              </div>
+              <div class="detail-item">
+                <label>名</label>
+                <input type="text" class="form-input" id="edit_firstName" value="${ef.firstName || ''}" onchange="window.app.updateEditField('firstName', this.value)">
+              </div>
+              <div class="detail-item">
+                <label>読み</label>
+                <input type="text" class="form-input" id="edit_reading" value="${ef.reading || ''}">
+              </div>
+              <div class="detail-item">
+                <label>コース</label>
+                <input type="text" class="form-input" id="edit_course" placeholder="例: ４" value="${ef.course || ''}">
+              </div>
+              <div class="detail-item">
+                <label>性別</label>
+                <input type="text" class="form-input" id="edit_gender" value="${ef.gender || ''}">
+              </div>
+              <div class="detail-item">
+                <label>生年月日</label>
+                <input type="date" class="form-input" id="edit_birthDate" value="${ef.birthDate || ''}">
+              </div>
+              <div class="detail-item">
+                <label>入会日</label>
+                <input type="date" class="form-input" id="edit_joinDate" value="${ef.joinDate || ''}">
+              </div>
+              <div class="detail-item">
+                <label>年会費更新日</label>
+                <input type="date" class="form-input" id="edit_annualFee" value="${ef.annualFee || ''}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact -->
+          <div class="detail-section">
+            <div class="detail-section-title">連絡先</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>電話番号</label>
+                <input type="tel" class="form-input" id="edit_phone1" value="${ef.phone1 || ''}">
+              </div>
+              <div class="detail-item">
+                <label>電話番号2</label>
+                <input type="tel" class="form-input" id="edit_phone2" value="${ef.phone2 || ''}">
+              </div>
+              <div class="detail-item full-width">
+                <label>メール</label>
+                <input type="email" class="form-input" id="edit_email" value="${ef.email || ''}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="detail-section">
+            <div class="detail-section-title">住所</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>郵便番号</label>
+                <input type="text" class="form-input" id="edit_postalCode" value="${ef.postalCode || ''}">
+              </div>
+              <div class="detail-item">
+                <label>都道府県</label>
+                <input type="text" class="form-input" id="edit_prefecture" value="${ef.prefecture || ''}">
+              </div>
+              <div class="detail-item">
+                <label>市区町村</label>
+                <input type="text" class="form-input" id="edit_city" value="${ef.city || ''}">
+              </div>
+              <div class="detail-item">
+                <label>番地</label>
+                <input type="text" class="form-input" id="edit_address" value="${ef.address || ''}">
+              </div>
+              <div class="detail-item full-width">
+                <label>建物・部屋番号</label>
+                <input type="text" class="form-input" id="edit_building" value="${ef.building || ''}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Other -->
+          <div class="detail-section">
+            <div class="detail-section-title">その他</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>保護者名</label>
+                <input type="text" class="form-input" id="edit_guardianName" value="${ef.guardianName || ''}">
+              </div>
+              <div class="detail-item">
+                <label>ハコモノ登録名</label>
+                <input type="text" class="form-input" id="edit_hakomonoName" value="${ef.hakomonoName || ''}">
+              </div>
+              <div class="detail-item full-width">
+                <label>備考</label>
+                <textarea class="form-input" id="edit_memo" rows="3">${ef.memo || ''}</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button data-edit-action="delete" data-id="${app.editingId}" class="btn btn-danger" style="margin-right:auto;">削除</button>
+          <button id="cancelEditBtn2" class="btn btn-secondary">キャンセル</button>
+          <button id="saveEditBtn" class="btn btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
   `;
 }
