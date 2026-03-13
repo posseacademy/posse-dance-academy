@@ -432,7 +432,7 @@ export function renderEventRecord(app) {
             <span style="font-size:0.875rem;color:var(--text-secondary)">
               ${events.length}件のイベント
             </span>
-            <span style="font-size:0.875rem;font-weight:600;color:#e42313">
+            <span style="font-size:0.875rem;font-weight:600;color:#1d1d1f">
               合計: ${formatCurrency(totalRevenue)}
             </span>
           </div>

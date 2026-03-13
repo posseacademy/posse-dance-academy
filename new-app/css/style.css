@@ -9,9 +9,9 @@
 
 :root {
   /* Brand Colors */
-  --color-primary: #e42313;
-  --color-primary-hover: #cc1f0f;
-  --color-primary-light: #f5e9e7;
+  --color-primary: #1d1d1f;
+  --color-primary-hover: #000000;
+  --color-primary-light: #f3f4f6;
 
   /* Grays & Neutrals */
   --color-white: #ffffff;

@@ -623,7 +623,7 @@ class DanceStudioApp {
             <div style="display:flex;">
                 <aside class="sidebar">
                     <div class="sidebar-logo">
-                        <svg class="logo-image" viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg"><text x="6" y="68" font-family="'Futura','Trebuchet MS','Arial Black',sans-serif" font-weight="900" font-size="76" fill="#e42313" letter-spacing="-2">posse</text><text x="8" y="93" font-family="'Futura','Trebuchet MS',Arial,sans-serif" font-weight="300" font-size="24" fill="rgba(255,255,255,0.85)" letter-spacing="5.5">dance academy</text></svg>
+                        <svg class="logo-image" viewBox="0 0 280 100" xmlns="http://www.w3.org/2000/svg"><text x="6" y="68" font-family="'Futura','Trebuchet MS','Arial Black',sans-serif" font-weight="900" font-size="76" fill="#ffffff" letter-spacing="-2">posse</text><text x="8" y="93" font-family="'Futura','Trebuchet MS',Arial,sans-serif" font-weight="300" font-size="24" fill="rgba(255,255,255,0.85)" letter-spacing="5.5">dance academy</text></svg>
                     </div>
                     <nav>
                         <button id="homeTab" class="nav-item ${this.currentTab === 'home' ? 'active' : ''}">
