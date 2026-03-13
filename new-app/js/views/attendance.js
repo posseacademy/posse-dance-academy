@@ -46,12 +46,19 @@ export function renderAttendance(app) {
 
     <!-- Attendance Subtabs -->
     <div class="tab-nav">
-      ${subtabs.map(tab => `
-        <button class="tab-btn ${tab === currentSubtab ? 'active' : ''}"
-                onclick="window.app.setAttendanceSubtab('${tab}')">
-          ${tab}
-        </button>
-      `).join('')}
+      ${subtabs.map(tab => {
+        const icons = {
+          '出席記録': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>',
+          '練習会': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+          'イベント': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+        };
+        return `
+          <button class="tab-btn ${tab === currentSubtab ? 'active' : ''}"
+                  onclick="window.app.setAttendanceSubtab('${tab}')">
+            ${icons[tab] || ''}${tab}
+          </button>
+        `;
+      }).join('')}
     </div>
 
     ${content}
@@ -126,19 +133,29 @@ export function renderAttendanceRecord(app) {
   const schedule = app.scheduleData[currentDay] || [];
 
   return `
-    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-      <button class="btn btn-secondary" onclick="window.app.previousMonth()">前月</button>
-      <button class="btn btn-secondary" onclick="window.app.nextMonth()">翌月</button>
-    </div>
-
-    <!-- Day Tabs -->
-    <div class="tab-nav">
-      ${daysOfWeek.map(day => `
-        <button class="tab-btn ${day === currentDay ? 'active' : ''}"
-                onclick="window.app.setAttendanceDay('${day}')">
-          ${day}
+    <!-- Day Tabs with Month Navigation -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--spacing-6);">
+      <div class="tab-nav" style="margin-bottom:0;flex:1;">
+        ${daysOfWeek.map(day => {
+          const dayColors = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
+          return `
+            <button class="tab-btn ${day === currentDay ? 'active' : ''}"
+                    onclick="window.app.setAttendanceDay('${day}')">
+              <span class="day-dot" style="background:${dayColors[day]};"></span>${day}
+            </button>
+          `;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-left:1rem;flex-shrink:0;">
+        <button class="btn btn-secondary btn-sm" onclick="window.app.previousMonth()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          前月
         </button>
-      `).join('')}
+        <button class="btn btn-secondary btn-sm" onclick="window.app.nextMonth()">
+          翌月
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Classes for Selected Day -->

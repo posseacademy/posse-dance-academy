@@ -66,15 +66,23 @@ export function renderCustomers(app) {
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
-      ${statusOptions.map(status => `
-        <button id="status-${status}" class="tab-btn ${app.statusFilter === status ? 'active' : ''}">
-          ${status} <span class="tab-count">${statusCounts[status]}</span>
-        </button>
-      `).join('')}
+      ${statusOptions.map(status => {
+        const icons = {
+          '入会中': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+          '休会中': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>',
+          '退会済み': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+        };
+        return `
+          <button id="status-${status}" class="tab-btn ${app.statusFilter === status ? 'active' : ''}">
+            ${icons[status] || ''}${status} <span class="tab-count">${statusCounts[status]}</span>
+          </button>
+        `;
+      }).join('')}
     </div>
 
     <!-- Search Bar -->
     <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="氏名、会員番号、読みで検索..."
              value="${app.searchTerm || ''}">
     </div>
