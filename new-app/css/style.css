@@ -463,6 +463,30 @@ pre {
   padding: 0 var(--spacing-8) var(--spacing-8);
 }
 
+/* Page Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-8) var(--spacing-8) var(--spacing-6);
+}
+
+.page-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--color-gray-900);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 0;
+}
+
+.page-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-500);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: 0.01em;
+}
+
 /* ============================================================================
    8. CARDS
    ============================================================================ */
