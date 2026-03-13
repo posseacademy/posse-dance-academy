@@ -184,6 +184,7 @@ export function renderAttendanceRecord(app) {
                     <th style="padding: 0.5rem;">Week4</th>
                     <th style="padding: 0.5rem;">Week5</th>
                     <th style="padding: 0.5rem;">出席率</th>
+                    <th style="padding: 0.5rem; width: 70px;"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -197,18 +198,41 @@ export function renderAttendanceRecord(app) {
                         <td style="padding: 0.5rem; font-size: 0.75rem;">${student.plan}</td>
                         ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => {
                           const current = attData[week] || '';
-                          const bgColor = current === '○' ? '#10b981' : current === '×' ? '#ef4444' : current === '休講' ? '#6b7280' : 'var(--bg-secondary)';
-                          const textColor = current === '○' || current === '×' || current === '休講' ? 'white' : 'black';
+                          const cellClass = current === '○' ? 'att-present' : current === '×' ? 'att-absent' : current === '休講' ? 'att-cancelled' : 'att-empty';
+                          const label = current === '休講' ? '休' : current || '−';
                           return `
                             <td style="padding: 0.5rem; text-align: center;">
-                              <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: 50px; background-color: ${bgColor}; color: ${textColor};"
-                                      onclick="window.app.cycleAttendance('${classId}', '${week}')">
-                                ${current || ''}
+                              <button class="att-cell ${cellClass}"
+                                      onclick="window.app.cycleAttendance('${classId}', '${week}')"
+                                      title="${current === '' ? 'クリックで出席記録' : current === '○' ? '出席 → ×に変更' : current === '×' ? '欠席 → 休講に変更' : '休講 → 空白に変更'}">
+                                ${label}
                               </button>
                             </td>
                           `;
                         }).join('')}
                         <td style="padding: 0.5rem; text-align: center; font-weight: 600;">${rate}%</td>
+                        <td style="padding: 0.5rem; text-align: center;">
+                          <div class="student-actions">
+                            <button class="student-action-btn edit-student-btn"
+                                    data-edit-student-day="${currentDay}"
+                                    data-edit-student-location="${cls.location || cls.venue}"
+                                    data-edit-student-class="${cls.name}"
+                                    data-edit-student-lastname="${student.lastName}"
+                                    data-edit-student-firstname="${student.firstName}"
+                                    title="編集">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button class="student-action-btn delete-student-btn"
+                                    data-delete-day="${currentDay}"
+                                    data-delete-location="${cls.location || cls.venue}"
+                                    data-delete-class="${cls.name}"
+                                    data-delete-lastname="${student.lastName}"
+                                    data-delete-firstname="${student.firstName}"
+                                    title="削除">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     `;
                   }).join('')}
@@ -218,7 +242,7 @@ export function renderAttendanceRecord(app) {
 
             <!-- Add Student Form -->
             <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-              ${renderAddStudentForm(app)}
+              ${renderAddStudentForm(app, currentDay, cls.location || cls.venue, cls.name)}
             </div>
           </div>
         </div>
@@ -291,19 +315,84 @@ export function renderPracticeSession(app) {
 /**
  * Form to add students to classes
  * @param {Object} app - Application state
+ * @param {string} day - Day of week
+ * @param {string} location - Class location
+ * @param {string} className - Class name
  * @returns {string} HTML string for add student form
  */
-export function renderAddStudentForm(app) {
-  return `
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-      <input type="text" placeholder="学生を追加..."
-             id="addStudentSearch"
-             style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;"
-             onkeyup="window.app.searchAddStudent(this.value)">
-      <button class="btn btn-primary" style="padding: 0.5rem 1rem;"
-              onclick="window.app.addStudentToClass()">
-        追加
+export function renderAddStudentForm(app, day, location, className) {
+  const isOpen = app.showAddStudentForm
+    && app.selectedClassForAdd
+    && app.selectedClassForAdd.day === day
+    && app.selectedClassForAdd.location === location
+    && app.selectedClassForAdd.className === className;
+
+  if (!isOpen) {
+    return `
+      <button class="add-student-trigger add-student-btn"
+              data-add-day="${day}"
+              data-add-location="${location}"
+              data-add-class="${className}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        生徒を追加
       </button>
+    `;
+  }
+
+  const plans = ['１クラス', '２クラス', '３クラス', '４クラス', '1.5hクラス',
+    'ビジター（会員）', 'ビジター（非会員）', 'ビジター（振替）', '初回体験', '初回無料'];
+
+  return `
+    <div class="add-student-form">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <h4 style="margin:0;font-size:0.95rem;font-weight:600;color:var(--color-gray-800);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          生徒を追加
+        </h4>
+        <button id="cancelAddStudentBtn" class="btn btn-secondary btn-sm" style="font-size:0.75rem;">キャンセル</button>
+      </div>
+
+      <!-- Customer search -->
+      <div style="margin-bottom:1rem;position:relative;">
+        <label>氏名で検索（既存会員）</label>
+        <input type="text" id="student_search_input"
+               placeholder="姓名・読み・会員番号で検索..."
+               value="${app.studentSearchTerm || ''}"
+               autocomplete="off">
+        <div id="searchResultsContainer"></div>
+      </div>
+
+      <!-- Selected customer info -->
+      <div id="selectedCustomerInfo"></div>
+
+      <!-- Manual name input (shown when no customer selected) -->
+      <div id="nameInputContainer" class="${app.selectedCustomerForStudent ? 'hidden' : ''}" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+        <div>
+          <label>姓</label>
+          <input type="text" id="new_student_lastName" placeholder="姓">
+        </div>
+        <div>
+          <label>名</label>
+          <input type="text" id="new_student_firstName" placeholder="名">
+        </div>
+      </div>
+
+      <!-- Plan selection -->
+      <div id="planSelectContainer" style="margin-bottom:1rem;">
+        <label>プラン</label>
+        <select id="new_student_plan">
+          <option value="">プランを選択...</option>
+          ${plans.map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+
+      <!-- Save button -->
+      <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+        <button id="saveNewStudentBtn" class="btn btn-primary" style="padding:0.5rem 1.5rem;font-size:0.875rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
+          追加する
+        </button>
+      </div>
     </div>
   `;
 }
