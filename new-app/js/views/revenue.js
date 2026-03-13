@@ -61,26 +61,26 @@ export function renderRevenue(app) {
     </div>
 
     <!-- Grand Total Card -->
-    <div class="content-card" style="margin-bottom:1.5rem;background:linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.08));">
+    <div class="content-card" style="margin-bottom:1.5rem;background:#1d1d1f;">
       <div class="card-content" style="padding:1.5rem;">
-        <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.25rem;">総売上（${monthDisplay}）</div>
-        <div style="font-size:2.25rem;font-weight:800;color:#10b981;letter-spacing:-0.02em;margin-bottom:1rem;">¥${grandTotal.toLocaleString('ja-JP')}</div>
+        <div style="font-size:0.875rem;color:rgba(255,255,255,0.6);margin-bottom:0.25rem;">総売上（${monthDisplay}）</div>
+        <div style="font-size:2.25rem;font-weight:800;color:white;letter-spacing:-0.02em;margin-bottom:1rem;">¥${grandTotal.toLocaleString('ja-JP')}</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;">
-          <div style="padding:0.75rem;background:rgba(0,0,0,0.2);border-radius:0.5rem;">
-            <div style="font-size:0.75rem;color:var(--text-secondary);">月謝</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#3b82f6;">¥${tuitionTotal.toLocaleString('ja-JP')}</div>
+          <div style="padding:0.75rem;background:rgba(255,255,255,0.1);border-radius:0.5rem;">
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">月謝</div>
+            <div style="font-size:1.1rem;font-weight:700;color:white;">¥${tuitionTotal.toLocaleString('ja-JP')}</div>
           </div>
-          <div style="padding:0.75rem;background:rgba(0,0,0,0.2);border-radius:0.5rem;">
-            <div style="font-size:0.75rem;color:var(--text-secondary);">ビジター</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#f59e0b;">¥${visitorTotal.toLocaleString('ja-JP')}</div>
+          <div style="padding:0.75rem;background:rgba(255,255,255,0.1);border-radius:0.5rem;">
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">ビジター</div>
+            <div style="font-size:1.1rem;font-weight:700;color:white;">¥${visitorTotal.toLocaleString('ja-JP')}</div>
           </div>
-          <div style="padding:0.75rem;background:rgba(0,0,0,0.2);border-radius:0.5rem;">
-            <div style="font-size:0.75rem;color:var(--text-secondary);">練習会</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#8b5cf6;">¥${practiceTotal.toLocaleString('ja-JP')}</div>
+          <div style="padding:0.75rem;background:rgba(255,255,255,0.1);border-radius:0.5rem;">
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">練習会</div>
+            <div style="font-size:1.1rem;font-weight:700;color:white;">¥${practiceTotal.toLocaleString('ja-JP')}</div>
           </div>
-          <div style="padding:0.75rem;background:rgba(0,0,0,0.2);border-radius:0.5rem;">
-            <div style="font-size:0.75rem;color:var(--text-secondary);">イベント</div>
-            <div style="font-size:1.1rem;font-weight:700;color:#ec4899;">¥${eventTotal.toLocaleString('ja-JP')}</div>
+          <div style="padding:0.75rem;background:rgba(255,255,255,0.1);border-radius:0.5rem;">
+            <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">イベント</div>
+            <div style="font-size:1.1rem;font-weight:700;color:white;">¥${eventTotal.toLocaleString('ja-JP')}</div>
           </div>
         </div>
       </div>

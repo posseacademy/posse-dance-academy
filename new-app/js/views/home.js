@@ -122,8 +122,8 @@ export function renderDashboard(app) {
     <div class="content-grid">
       <!-- Left: Course Breakdown -->
       <div class="content-card">
-        <div class="card-header">
-          <h3 class="card-title">コース別内訳（入会中）</h3>
+        <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="color:white;">コース別内訳（入会中）</h3>
         </div>
         <div class="card-content">
           ${courseCounts.map(item => `
@@ -163,8 +163,8 @@ export function renderDashboard(app) {
 
         <!-- Breakdown Card -->
         <div class="content-card" style="margin-top: 1rem;">
-          <div class="card-header">
-            <h3 class="card-title">売上内訳</h3>
+          <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+            <h3 class="card-title" style="color:white;">売上内訳</h3>
           </div>
           <div class="card-content">
             <div class="revenue-row">
