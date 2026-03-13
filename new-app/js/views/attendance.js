@@ -411,6 +411,8 @@ function renderEventTab(app) {
       const participants = evt.participants || [];
       const eventRevenue = participants.reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
       const isAddingParticipant = addingParticipantTo === eventId;
+      const editingEvent = app.editingEventId === eventId;
+      const editingIdx = app.editingParticipantIndex;
 
       return `
         <div class="card" style="margin-bottom:var(--spacing-4);overflow:hidden">
@@ -422,12 +424,39 @@ function renderEventTab(app) {
             <div style="display:flex;gap:var(--spacing-3);align-items:center">
               <span style="font-size:0.75rem;opacity:0.9">${participants.length}\u540D\u53C2\u52A0</span>
               <span style="font-size:0.875rem;font-weight:600">${formatCurrency(eventRevenue)}</span>
-              <button onclick="app.deleteEvent('${escapeAttr(eventId)}')"
+              <button onclick="app.startEditEvent('${escapeAttr(eventId)}')"
                 style="background:rgba(255,255,255,0.2);border:none;color:white;padding:4px 8px;border-radius:4px;font-size:0.75rem;cursor:pointer">
-                \u524A\u9664
+                \u7DE8\u96C6
               </button>
             </div>
           </div>
+
+          ${editingEvent && editingIdx === -1 ? `
+            <div style="background:#faf5ff;padding:var(--spacing-3) var(--spacing-4);border-bottom:1px solid #ddd6fe">
+              <h4 style="font-size:0.8rem;font-weight:600;margin-bottom:var(--spacing-2);color:#374151">\u30A4\u30D9\u30F3\u30C8\u60C5\u5831\u3092\u7DE8\u96C6</h4>
+              <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--spacing-2);margin-bottom:var(--spacing-2)">
+                <div>
+                  <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px;color:#374151">\u30A4\u30D9\u30F3\u30C8\u540D</label>
+                  <input type="text" id="edit_event_name" class="form-input" style="width:100%;font-size:0.8rem" value="${escapeAttr(evt.name || '')}">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.7rem;font-weight:500;margin-bottom:2px;color:#374151">\u958B\u50AC\u65E5</label>
+                  <input type="date" id="edit_event_date" class="form-input" style="width:100%;font-size:0.8rem" value="${evt.date || ''}">
+                </div>
+              </div>
+              <div style="display:flex;gap:var(--spacing-2)">
+                <button onclick="app.saveEditEvent('${escapeAttr(eventId)}')"
+                  class="btn btn-primary" style="font-size:0.75rem;padding:4px 12px">\u4FDD\u5B58</button>
+                <button onclick="app.cancelEditEvent()"
+                  class="btn btn-secondary" style="font-size:0.75rem;padding:4px 12px">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
+                <button onclick="app.deleteEvent('${escapeAttr(eventId)}')"
+                  style="background:none;border:1px solid #dc2626;color:#dc2626;padding:4px 12px;border-radius:4px;font-size:0.75rem;cursor:pointer;margin-left:auto">
+                  \u3053\u306E\u30A4\u30D9\u30F3\u30C8\u3092\u524A\u9664
+                </button>
+              </div>
+            </div>
+          ` : ''}
+
           <div class="card-body" style="padding:var(--spacing-3);overflow-x:auto">
             <table class="data-table" style="font-size:0.75rem">
               <thead>
@@ -440,22 +469,57 @@ function renderEventTab(app) {
                 </tr>
               </thead>
               <tbody>
-                ${participants.map((p, idx) => `
-                  <tr style="border-bottom:1px solid var(--color-gray-200)">
-                    <td style="padding:var(--spacing-2);font-size:0.75rem">${p.name || ''}</td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem">
-                      <span style="padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:500;${p.memberType === '\u4F1A\u54E1' ? 'background:#dcfce7;color:#166534' : 'background:#fee2e2;color:#991b1b'}">
-                        ${p.memberType || ''}
-                      </span>
-                    </td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:center">${p.plan || '-'}</td>
-                    <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:right;font-weight:600">${formatCurrency(parseInt(p.amount) || 0)}</td>
-                    <td style="text-align:center;padding:var(--spacing-2)">
-                      <button onclick="app.deleteParticipant('${escapeAttr(eventId)}',${idx})"
-                        style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:0.75rem">\u524A\u9664</button>
-                    </td>
-                  </tr>
-                `).join('')}
+                ${participants.map((p, idx) => {
+                  const isEditingThis = editingEvent && editingIdx === idx;
+                  if (isEditingThis) {
+                    return `
+                      <tr style="background:#faf5ff;border-bottom:1px solid #ddd6fe">
+                        <td style="padding:var(--spacing-2)"><input type="text" id="edit_p_name" class="form-input" style="width:100%;font-size:0.75rem" value="${escapeAttr(p.name || '')}"></td>
+                        <td style="padding:var(--spacing-2)">
+                          <select id="edit_p_memberType" class="form-input" style="width:100%;font-size:0.75rem">
+                            <option value="\u4F1A\u54E1" ${p.memberType === '\u4F1A\u54E1' ? 'selected' : ''}>\u4F1A\u54E1</option>
+                            <option value="\u975E\u4F1A\u54E1" ${p.memberType === '\u975E\u4F1A\u54E1' ? 'selected' : ''}>\u975E\u4F1A\u54E1</option>
+                          </select>
+                        </td>
+                        <td style="padding:var(--spacing-2)">
+                          <select id="edit_p_plan" class="form-input" style="width:100%;font-size:0.75rem">
+                            <option value="" ${!p.plan ? 'selected' : ''}>-</option>
+                            <option value="1" ${p.plan === '1' ? 'selected' : ''}>1</option>
+                            <option value="2" ${p.plan === '2' ? 'selected' : ''}>2</option>
+                            <option value="3" ${p.plan === '3' ? 'selected' : ''}>3</option>
+                          </select>
+                        </td>
+                        <td style="padding:var(--spacing-2)"><input type="number" id="edit_p_amount" class="form-input" style="width:100%;font-size:0.75rem;text-align:right" value="${parseInt(p.amount) || 0}" min="0"></td>
+                        <td style="padding:var(--spacing-2);text-align:center">
+                          <div style="display:flex;flex-direction:column;gap:2px">
+                            <button onclick="app.saveEditParticipant('${escapeAttr(eventId)}',${idx})"
+                              style="background:#7c3aed;border:none;color:white;padding:2px 6px;border-radius:3px;font-size:0.7rem;cursor:pointer">\u4FDD\u5B58</button>
+                            <button onclick="app.cancelEditEvent()"
+                              style="background:none;border:1px solid var(--color-gray-300);color:var(--color-text-secondary);padding:2px 6px;border-radius:3px;font-size:0.7rem;cursor:pointer">\u623B\u308B</button>
+                            <button onclick="app.deleteParticipant('${escapeAttr(eventId)}',${idx})"
+                              style="background:none;border:none;color:#dc2626;padding:2px 6px;font-size:0.65rem;cursor:pointer">\u524A\u9664</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }
+                  return `
+                    <tr style="border-bottom:1px solid var(--color-gray-200)">
+                      <td style="padding:var(--spacing-2);font-size:0.75rem">${p.name || ''}</td>
+                      <td style="padding:var(--spacing-2);font-size:0.75rem">
+                        <span style="padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:500;${p.memberType === '\u4F1A\u54E1' ? 'background:#dcfce7;color:#166534' : 'background:#fee2e2;color:#991b1b'}">
+                          ${p.memberType || ''}
+                        </span>
+                      </td>
+                      <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:center">${p.plan || '-'}</td>
+                      <td style="padding:var(--spacing-2);font-size:0.75rem;text-align:right;font-weight:600">${formatCurrency(parseInt(p.amount) || 0)}</td>
+                      <td style="text-align:center;padding:var(--spacing-2)">
+                        <button onclick="app.startEditParticipant('${escapeAttr(eventId)}',${idx})"
+                          style="background:none;border:none;color:#7c3aed;cursor:pointer;font-size:0.75rem">\u7DE8\u96C6</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
                 ${participants.length === 0 ? `
                   <tr><td colspan="5" style="text-align:center;padding:var(--spacing-4);color:var(--color-text-secondary);font-size:0.75rem">
                     \u53C2\u52A0\u8005\u304C\u307E\u3060\u767B\u9332\u3055\u308C\u3066\u3044\u307E\u305B\u3093

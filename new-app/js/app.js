@@ -43,6 +43,8 @@ class DanceStudioApp {
     // Event view state
     this.showAddEventForm = false;
     this.addingParticipantToEvent = null;
+    this.editingEventId = null;
+    this.editingParticipantIndex = null;
 
     // Schedule view state
     this.scheduleTab = 'time';
@@ -343,6 +345,53 @@ class DanceStudioApp {
     participants.splice(index, 1);
     this.eventsData[eventId].participants = participants;
     await saveEvent(this.selectedMonth, eventId, this.eventsData[eventId]);
+    this.editingEventId = null;
+    this.editingParticipantIndex = null;
+    this.render();
+  }
+
+  startEditEvent(eventId) {
+    this.editingEventId = eventId;
+    this.editingParticipantIndex = -1;
+    this.render();
+  }
+
+  async saveEditEvent(eventId) {
+    const name = document.getElementById('edit_event_name')?.value?.trim();
+    const date = document.getElementById('edit_event_date')?.value || '';
+    if (!name) { alert('\u30A4\u30D9\u30F3\u30C8\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044'); return; }
+    if (!this.eventsData[eventId]) return;
+    this.eventsData[eventId].name = name;
+    this.eventsData[eventId].date = date;
+    await saveEvent(this.selectedMonth, eventId, this.eventsData[eventId]);
+    this.editingEventId = null;
+    this.editingParticipantIndex = null;
+    this.render();
+  }
+
+  cancelEditEvent() {
+    this.editingEventId = null;
+    this.editingParticipantIndex = null;
+    this.render();
+  }
+
+  startEditParticipant(eventId, index) {
+    this.editingEventId = eventId;
+    this.editingParticipantIndex = index;
+    this.render();
+  }
+
+  async saveEditParticipant(eventId, index) {
+    const name = document.getElementById('edit_p_name')?.value?.trim();
+    const memberType = document.getElementById('edit_p_memberType')?.value || '\u4F1A\u54E1';
+    const plan = document.getElementById('edit_p_plan')?.value || '';
+    const amount = parseInt(document.getElementById('edit_p_amount')?.value) || 0;
+    if (!name) { alert('\u6C0F\u540D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044'); return; }
+    if (!this.eventsData[eventId]) return;
+    this.eventsData[eventId].participants[index] = { name, memberType, plan, amount };
+    await saveEvent(this.selectedMonth, eventId, this.eventsData[eventId]);
+    this.editingEventId = null;
+    this.editingParticipantIndex = null;
     this.render();
   }
 
