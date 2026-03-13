@@ -8,7 +8,7 @@ export function renderRevenue(app) {
 
   // 1. Monthly tuition (regular plans)
   const courseCountsMap = {};
-  Object.values(app.customers || {})
+  app.customers
     .filter(c => c.status === '入会中')
     .forEach(c => {
       const course = c.course || '１';
@@ -52,10 +52,10 @@ export function renderRevenue(app) {
         <p class="subtitle">月別売上の確認</p>
       </div>
       <div style="display:flex;align-items:center;gap:0.75rem;">
-        <button class="btn btn-secondary" onclick="(function(){const d=new Date(window.app.selectedMonth+'-01');d.setMonth(d.getMonth()-1);window.app.changeMonth(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))})()">前月</button>
-        <button class="btn btn-secondary" onclick="(function(){const d=new Date(window.app.selectedMonth+'-01');d.setMonth(d.getMonth()+1);window.app.changeMonth(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))})()">翌月</button>
+        <button class="btn btn-secondary" onclick="window.app.previousMonth()">前月</button>
+        <button class="btn btn-secondary" onclick="window.app.nextMonth()">翌月</button>
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
-               onchange="window.app.changeMonth(this.value)"
+               onchange="window.app.setSelectedMonth(this.value)"
                style="width:150px;">
       </div>
     </div>

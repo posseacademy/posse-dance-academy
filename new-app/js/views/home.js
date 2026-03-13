@@ -1,17 +1,16 @@
 import { pricing, coursePrices, courseColors, visitorRevenueOverrides } from '../config.js';
 import { calculateVisitorRevenue, calculatePracticeRevenue } from '../utils.js';
 
-export function renderHome(app) {
+export function renderDashboard(app) {
   // Calculate customer statistics
-  const customersList = Object.values(app.customers || {});
-  const totalCustomers = customersList.length;
-  const activeCustomers = customersList.filter(c => c.status === '入会中').length;
-  const pausedCustomers = customersList.filter(c => c.status === '休会中').length;
-  const withdrawnCustomers = customersList.filter(c => c.status === '退会済み').length;
+  const totalCustomers = app.customers.length;
+  const activeCustomers = app.customers.filter(c => c.status === '入会中').length;
+  const pausedCustomers = app.customers.filter(c => c.status === '休会中').length;
+  const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
 
   // Calculate course breakdown for active customers
   const courseCountsMap = {};
-  customersList
+  app.customers
     .filter(c => c.status === '入会中')
     .forEach(c => {
       const course = c.course || '１';
