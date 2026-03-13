@@ -6,7 +6,7 @@ import { renderCustomers } from './views/customers.js?v=4';
 import { renderAttendance } from './views/attendance.js?v=12';
 import { renderSchedule } from './views/schedule.js?v=2';
 import { renderInstructors } from './views/instructors.js?v=2';
-import { renderRevenue } from './views/revenue.js?v=4';
+import { renderRevenue } from './views/revenue.js?v=5';
 
 class DanceStudioApp {
   constructor() {
