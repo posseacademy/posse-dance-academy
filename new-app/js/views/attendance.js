@@ -86,7 +86,7 @@ export function renderAttendanceOverview(app) {
         <h3 class="card-title" style="color:white;">今月の売上概要</h3>
       </div>
       <div class="card-content">
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+        <div class="grid-4col" style="margin-bottom: 2rem;">
           <div style="border-left: 4px solid #10b981; padding-left: 1rem;">
             <div style="font-size: 0.875rem; color: var(--text-secondary);">総売上</div>
             <div style="font-size: 1.875rem; font-weight: 600;">¥${totalRevenue.toLocaleString('ja-JP')}</div>
@@ -107,7 +107,7 @@ export function renderAttendanceOverview(app) {
 
         <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
           <h4 style="margin-bottom: 1rem; font-weight: 600;">売上内訳</h4>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+          <div class="grid-2col" style="gap: 1rem;">
             ${Object.entries(revenueData).map(([category, data]) => `
               <div style="padding: 1rem; background-color: var(--bg-secondary); border-radius: 0.5rem;">
                 <div style="font-size: 0.875rem; color: var(--text-secondary);">${category}</div>
@@ -159,7 +159,7 @@ export function renderAttendanceRecord(app) {
     </div>
 
     <!-- Classes for Selected Day (2-column grid) -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+    <div class="grid-2col attendance-grid">
       ${[...schedule].sort((a, b) => {
         const locA = a.location || a.venue || '';
         const locB = b.location || b.venue || '';
@@ -309,7 +309,7 @@ export function renderPracticeSession(app) {
         </div>
 
         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+          <div class="grid-2col" style="gap: 1rem;">
             ${days.map(day => {
               const key = `練習会_${day}`;
               const total = ['week1', 'week2', 'week3', 'week4', 'week5'].reduce((sum, w) => sum + (parseInt(app.attendanceData[key]?.[w]) || 0), 0);

@@ -3,11 +3,11 @@ import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSched
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=6';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=9';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=21';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=22';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=5';
 import { renderInstructors } from './views/instructors.js?v=5';
-import { renderRevenue } from './views/revenue.js?v=7';
+import { renderRevenue } from './views/revenue.js?v=8';
 
 class DanceStudioApp {
     constructor() {
@@ -619,6 +619,7 @@ class DanceStudioApp {
     // ===== RENDERING =====
     render() {
         const filteredCustomers = this.getFilteredCustomers();
+        const isMoreTab = ['timeSchedule', 'monthlySchedule', 'instructors'].includes(this.currentTab);
         document.getElementById('app').innerHTML = `
             <div style="display:flex;">
                 <aside class="sidebar">
@@ -668,9 +669,47 @@ class DanceStudioApp {
                       renderDashboard(this)}
                 </main>
             </div>
+            <!-- Mobile Bottom Navigation -->
+            <div class="mobile-more-overlay" id="mobileMoreOverlay"></div>
+            <div class="mobile-more-menu" id="mobileMoreMenu">
+                <button id="mobileTimeScheduleTab" class="mobile-more-menu-item ${this.currentTab === 'timeSchedule' ? 'active' : ''}">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    タイムスケジュール
+                </button>
+                <button id="mobileMonthlyScheduleTab" class="mobile-more-menu-item ${this.currentTab === 'monthlySchedule' ? 'active' : ''}">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    月間スケジュール
+                </button>
+                <button id="mobileInstructorsTab" class="mobile-more-menu-item ${this.currentTab === 'instructors' ? 'active' : ''}">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    講師プロフィール
+                </button>
+            </div>
+            <nav class="mobile-bottom-nav">
+                <button id="mobileHomeTab" class="mobile-nav-item ${this.currentTab === 'home' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    HOME
+                </button>
+                <button id="mobileCustomersTab" class="mobile-nav-item ${this.currentTab === 'customers' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    顧客
+                </button>
+                <button id="mobileAttendanceTab" class="mobile-nav-item ${this.currentTab === 'attendance' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l2 2 4-4"/></svg>
+                    出席
+                </button>
+                <button id="mobileRevenueTab" class="mobile-nav-item ${this.currentTab === 'revenue' ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    売上
+                </button>
+                <button id="mobileMoreTab" class="mobile-nav-item ${isMoreTab ? 'active' : ''}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                    その他
+                </button>
+            </nav>
         `;
 
-        // Setup navigation events
+        // Setup navigation events (desktop sidebar)
         document.getElementById('homeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
         document.getElementById('customersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
         document.getElementById('attendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
@@ -678,6 +717,31 @@ class DanceStudioApp {
         document.getElementById('timeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
         document.getElementById('monthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
         document.getElementById('instructorsTab')?.addEventListener('click', () => { this.currentTab = 'instructors'; this.render(); });
+
+        // Setup mobile navigation events
+        document.getElementById('mobileHomeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
+        document.getElementById('mobileCustomersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
+        document.getElementById('mobileAttendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
+        document.getElementById('mobileRevenueTab')?.addEventListener('click', () => { this.currentTab = 'revenue'; this.render(); });
+
+        // Mobile "More" menu toggle
+        const moreTab = document.getElementById('mobileMoreTab');
+        const moreMenu = document.getElementById('mobileMoreMenu');
+        const moreOverlay = document.getElementById('mobileMoreOverlay');
+        if (moreTab && moreMenu) {
+            moreTab.addEventListener('click', () => {
+                const isOpen = moreMenu.classList.contains('open');
+                moreMenu.classList.toggle('open', !isOpen);
+                moreOverlay?.classList.toggle('open', !isOpen);
+            });
+        }
+        moreOverlay?.addEventListener('click', () => {
+            moreMenu?.classList.remove('open');
+            moreOverlay.classList.remove('open');
+        });
+        document.getElementById('mobileTimeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
+        document.getElementById('mobileMonthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
+        document.getElementById('mobileInstructorsTab')?.addEventListener('click', () => { this.currentTab = 'instructors'; this.render(); });
 
         // Setup page-specific events
         if (this.currentTab === 'customers') {

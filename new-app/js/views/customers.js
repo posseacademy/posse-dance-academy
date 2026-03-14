@@ -132,7 +132,7 @@ export function renderAddForm(app) {
         <h3 class="card-title" style="color:white;">新規会員登録</h3>
       </div>
       <div class="card-content">
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+        <div class="grid-4col">
           <div>
             <label class="form-label">会員番号</label>
             <input type="text" class="form-input" id="new_memberNumber" value="${form.memberNumber || ''}">
@@ -221,7 +221,7 @@ export function renderAddForm(app) {
           <!-- Fee Fields -->
           <div style="grid-column: span 4; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
             <div style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">入会金・年会費・オプション</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+            <div class="grid-4col">
               <div>
                 <label class="form-label">入会金支払日</label>
                 <input type="date" class="form-input" id="new_enrollmentFeeDate" value="${form.enrollmentFeeDate || ''}">

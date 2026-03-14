@@ -58,7 +58,7 @@ export function renderRevenue(app) {
       <div class="card-content" style="padding:1.5rem;">
         <div style="font-size:0.875rem;color:rgba(255,255,255,0.6);margin-bottom:0.25rem;">総売上（${monthDisplay}）</div>
         <div style="font-size:2.25rem;font-weight:800;color:white;letter-spacing:-0.02em;margin-bottom:1rem;">¥${grandTotal.toLocaleString('ja-JP')}</div>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;">
+        <div class="grid-5col revenue-grand-grid">
           <div style="padding:0.75rem;background:rgba(255,255,255,0.1);border-radius:0.5rem;">
             <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">月謝</div>
             <div style="font-size:1.1rem;font-weight:700;color:white;">¥${tuitionTotal.toLocaleString('ja-JP')}</div>
@@ -84,7 +84,7 @@ export function renderRevenue(app) {
     </div>
 
     <!-- Detail Cards -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+    <div class="grid-2col">
       <!-- Tuition -->
       <div class="content-card">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
@@ -180,7 +180,7 @@ export function renderRevenue(app) {
         <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${feeTotal.toLocaleString('ja-JP')}</span>
       </div>
       <div class="card-content">
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;">
+        <div class="grid-2col" style="gap:1rem;">
           <div>
             <div style="font-weight:600;margin-bottom:0.5rem;">入会金（¥${ENROLLMENT_FEE.toLocaleString('ja-JP')}）</div>
             ${feeData.enrollment.list.length > 0 ? feeData.enrollment.list.map(f => `
