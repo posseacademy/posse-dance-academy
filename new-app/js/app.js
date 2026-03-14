@@ -1,5 +1,5 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, instructors, getEmptyCustomer, coursePrices, courseColors } from './config.js?v=4';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, instructors, getEmptyCustomer, coursePrices, courseColors } from './config.js?v=5';
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue } from './utils.js?v=4';
 import { renderDashboard } from './views/home.js?v=5';

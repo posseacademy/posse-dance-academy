@@ -114,10 +114,6 @@ export const defaultSchedule = {
             { lastName: '田代', firstName: '杏奈', plan: '1クラス' },
             { lastName: '唯野', firstName: '萌維', plan: '1クラス' }
         ]},
-        { location: '天神', name: 'hiphop HIMEKA', color: 'purple', students: [
-            { lastName: '石原', firstName: '美黎', plan: '1クラス' },
-            { lastName: '中川', firstName: '凛音', plan: '２クラス' }
-        ]},
         { location: '大橋', name: 'hiphop HIMEKA', color: 'purple', students: [
             { lastName: '清水', firstName: 'くるみ', plan: '1クラス' }
         ]}
@@ -244,7 +240,6 @@ export const timeSchedule = {
     '月曜日': [
         { time: '18:00-19:00', venue: '天神校', name: 'アクロバット SOYA', color: '#DC2626' },
         { time: '18:00-19:00', venue: '天神校', name: 'ブレイキン入門 SOYA', color: '#EA580C' },
-        { time: '19:00-20:00', venue: '天神校', name: 'hiphop HIMEKA', color: '#9333EA' },
         { time: '20:00-21:00', venue: '天神校', name: 'K-POP AI', color: '#16A34A' },
         { time: '19:00-20:00', venue: '大橋校', name: 'hiphop HIMEKA', color: '#9333EA' },
         { time: '20:00-21:00', venue: '大橋校', name: 'トップロック フットワーク DAZ', color: '#2563EB' },
