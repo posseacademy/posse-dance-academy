@@ -159,19 +159,29 @@ export function renderAttendanceRecord(app) {
     </div>
 
     <!-- Classes for Selected Day (2-column grid) -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;align-items:start;">
-      ${schedule.map((cls, idx) => {
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+      ${[...schedule].sort((a, b) => {
+        const locA = a.location || a.venue || '';
+        const locB = b.location || b.venue || '';
+        const tA = (timeSchedule[currentDay] || []).find(t => t.name === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
+          || (timeSchedule[currentDay] || []).find(t => t.name === a.name);
+        const tB = (timeSchedule[currentDay] || []).find(t => t.name === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
+          || (timeSchedule[currentDay] || []).find(t => t.name === b.name);
+        const timeA = tA ? tA.time.split('-')[0].replace(':', '') : '9999';
+        const timeB = tB ? tB.time.split('-')[0].replace(':', '') : '9999';
+        return timeA.localeCompare(timeB);
+      }).map((cls, idx) => {
         const loc = cls.location || cls.venue || '';
         const timeEntry = (timeSchedule[currentDay] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
           || (timeSchedule[currentDay] || []).find(t => t.name === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
-        <div class="content-card" style="margin-bottom:0;">
+        <div class="content-card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;">
           <div class="card-header" style="background-color: #1d1d1f; color: white; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: space-between;">
             <h3 class="card-title" style="color: white; margin: 0; font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cls.name} - ${cls.location || cls.venue}</h3>
             ${timeStr ? `<span style="font-size: 0.875rem; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 0.25rem; white-space: nowrap;">${timeStr}</span>` : ''}
           </div>
-          <div class="card-content">
+          <div class="card-content" style="flex:1;">
             <div style="overflow-x: auto;">
               <table style="width: 100%; font-size: 0.875rem;">
                 <thead>
