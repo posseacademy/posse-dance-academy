@@ -158,17 +158,17 @@ export function renderAttendanceRecord(app) {
       </div>
     </div>
 
-    <!-- Classes for Selected Day -->
-    <div>
+    <!-- Classes for Selected Day (2-column grid) -->
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;align-items:start;">
       ${schedule.map((cls, idx) => {
         const loc = cls.location || cls.venue || '';
         const timeEntry = (timeSchedule[currentDay] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
           || (timeSchedule[currentDay] || []).find(t => t.name === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
-        <div class="content-card" style="margin-bottom: 1.5rem;">
+        <div class="content-card" style="margin-bottom:0;">
           <div class="card-header" style="background-color: #1d1d1f; color: white; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: space-between;">
-            <h3 class="card-title" style="color: white; margin: 0; font-size: 1.1rem;">${cls.name} - ${cls.location || cls.venue}</h3>
+            <h3 class="card-title" style="color: white; margin: 0; font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cls.name} - ${cls.location || cls.venue}</h3>
             ${timeStr ? `<span style="font-size: 0.875rem; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 0.25rem; white-space: nowrap;">${timeStr}</span>` : ''}
           </div>
           <div class="card-content">
