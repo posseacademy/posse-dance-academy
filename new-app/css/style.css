@@ -2380,6 +2380,57 @@ tr:hover .student-actions {
 }
 
 /* ============================================================================
+   23.6 ATTENDANCE TABLE STYLES
+   ============================================================================ */
+
+/* Day navigation container */
+.att-day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-6);
+}
+
+.att-month-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+/* Day short labels hidden on desktop */
+.day-short { display: none; }
+.day-full { display: inline; }
+
+/* Plan short labels hidden on desktop */
+.plan-short { display: none; }
+.plan-full { display: inline; }
+
+/* Attendance table base */
+.att-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.att-table {
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.att-th-name { text-align: left; padding: 0.5rem; }
+.att-th-plan { padding: 0.5rem; }
+.att-th-week { padding: 0.5rem; }
+.att-th-rate { padding: 0.5rem; }
+.att-th-actions { padding: 0.5rem; width: 70px; }
+
+.att-row { border-bottom: 1px solid var(--border-color); }
+.att-td-name { padding: 0.5rem; white-space: nowrap; }
+.att-td-plan { padding: 0.5rem; font-size: 0.75rem; }
+.att-td-week { padding: 0.5rem; text-align: center; }
+.att-td-rate { padding: 0.5rem; text-align: center; font-weight: 600; }
+.att-td-actions { padding: 0.5rem; text-align: center; }
+
+/* ============================================================================
    24. RESPONSIVE DESIGN
    ============================================================================ */
 
@@ -2619,6 +2670,149 @@ tr:hover .student-actions {
   /* Attendance grid: single column on mobile */
   .attendance-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* ---- Attendance Mobile Optimization ---- */
+
+  /* Day navigation: stack on mobile */
+  .att-day-nav {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: var(--spacing-4);
+  }
+
+  .att-day-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    justify-content: stretch;
+  }
+
+  .att-day-tabs .tab-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 4px;
+    font-size: 13px;
+    justify-content: center;
+  }
+
+  /* Show short day labels, hide full */
+  .day-full { display: none !important; }
+  .day-short { display: inline !important; }
+
+  /* Month nav: right-aligned row */
+  .att-month-nav {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .att-month-nav .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .month-nav-label {
+    display: inline;
+  }
+
+  /* Plan: show short labels */
+  .plan-full { display: none !important; }
+  .plan-short { display: inline !important; }
+
+  /* Attendance table compact */
+  .att-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem;
+  }
+
+  .att-table {
+    font-size: 0.72rem;
+    white-space: nowrap;
+    min-width: 0;
+    width: max-content;
+  }
+
+  .att-th-name,
+  .att-td-name {
+    padding: 0.3rem 0.25rem;
+    font-size: 0.72rem;
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 1;
+    min-width: 60px;
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .att-th-name {
+    z-index: 2;
+    background: #fff;
+  }
+
+  .att-th-plan,
+  .att-td-plan {
+    padding: 0.3rem 0.15rem;
+    font-size: 0.6rem;
+    text-align: center;
+  }
+
+  .att-th-week,
+  .att-td-week {
+    padding: 0.15rem;
+    text-align: center;
+  }
+
+  .att-td-week .att-cell {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 0.7rem;
+    padding: 0;
+  }
+
+  .att-th-rate,
+  .att-td-rate {
+    padding: 0.3rem 0.15rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  /* Hide actions column on mobile */
+  .att-th-actions,
+  .att-td-actions {
+    display: none;
+  }
+
+  /* Class card header compact */
+  .attendance-grid .card-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .attendance-grid .card-header .card-title {
+    font-size: 0.85rem !important;
+  }
+
+  /* Tab nav for attendance subtabs */
+  .tab-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 0;
+  }
+
+  .tab-nav .tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 13px;
+    padding: 8px 12px;
   }
 
   /* Day tabs horizontal scroll */

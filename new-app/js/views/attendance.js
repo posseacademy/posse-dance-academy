@@ -134,25 +134,28 @@ export function renderAttendanceRecord(app) {
 
   return `
     <!-- Day Tabs with Month Navigation -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--spacing-6);">
-      <div class="tab-nav" style="margin-bottom:0;flex:1;">
+    <div class="att-day-nav">
+      <div class="tab-nav att-day-tabs" style="margin-bottom:0;flex:1;">
         ${daysOfWeek.map(day => {
           const dayColors = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
+          const shortDay = day.charAt(0);
           return `
             <button class="tab-btn ${day === currentDay ? 'active' : ''}"
                     onclick="window.app.setAttendanceDay('${day}')">
-              <span class="day-dot" style="background:${dayColors[day]};"></span>${day}
+              <span class="day-dot" style="background:${dayColors[day]};"></span>
+              <span class="day-full">${day}</span>
+              <span class="day-short">${shortDay}</span>
             </button>
           `;
         }).join('')}
       </div>
-      <div style="display:flex;gap:0.5rem;margin-left:1rem;flex-shrink:0;">
+      <div class="att-month-nav">
         <button class="btn btn-secondary btn-sm" onclick="window.app.previousMonth()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          前月
+          <span class="month-nav-label">前月</span>
         </button>
         <button class="btn btn-secondary btn-sm" onclick="window.app.nextMonth()">
-          翌月
+          <span class="month-nav-label">翌月</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -182,19 +185,19 @@ export function renderAttendanceRecord(app) {
             ${timeStr ? `<span style="font-size: 0.875rem; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 0.25rem; white-space: nowrap;">${timeStr}</span>` : ''}
           </div>
           <div class="card-content" style="flex:1;">
-            <div style="overflow-x: auto;">
-              <table style="width: 100%; font-size: 0.875rem;">
+            <div class="att-table-wrap">
+              <table class="att-table">
                 <thead>
                   <tr style="border-bottom: 1px solid var(--border-color);">
-                    <th style="text-align: left; padding: 0.5rem;">学生名</th>
-                    <th style="padding: 0.5rem;">プラン</th>
-                    <th style="padding: 0.5rem;">Week1</th>
-                    <th style="padding: 0.5rem;">Week2</th>
-                    <th style="padding: 0.5rem;">Week3</th>
-                    <th style="padding: 0.5rem;">Week4</th>
-                    <th style="padding: 0.5rem;">Week5</th>
-                    <th style="padding: 0.5rem;">出席率</th>
-                    <th style="padding: 0.5rem; width: 70px;"></th>
+                    <th class="att-th-name"><span class="day-full">学生名</span><span class="day-short">名前</span></th>
+                    <th class="att-th-plan"><span class="day-full">プラン</span><span class="day-short">P</span></th>
+                    <th class="att-th-week">W1</th>
+                    <th class="att-th-week">W2</th>
+                    <th class="att-th-week">W3</th>
+                    <th class="att-th-week">W4</th>
+                    <th class="att-th-week">W5</th>
+                    <th class="att-th-rate"><span class="day-full">出席率</span><span class="day-short">率</span></th>
+                    <th class="att-th-actions"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,16 +211,29 @@ export function renderAttendanceRecord(app) {
                     const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
                     const rate = getAttendanceRate(app.attendanceData, classId);
+                    // Short plan label for mobile
+                    const planShortMap = {
+                      'ビジター（会員）': 'V会',
+                      'ビジター（非会員）': 'V非',
+                      'ビジター（振替）': 'V振',
+                      'ビジター1.5h（会員）': 'V1.5',
+                      'ビジター1.5h（非会員）': 'V1.5',
+                      '初回体験': '体験',
+                      '初回無料': '無料',
+                      '月謝クラス振替': '振替',
+                      '1.5hクラス': '1.5h'
+                    };
+                    const planShort = planShortMap[student.plan] || student.plan.replace('クラス', '');
                     return `
-                      <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 0.5rem;">${student.lastName}${student.firstName}</td>
-                        <td style="padding: 0.5rem; font-size: 0.75rem;">${student.plan}</td>
+                      <tr class="att-row">
+                        <td class="att-td-name">${student.lastName}${student.firstName}</td>
+                        <td class="att-td-plan"><span class="plan-full">${student.plan}</span><span class="plan-short">${planShort}</span></td>
                         ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => {
                           const current = attData[week] || '';
                           const cellClass = current === '○' ? 'att-present' : current === '×' ? 'att-absent' : current === '休講' ? 'att-cancelled' : 'att-empty';
                           const label = current === '休講' ? '休' : current || '−';
                           return `
-                            <td style="padding: 0.5rem; text-align: center;">
+                            <td class="att-td-week">
                               <button class="att-cell ${cellClass}"
                                       onclick="window.app.cycleAttendance('${classId}', '${week}')"
                                       title="${current === '' ? 'クリックで出席記録' : current === '○' ? '出席 → ×に変更' : current === '×' ? '欠席 → 休講に変更' : '休講 → 空白に変更'}">
@@ -226,8 +242,8 @@ export function renderAttendanceRecord(app) {
                             </td>
                           `;
                         }).join('')}
-                        <td style="padding: 0.5rem; text-align: center; font-weight: 600;">${rate}%</td>
-                        <td style="padding: 0.5rem; text-align: center;">
+                        <td class="att-td-rate">${rate}%</td>
+                        <td class="att-td-actions">
                           <div class="student-actions">
                             <button class="student-action-btn edit-student-btn"
                                     data-edit-student-day="${currentDay}"
