@@ -116,7 +116,7 @@ export function renderRevenue(app) {
           <span style="font-size:1.1rem;font-weight:700;color:white;white-space:nowrap;">¥${visitorTotal.toLocaleString('ja-JP')}</span>
         </div>
         <div class="card-content">
-          ${Object.entries(visitorDetail).filter(([, d]) => d.count > 0).map(([cat, data]) => `
+          ${Object.entries(visitorDetail).filter(([cat, d]) => d.count > 0 && cat !== '練習会').map(([cat, data]) => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border-color);">
               <span>${cat}</span>
               <div style="text-align:right;">
