@@ -8,6 +8,29 @@ export const firebaseConfig = {
     appId: "1:613497046871:web:8a31cbc6b947617113e012"
 };
 
+// Fee Constants
+export const TRANSFER_FEE = 200;
+export const ENROLLMENT_FEE = 5500;
+export const ANNUAL_FEE = 4800;
+
+// 振込手数料込み月謝（顧客のcourseフィールド用）
+export const coursePricesWithTransfer = {
+    '４': 18800, '4': 18800,
+    '３': 14600, '3': 14600,
+    '２': 10200, '2': 10200,
+    '１': 6200, '1': 6200
+};
+
+// 1.5hクラス含む複合プラン料金（手数料込み）
+export const combinedPrices15h = {
+    '２': 11800, '2': 11800,   // ¥5,000 + ¥6,600 + ¥200
+    '３': 16400, '3': 16400,   // ¥9,600 + ¥6,600 + ¥200
+    '４': 20750, '4': 20750    // ¥13,950 + ¥6,600 + ¥200
+};
+
+// 1.5hクラス識別用
+export const CLASS_15H = { day: '水曜日', location: '天神', name: 'ブレイキン中上級 HARUHIKO' };
+
 // Pricing Data - 18 plan types
 export const pricing = {
     '4クラス': 18600,
@@ -408,6 +431,12 @@ export function getEmptyCustomer() {
         address: '',
         building: '',
         joinDate: '',
-        memo: ''
+        memo: '',
+        enrollmentFeePaid: false,
+        enrollmentFeeDate: '',
+        isFamilyMember: false,
+        annualFeePaid: false,
+        annualFeeMonth: '',
+        has15hClass: false
     };
 }

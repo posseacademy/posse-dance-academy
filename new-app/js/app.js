@@ -1,13 +1,13 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, instructors, getEmptyCustomer, coursePrices, courseColors } from './config.js?v=5';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, instructors, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=6';
 import * as db from './firebase-service.js?v=5';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue } from './utils.js?v=4';
-import { renderDashboard } from './views/home.js?v=5';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=8';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
+import { renderDashboard } from './views/home.js?v=6';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=9';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=21';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=5';
 import { renderInstructors } from './views/instructors.js?v=5';
-import { renderRevenue } from './views/revenue.js?v=5';
+import { renderRevenue } from './views/revenue.js?v=6';
 
 class DanceStudioApp {
     constructor() {
@@ -704,13 +704,18 @@ class DanceStudioApp {
         });
 
         // Form field events
-        const fields = ['memberNumber', 'status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo'];
+        const fields = ['memberNumber', 'status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'enrollmentFeeDate', 'annualFeeMonth'];
         fields.forEach(field => {
             const el = document.getElementById(`new_${field}`);
             if (el) {
                 el.addEventListener('change', (e) => { this.newCustomer[field] = e.target.value; });
                 el.addEventListener('input', (e) => { this.newCustomer[field] = e.target.value; });
             }
+        });
+        // Checkbox fields for add form
+        ['isFamilyMember', 'has15hClass'].forEach(field => {
+            const el = document.getElementById(`new_${field}`);
+            if (el) el.addEventListener('change', (e) => { this.newCustomer[field] = e.target.checked; });
         });
 
         // Detail modal events
@@ -738,13 +743,18 @@ class DanceStudioApp {
             if (e.target.id === 'editOverlay') this.cancelEdit();
         });
 
-        const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'phone2', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'lastName', 'firstName'];
+        const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'phone2', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'lastName', 'firstName', 'enrollmentFeeDate', 'annualFeeMonth'];
         editFields.forEach(field => {
             const el = document.getElementById(`edit_${field}`);
             if (el) {
                 el.addEventListener('change', (e) => { this.updateEditField(field, e.target.value); });
                 el.addEventListener('input', (e) => { this.updateEditField(field, e.target.value); });
             }
+        });
+        // Checkbox fields for edit form
+        ['isFamilyMember', 'has15hClass'].forEach(field => {
+            const el = document.getElementById(`edit_${field}`);
+            if (el) el.addEventListener('change', (e) => { this.updateEditField(field, e.target.checked); });
         });
     }
 

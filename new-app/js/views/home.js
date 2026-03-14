@@ -1,5 +1,5 @@
-import { pricing, coursePrices, courseColors, visitorRevenueOverrides } from '../config.js';
-import { calculateVisitorRevenue, calculatePracticeRevenue } from '../utils.js';
+import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE } from '../config.js?v=6';
+import { calculateVisitorRevenue, calculatePracticeRevenue, calculateMonthlyTuition, calculateFeeRevenue } from '../utils.js?v=5';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -8,30 +8,13 @@ export function renderDashboard(app) {
   const pausedCustomers = app.customers.filter(c => c.status === '休会中').length;
   const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
 
-  // Calculate course breakdown for active customers
-  const courseCountsMap = {};
-  app.customers
-    .filter(c => c.status === '入会中')
-    .forEach(c => {
-      const course = c.course || '１';
-      courseCountsMap[course] = (courseCountsMap[course] || 0) + 1;
-    });
-
-  // Sort courses in order: ４, ３, ２, １
-  const courseOrder = ['４', '３', '２', '１'];
-  const courseCounts = courseOrder
-    .filter(course => courseCountsMap[course])
-    .map(course => ({
-      course,
-      count: courseCountsMap[course],
-      price: coursePrices[course] || 0,
-      color: courseColors[course] || '#999999'
-    }));
-
-  // Calculate total monthly tuition
-  const monthlyTuitionTotal = courseCounts.reduce((sum, item) => {
-    return sum + (item.price * item.count);
-  }, 0);
+  // Calculate course breakdown with transfer fee + 1.5h combined plan support
+  const tuitionResult = calculateMonthlyTuition(
+    app.customers, app.scheduleData,
+    coursePricesWithTransfer, combinedPrices15h, CLASS_15H
+  );
+  const courseCounts = tuitionResult.courseCounts;
+  const monthlyTuitionTotal = tuitionResult.total;
 
   // Calculate schedule statistics
   let totalClasses = 0;
@@ -57,8 +40,12 @@ export function renderDashboard(app) {
     eventRevenue += (ev.participants || []).reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
   });
 
+  // Calculate fee revenue
+  const feeData = calculateFeeRevenue(app.customers, app.selectedMonth);
+  const feeTotal = feeData.enrollment.total + feeData.annualFee.total;
+
   // Total revenue & goal
-  const totalRevenue = monthlyTuitionTotal + visitorRevenue + practiceRevenue + eventRevenue;
+  const totalRevenue = monthlyTuitionTotal + visitorRevenue + practiceRevenue + eventRevenue + feeTotal;
   const revenueGoal = 1000000;
   const progressPct = Math.min(Math.round((totalRevenue / revenueGoal) * 100), 100);
 
@@ -132,7 +119,7 @@ export function renderDashboard(app) {
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
                 コース${item.course}
               </div>
-              <div class="rev-amount">¥${(item.price * item.count).toLocaleString('ja-JP')}</div>
+              <div class="rev-amount">¥${item.price.toLocaleString('ja-JP')}</div>
               <div class="rev-detail">${item.count}名</div>
             </div>
           `).join('')}

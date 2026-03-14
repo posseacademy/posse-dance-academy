@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Schedule View Module
 // ES module for schedule display and management
 
-import { timeSchedule } from '../config.js';
+import { timeSchedule } from '../config.js?v=6';
 
 /**
  * Weekly time grid view

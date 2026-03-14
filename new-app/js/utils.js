@@ -307,3 +307,110 @@ export function exportCustomersCSV(customers) {
     link.download = `顧客一覧_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
 }
+
+/**
+ * Calculate monthly tuition with transfer fee and 1.5h combined plan support
+ * @param {Array} customers - All customers
+ * @param {Object} scheduleData - Schedule data keyed by day
+ * @param {Object} coursePricesWithTransfer - Standard prices with transfer fee
+ * @param {Object} combinedPrices15h - Combined 1.5h plan prices
+ * @param {Object} class15h - 1.5h class identifier {day, location, name}
+ * @returns {Object} { total, courseCounts: [{course, count, price, is15h, count15h}] }
+ */
+export function calculateMonthlyTuition(customers, scheduleData, coursePricesWithTransfer, combinedPrices15h, class15h) {
+    const activeCustomers = customers.filter(c => c.status === '入会中');
+
+    // Build set of student names in the 1.5h class from schedule data
+    const students15h = new Set();
+    const classData = scheduleData[class15h.day]?.find(
+        c => (c.location || c.venue) === class15h.location && c.name === class15h.name
+    );
+    if (classData) {
+        (classData.students || []).forEach(s => {
+            students15h.add(`${s.lastName}${s.firstName}`);
+        });
+    }
+
+    // Count by course, separating 1.5h combined students
+    const counts = {}; // { course: { normal: n, combined15h: n } }
+    activeCustomers.forEach(customer => {
+        const course = customer.course || '１';
+        const fullName = `${customer.lastName}${customer.firstName}`;
+        const is15h = customer.has15hClass || students15h.has(fullName);
+
+        if (!counts[course]) counts[course] = { normal: 0, combined15h: 0 };
+        if (is15h && combinedPrices15h[course]) {
+            counts[course].combined15h++;
+        } else if (is15h && (course === '１' || course === '1')) {
+            // 1.5h class only student: ¥6,800
+            counts[course].combined15h++;
+        } else {
+            counts[course].normal++;
+        }
+    });
+
+    let total = 0;
+    const courseCounts = [];
+    const courseOrder = ['４', '３', '２', '１'];
+    const courseColors = { '４': '#3b82f6', '３': '#8b5cf6', '２': '#10b981', '１': '#f59e0b' };
+
+    courseOrder.forEach(course => {
+        const data = counts[course] || { normal: 0, combined15h: 0 };
+        const normalPrice = coursePricesWithTransfer[course] || 0;
+        const combinedPrice = combinedPrices15h[course] || (course === '１' || course === '1' ? 6800 : 0);
+
+        const normalRevenue = data.normal * normalPrice;
+        const combinedRevenue = data.combined15h * combinedPrice;
+        const courseTotal = normalRevenue + combinedRevenue;
+        total += courseTotal;
+
+        if (data.normal + data.combined15h > 0) {
+            courseCounts.push({
+                course,
+                count: data.normal + data.combined15h,
+                count15h: data.combined15h,
+                price: courseTotal,
+                unitPrice: normalPrice,
+                combinedUnitPrice: combinedPrice,
+                color: courseColors[course] || '#6b7280'
+            });
+        }
+    });
+
+    return { total, courseCounts };
+}
+
+/**
+ * Calculate enrollment and annual fee revenue for a given month
+ * @param {Array} customers - All customers
+ * @param {string} selectedMonth - YYYY-MM format
+ * @returns {Object} { enrollment: {total, list}, annualFee: {total, list} }
+ */
+export function calculateFeeRevenue(customers, selectedMonth) {
+    let enrollmentTotal = 0;
+    let annualFeeTotal = 0;
+    const enrollmentList = [];
+    const annualFeeList = [];
+
+    customers.forEach(c => {
+        // Enrollment fee: check if paid this month
+        if (c.enrollmentFeeDate) {
+            const feeMonth = c.enrollmentFeeDate.slice(0, 7);
+            if (feeMonth === selectedMonth && !c.isFamilyMember) {
+                enrollmentTotal += 5500;
+                enrollmentList.push({ name: `${c.lastName}${c.firstName}`, amount: 5500 });
+            }
+        }
+
+        // Annual fee: check if paid this month
+        if (c.annualFeeMonth === selectedMonth) {
+            annualFeeTotal += 4800;
+            annualFeeList.push({ name: `${c.lastName}${c.firstName}`, amount: 4800 });
+        }
+    });
+
+    return {
+        enrollment: { total: enrollmentTotal, list: enrollmentList },
+        annualFee: { total: annualFeeTotal, list: annualFeeList }
+    };
+}

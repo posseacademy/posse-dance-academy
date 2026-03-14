@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Customers View Module
 // ES module for customer management page rendering
 
-import { calculateAge } from '../utils.js';
+import { calculateAge } from '../utils.js?v=5';
 
 /**
  * Main customer list page
@@ -217,6 +217,29 @@ export function renderAddForm(app) {
             <label class="form-label">備考</label>
             <textarea class="form-input" id="new_memo">${form.memo || ''}</textarea>
           </div>
+
+          <!-- Fee Fields -->
+          <div style="grid-column: span 4; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+            <div style="font-weight:600;margin-bottom:0.75rem;font-size:0.9rem;">入会金・年会費・オプション</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
+              <div>
+                <label class="form-label">入会金支払日</label>
+                <input type="date" class="form-input" id="new_enrollmentFeeDate" value="${form.enrollmentFeeDate || ''}">
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+                <input type="checkbox" id="new_isFamilyMember" ${form.isFamilyMember ? 'checked' : ''}>
+                <label for="new_isFamilyMember" style="font-size:0.875rem;">家族割（入会金免除）</label>
+              </div>
+              <div>
+                <label class="form-label">年会費支払月</label>
+                <input type="month" class="form-input" id="new_annualFeeMonth" value="${form.annualFeeMonth || ''}">
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+                <input type="checkbox" id="new_has15hClass" ${form.has15hClass ? 'checked' : ''}>
+                <label for="new_has15hClass" style="font-size:0.875rem;">1.5hクラス受講</label>
+              </div>
+            </div>
+          </div>
         </div>
         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
           <button id="addCustomerBtn" class="btn btn-primary">登録</button>
@@ -322,6 +345,33 @@ function renderCustomerDetailModal(app) {
               <div class="detail-item">
                 <label>年会費更新日</label>
                 <div class="detail-value">${val(customer.annualFee)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fees -->
+          <div class="detail-section">
+            <div class="detail-section-title">入会金・年会費</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>入会金</label>
+                <div class="detail-value">${customer.isFamilyMember
+                  ? '<span class="status-badge status-badge-paused">家族割（免除）</span>'
+                  : customer.enrollmentFeeDate
+                    ? '<span class="status-badge status-badge-active">支払済 ' + customer.enrollmentFeeDate + '</span>'
+                    : '<span class="status-badge status-badge-withdrawn">未払い</span>'}</div>
+              </div>
+              <div class="detail-item">
+                <label>年会費</label>
+                <div class="detail-value">${customer.annualFeeMonth
+                  ? '<span class="status-badge status-badge-active">支払済 ' + customer.annualFeeMonth + '</span>'
+                  : '<span class="status-badge status-badge-withdrawn">未払い</span>'}</div>
+              </div>
+              <div class="detail-item">
+                <label>1.5hクラス</label>
+                <div class="detail-value">${customer.has15hClass
+                  ? '<span class="status-badge status-badge-active">受講中</span>'
+                  : '—'}</div>
               </div>
             </div>
           </div>
@@ -470,6 +520,29 @@ function renderEditModal(app) {
               <div class="detail-item">
                 <label>年会費更新日</label>
                 <input type="date" class="form-input" id="edit_annualFee" value="${ef.annualFee || ''}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Fees -->
+          <div class="detail-section">
+            <div class="detail-section-title">入会金・年会費</div>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>入会金支払日</label>
+                <input type="date" class="form-input" id="edit_enrollmentFeeDate" value="${ef.enrollmentFeeDate || ''}">
+              </div>
+              <div class="detail-item" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+                <input type="checkbox" id="edit_isFamilyMember" ${ef.isFamilyMember ? 'checked' : ''}>
+                <label for="edit_isFamilyMember" style="margin:0;">家族割（入会金免除）</label>
+              </div>
+              <div class="detail-item">
+                <label>年会費支払月</label>
+                <input type="month" class="form-input" id="edit_annualFeeMonth" value="${ef.annualFeeMonth || ''}">
+              </div>
+              <div class="detail-item" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
+                <input type="checkbox" id="edit_has15hClass" ${ef.has15hClass ? 'checked' : ''}>
+                <label for="edit_has15hClass" style="margin:0;">1.5hクラス受講</label>
               </div>
             </div>
           </div>
