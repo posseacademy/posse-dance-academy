@@ -110,6 +110,22 @@ class DanceStudioApp {
         }
     }
 
+    // Remove non-regular (visitor/trial) students from schedule on month change
+    cleanupNonRegularStudents() {
+        let changed = false;
+        Object.keys(this.scheduleData).forEach(day => {
+            if (!Array.isArray(this.scheduleData[day])) return;
+            this.scheduleData[day].forEach(cls => {
+                const before = cls.students?.length || 0;
+                cls.students = (cls.students || []).filter(s => isRegularPlan(s.plan));
+                if (cls.students.length < before) changed = true;
+            });
+        });
+        if (changed) {
+            db.saveScheduleData(this.scheduleData);
+        }
+    }
+
     // ===== CUSTOMER MANAGEMENT =====
     getFilteredCustomers() {
         const s = this.searchTerm.toLowerCase();
@@ -322,6 +338,7 @@ class DanceStudioApp {
     }
 
     async changeMonth(direction) {
+        this.cleanupNonRegularStudents();
         this.isLoading = true;
         this.render();
         try {
@@ -342,6 +359,7 @@ class DanceStudioApp {
 
     async selectMonth(monthValue) {
         if (!monthValue) return;
+        this.cleanupNonRegularStudents();
         this.isLoading = true;
         this.selectedMonth = monthValue;
         this.render();
