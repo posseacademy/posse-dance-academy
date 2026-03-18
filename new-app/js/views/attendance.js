@@ -201,13 +201,7 @@ export function renderAttendanceRecord(app) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${(cls.students || []).filter(student => {
-                    if (isRegularPlan(student.plan)) return true;
-                    const sid = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
-                    const ad = app.attendanceData[sid];
-                    if (!ad) return false;
-                    return ['week1','week2','week3','week4','week5'].some(w => ad[w] === '○' || ad[w] === '×' || ad[w] === '休講') || ad._active;
-                  }).map(student => {
+                  ${(cls.students || []).map(student => {
                     const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
                     const rate = getAttendanceRate(app.attendanceData, classId);
