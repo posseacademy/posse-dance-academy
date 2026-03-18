@@ -366,7 +366,9 @@ class DanceStudioApp {
         this.selectedCustomerForStudent = null;
         this.studentSearchTerm = '';
         this.studentSearchResults = [];
-        // Reload attendance data from Firestore to ensure key consistency
+        // Full reload from Firestore (same as init) to ensure consistency
+        const reloaded = await db.loadScheduleData(this.scheduleData);
+        if (reloaded) this.scheduleData = reloaded;
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒を追加しました');
         this.render();
@@ -396,7 +398,9 @@ class DanceStudioApp {
         this.attendanceData[studentKey]._plan = newPlan;
         await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
         this.editingStudent = null;
-        // Reload attendance for consistency
+        // Full reload from Firestore for consistency
+        const reloaded2 = await db.loadScheduleData(this.scheduleData);
+        if (reloaded2) this.scheduleData = reloaded2;
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒情報を更新しました');
         this.render();
@@ -415,6 +419,9 @@ class DanceStudioApp {
         try {
             await db.deleteAttendanceRecord(this.selectedMonth, studentKey);
         } catch (error) { console.log('出席データの削除エラー'); }
+        // Full reload from Firestore for consistency
+        const reloaded3 = await db.loadScheduleData(this.scheduleData);
+        if (reloaded3) this.scheduleData = reloaded3;
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒を削除しました');
         this.render();
