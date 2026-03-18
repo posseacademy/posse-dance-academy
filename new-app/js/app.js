@@ -110,20 +110,10 @@ class DanceStudioApp {
         }
     }
 
-    // Remove non-regular (visitor/trial) students from schedule on month change
+    // DISABLED - was deleting visitor data from Firestore permanently
+    // Will be reimplemented as display-only filter instead of destructive delete
     cleanupNonRegularStudents() {
-        let changed = false;
-        Object.keys(this.scheduleData).forEach(day => {
-            if (!Array.isArray(this.scheduleData[day])) return;
-            this.scheduleData[day].forEach(cls => {
-                const before = cls.students?.length || 0;
-                cls.students = (cls.students || []).filter(s => isRegularPlan(s.plan));
-                if (cls.students.length < before) changed = true;
-            });
-        });
-        if (changed) {
-            db.saveScheduleData(this.scheduleData);
-        }
+        // Intentionally disabled to prevent data loss
     }
 
     // ===== CUSTOMER MANAGEMENT =====
