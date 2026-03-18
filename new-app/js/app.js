@@ -55,31 +55,34 @@ class DanceStudioApp {
 
     // ===== INITIALIZATION =====
     async init() {
-        // Restore state from URL hash (e.g. #attendance/水曜日)
+        // Restore navigation state from URL hash (e.g. #attendance/出席記録/水曜日)
         this.restoreFromHash();
 
-        this.customers = await db.loadCustomers();
-        const loaded = await db.loadScheduleData(this.scheduleData);
-        if (loaded) this.scheduleData = loaded;
-        this.attendanceData = await db.loadAttendance(this.selectedMonth);
-        this.eventsData = await db.loadEvents(this.selectedMonth);
+        try {
+            const results = await Promise.allSettled([
+                db.loadCustomers(),
+                db.loadScheduleData(this.scheduleData),
+                db.loadAttendance(this.selectedMonth),
+                db.loadEvents(this.selectedMonth)
+            ]);
+            if (results[0].status === 'fulfilled') this.customers = results[0].value;
+            if (results[1].status === 'fulfilled' && results[1].value) this.scheduleData = results[1].value;
+            if (results[2].status === 'fulfilled') this.attendanceData = results[2].value;
+            if (results[3].status === 'fulfilled') this.eventsData = results[3].value;
+        } catch (error) {
+            console.error('初期化エラー:', error);
+        }
 
         this.render();
-
-        // Listen for hash changes (browser back/forward)
-        window.addEventListener('hashchange', () => {
-            this.restoreFromHash();
-            this.render();
-        });
     }
 
     // Save current navigation state to URL hash
     updateHash() {
         let hash = this.currentTab;
         if (this.currentTab === 'attendance') {
-            hash += '/' + (this.attendanceSubtab || '出席記録');
+            hash += '/' + encodeURIComponent(this.attendanceSubtab || '出席記録');
             if (this.attendanceSubtab === '出席記録') {
-                hash += '/' + (this.selectedDay || '月曜日');
+                hash += '/' + encodeURIComponent(this.selectedDay || '月曜日');
             }
         }
         const newHash = '#' + hash;
@@ -90,7 +93,7 @@ class DanceStudioApp {
 
     // Restore navigation state from URL hash
     restoreFromHash() {
-        const hash = window.location.hash.slice(1); // remove #
+        const hash = decodeURIComponent(window.location.hash.slice(1));
         if (!hash) return;
         const parts = hash.split('/');
         const validTabs = ['home', 'customers', 'attendance', 'revenue', 'timeSchedule', 'monthlySchedule', 'instructors'];
@@ -98,8 +101,8 @@ class DanceStudioApp {
             this.currentTab = parts[0];
         }
         if (parts[0] === 'attendance') {
-            if (parts[1]) this.attendanceSubtab = decodeURIComponent(parts[1]);
-            if (parts[2]) this.selectedDay = decodeURIComponent(parts[2]);
+            if (parts[1]) this.attendanceSubtab = parts[1];
+            if (parts[2]) this.selectedDay = parts[2];
         }
     }
 
@@ -387,6 +390,12 @@ class DanceStudioApp {
                 cls.students.push({ lastName, firstName, plan });
                 await db.saveScheduleData(this.scheduleData);
             }
+            // Save _plan to attendance data for revenue calculations
+            const classLoc = cls.location || cls.venue || location;
+            const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
+            if (!this.attendanceData[studentKey]) this.attendanceData[studentKey] = {};
+            this.attendanceData[studentKey]._plan = plan;
+            await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
         } else {
             console.error('クラスが見つかりません:', day, location, className);
             alert('エラー: クラスが見つかりません。ページを再読み込みしてください。');
@@ -399,7 +408,6 @@ class DanceStudioApp {
         this.selectedCustomerForStudent = null;
         this.studentSearchTerm = '';
         this.studentSearchResults = [];
-        // No Firestore reload — in-memory data is already up to date
         alert('生徒を追加しました');
         this.render();
     }
@@ -997,4 +1005,7 @@ class DanceStudioApp {
 // Initialize
 const _app = new DanceStudioApp();
 window.app = _app;
-_app.init();
+_app.init().catch(err => {
+    console.error('Fatal init error:', err);
+    _app.render(); // Render with whatever data is available
+});
