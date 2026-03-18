@@ -61,15 +61,6 @@ class DanceStudioApp {
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
         this.eventsData = await db.loadEvents(this.selectedMonth);
 
-        // Sort all students by plan
-        Object.keys(this.scheduleData).forEach(day => {
-            if (this.scheduleData[day] && Array.isArray(this.scheduleData[day])) {
-                this.scheduleData[day].forEach(classInfo => {
-                    classInfo.students = sortStudentsByPlan(classInfo.students, this.planOrder);
-                });
-            }
-        });
-
         this.render();
     }
 
@@ -344,21 +335,31 @@ class DanceStudioApp {
             alert('姓名とプランを入力してください'); return;
         }
         const { day, location, className } = this.selectedClassForAdd;
-        const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
+        // Location normalization: match with or without '校' suffix, and handle venue vs location
+        const normLoc = (loc) => (loc || '').replace(/校$/, '');
+        const classIndex = this.scheduleData[day].findIndex(c => {
+            const cLoc = normLoc(c.location || c.venue || '');
+            return cLoc === normLoc(location) && c.name === className;
+        });
         if (classIndex !== -1) {
-            const exists = this.scheduleData[day][classIndex].students.some(s => s.lastName === lastName && s.firstName === firstName);
+            const cls = this.scheduleData[day][classIndex];
+            const exists = cls.students.some(s => s.lastName === lastName && s.firstName === firstName);
             if (!exists) {
-                this.scheduleData[day][classIndex].students.push({ lastName, firstName, plan });
-                this.scheduleData[day][classIndex].students = sortStudentsByPlan(this.scheduleData[day][classIndex].students, this.planOrder);
+                cls.students.push({ lastName, firstName, plan });
                 await db.saveScheduleData(this.scheduleData);
             }
+            // Ensure attendance key uses the same location as the class data
+            const classLoc = cls.location || cls.venue || location;
+            const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
             if (!isRegularPlan(plan)) {
-                const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
                 if (!this.attendanceData[studentKey]) {
-                    this.attendanceData[studentKey] = {};
+                    this.attendanceData[studentKey] = { _active: true };
                     await db.saveAttendance(this.selectedMonth, studentKey, { _active: true });
                 }
             }
+        } else {
+            console.error('クラスが見つかりません:', day, location, className);
+            alert('エラー: クラスが見つかりません。ページを再読み込みしてください。');
         }
         this.showAddStudentForm = false;
         this.selectedClassForAdd = null;
@@ -378,16 +379,17 @@ class DanceStudioApp {
         const newPlan = document.getElementById('edit_student_plan')?.value;
         if (!newPlan) { alert('プランを選択してください'); return; }
         const { day, location, className, lastName, firstName } = this.editingStudent;
-        const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
+        const normLoc = (loc) => (loc || '').replace(/校$/, '');
+        const classIndex = this.scheduleData[day].findIndex(c => normLoc(c.location || c.venue || '') === normLoc(location) && c.name === className);
         if (classIndex !== -1) {
             const studentIndex = this.scheduleData[day][classIndex].students.findIndex(s => s.lastName === lastName && s.firstName === firstName);
             if (studentIndex !== -1) {
                 this.scheduleData[day][classIndex].students[studentIndex].plan = newPlan;
-                this.scheduleData[day][classIndex].students = sortStudentsByPlan(this.scheduleData[day][classIndex].students, this.planOrder);
                 await db.saveScheduleData(this.scheduleData);
             }
         }
-        const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
+        const classLoc = classIndex !== -1 ? (this.scheduleData[day][classIndex].location || this.scheduleData[day][classIndex].venue || location) : location;
+        const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
         if (!this.attendanceData[studentKey]) this.attendanceData[studentKey] = {};
         this.attendanceData[studentKey]._plan = newPlan;
         await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
@@ -398,12 +400,14 @@ class DanceStudioApp {
 
     async deleteStudent(day, location, className, lastName, firstName) {
         if (!confirm(`${lastName} ${firstName} を削除してもよろしいですか？`)) return;
-        const classIndex = this.scheduleData[day].findIndex(c => c.location === location && c.name === className);
+        const normLoc = (loc) => (loc || '').replace(/校$/, '');
+        const classIndex = this.scheduleData[day].findIndex(c => normLoc(c.location || c.venue || '') === normLoc(location) && c.name === className);
         if (classIndex !== -1) {
             this.scheduleData[day][classIndex].students = this.scheduleData[day][classIndex].students.filter(s => !(s.lastName === lastName && s.firstName === firstName));
             await db.saveScheduleData(this.scheduleData);
         }
-        const studentKey = `${day}_${location}_${className}_${lastName}${firstName}`;
+        const classLoc = classIndex !== -1 ? (this.scheduleData[day][classIndex].location || this.scheduleData[day][classIndex].venue || location) : location;
+        const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
         try {
             await db.deleteAttendanceRecord(this.selectedMonth, studentKey);
         } catch (error) { console.log('出席データの削除エラー'); }
