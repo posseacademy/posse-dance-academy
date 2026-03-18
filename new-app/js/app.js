@@ -61,6 +61,7 @@ class DanceStudioApp {
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
         this.eventsData = await db.loadEvents(this.selectedMonth);
 
+        // Note: no sortStudentsByPlan — preserve Firestore order (addition order)
         this.render();
     }
 
@@ -352,24 +353,22 @@ class DanceStudioApp {
             const classLoc = cls.location || cls.venue || location;
             const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
             if (!isRegularPlan(plan)) {
-                if (!this.attendanceData[studentKey]) {
-                    this.attendanceData[studentKey] = { _active: true };
-                    await db.saveAttendance(this.selectedMonth, studentKey, { _active: true });
-                }
+                this.attendanceData[studentKey] = { ...(this.attendanceData[studentKey] || {}), _active: true };
+                await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
             }
         } else {
             console.error('クラスが見つかりません:', day, location, className);
             alert('エラー: クラスが見つかりません。ページを再読み込みしてください。');
+            this.showAddStudentForm = false;
+            this.selectedClassForAdd = null;
+            return;
         }
         this.showAddStudentForm = false;
         this.selectedClassForAdd = null;
         this.selectedCustomerForStudent = null;
         this.studentSearchTerm = '';
         this.studentSearchResults = [];
-        // Full reload from Firestore (same as init) to ensure consistency
-        const reloaded = await db.loadScheduleData(this.scheduleData);
-        if (reloaded) this.scheduleData = reloaded;
-        this.attendanceData = await db.loadAttendance(this.selectedMonth);
+        // No Firestore reload — in-memory data is already up to date
         alert('生徒を追加しました');
         this.render();
     }
@@ -398,10 +397,6 @@ class DanceStudioApp {
         this.attendanceData[studentKey]._plan = newPlan;
         await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
         this.editingStudent = null;
-        // Full reload from Firestore for consistency
-        const reloaded2 = await db.loadScheduleData(this.scheduleData);
-        if (reloaded2) this.scheduleData = reloaded2;
-        this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒情報を更新しました');
         this.render();
     }
@@ -418,11 +413,8 @@ class DanceStudioApp {
         const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
         try {
             await db.deleteAttendanceRecord(this.selectedMonth, studentKey);
+            delete this.attendanceData[studentKey];
         } catch (error) { console.log('出席データの削除エラー'); }
-        // Full reload from Firestore for consistency
-        const reloaded3 = await db.loadScheduleData(this.scheduleData);
-        if (reloaded3) this.scheduleData = reloaded3;
-        this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒を削除しました');
         this.render();
     }
