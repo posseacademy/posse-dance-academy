@@ -58,12 +58,16 @@ class DanceStudioApp {
         // Restore navigation state from URL hash (e.g. #attendance/出席記録/水曜日)
         this.restoreFromHash();
 
+        // Load data with 15s timeout to prevent infinite loading
+        const withTimeout = (promise, ms = 15000) =>
+            Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+
         try {
             const results = await Promise.allSettled([
-                db.loadCustomers(),
-                db.loadScheduleData(this.scheduleData),
-                db.loadAttendance(this.selectedMonth),
-                db.loadEvents(this.selectedMonth)
+                withTimeout(db.loadCustomers()),
+                withTimeout(db.loadScheduleData(this.scheduleData)),
+                withTimeout(db.loadAttendance(this.selectedMonth)),
+                withTimeout(db.loadEvents(this.selectedMonth))
             ]);
             if (results[0].status === 'fulfilled') this.customers = results[0].value;
             if (results[1].status === 'fulfilled' && results[1].value) this.scheduleData = results[1].value;
