@@ -366,8 +366,10 @@ class DanceStudioApp {
         this.selectedCustomerForStudent = null;
         this.studentSearchTerm = '';
         this.studentSearchResults = [];
-        this.render();
+        // Reload attendance data from Firestore to ensure key consistency
+        this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒を追加しました');
+        this.render();
     }
 
     startEditStudent(day, location, className, lastName, firstName) {
@@ -394,8 +396,10 @@ class DanceStudioApp {
         this.attendanceData[studentKey]._plan = newPlan;
         await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
         this.editingStudent = null;
-        this.render();
+        // Reload attendance for consistency
+        this.attendanceData = await db.loadAttendance(this.selectedMonth);
         alert('生徒情報を更新しました');
+        this.render();
     }
 
     async deleteStudent(day, location, className, lastName, firstName) {
@@ -412,8 +416,8 @@ class DanceStudioApp {
             await db.deleteAttendanceRecord(this.selectedMonth, studentKey);
         } catch (error) { console.log('出席データの削除エラー'); }
         this.attendanceData = await db.loadAttendance(this.selectedMonth);
-        this.render();
         alert('生徒を削除しました');
+        this.render();
     }
 
     // Student search helpers
