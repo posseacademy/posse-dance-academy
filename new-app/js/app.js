@@ -1,12 +1,11 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, instructors, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=6';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=6';
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=6';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=25';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=5';
-import { renderInstructors } from './views/instructors.js?v=5';
 import { renderRevenue } from './views/revenue.js?v=8';
 
 class DanceStudioApp {
@@ -50,7 +49,6 @@ class DanceStudioApp {
         this.courseColors = courseColors;
         this.scheduleData = JSON.parse(JSON.stringify(defaultSchedule));
         this.timeScheduleData = timeSchedule;
-        this.instructorData = instructors;
     }
 
     // ===== INITIALIZATION =====
@@ -100,7 +98,7 @@ class DanceStudioApp {
         const hash = decodeURIComponent(window.location.hash.slice(1));
         if (!hash) return;
         const parts = hash.split('/');
-        const validTabs = ['home', 'customers', 'attendance', 'revenue', 'timeSchedule', 'monthlySchedule', 'instructors'];
+        const validTabs = ['home', 'customers', 'attendance', 'revenue', 'timeSchedule', 'monthlySchedule'];
         if (validTabs.includes(parts[0])) {
             this.currentTab = parts[0];
         }
@@ -688,7 +686,7 @@ class DanceStudioApp {
     // ===== RENDERING =====
     render() {
         const filteredCustomers = this.getFilteredCustomers();
-        const isMoreTab = ['timeSchedule', 'monthlySchedule', 'instructors'].includes(this.currentTab);
+        const isMoreTab = ['timeSchedule', 'monthlySchedule'].includes(this.currentTab);
         document.getElementById('app').innerHTML = `
             <div style="display:flex;">
                 <aside class="sidebar">
@@ -721,10 +719,6 @@ class DanceStudioApp {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                             <span>月間スケジュール</span>
                         </button>
-                        <button id="instructorsTab" class="nav-item ${this.currentTab === 'instructors' ? 'active' : ''}">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            <span>講師プロフィール</span>
-                        </button>
                     </nav>
                 </aside>
                 <main class="main-content" style="min-width:0;overflow-x:hidden;flex:1;">
@@ -734,7 +728,6 @@ class DanceStudioApp {
                       this.currentTab === 'revenue' ? renderRevenue(this) :
                       this.currentTab === 'timeSchedule' ? renderTimeSchedule(this) :
                       this.currentTab === 'monthlySchedule' ? renderMonthlySchedule(this) :
-                      this.currentTab === 'instructors' ? renderInstructors(this) :
                       renderDashboard(this)}
                 </main>
             </div>
@@ -748,10 +741,6 @@ class DanceStudioApp {
                 <button id="mobileMonthlyScheduleTab" class="mobile-more-menu-item ${this.currentTab === 'monthlySchedule' ? 'active' : ''}">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     月間スケジュール
-                </button>
-                <button id="mobileInstructorsTab" class="mobile-more-menu-item ${this.currentTab === 'instructors' ? 'active' : ''}">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    講師プロフィール
                 </button>
             </div>
             <nav class="mobile-bottom-nav">
@@ -785,7 +774,6 @@ class DanceStudioApp {
         document.getElementById('revenueTab')?.addEventListener('click', () => { this.currentTab = 'revenue'; this.render(); });
         document.getElementById('timeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
         document.getElementById('monthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
-        document.getElementById('instructorsTab')?.addEventListener('click', () => { this.currentTab = 'instructors'; this.render(); });
 
         // Setup mobile navigation events
         document.getElementById('mobileHomeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
@@ -810,7 +798,6 @@ class DanceStudioApp {
         });
         document.getElementById('mobileTimeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
         document.getElementById('mobileMonthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
-        document.getElementById('mobileInstructorsTab')?.addEventListener('click', () => { this.currentTab = 'instructors'; this.render(); });
 
         // Setup page-specific events
         if (this.currentTab === 'customers') {
