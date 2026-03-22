@@ -183,20 +183,20 @@ export function renderDashboard(app) {
       </div>
     </div>
 
-    <!-- Lesson Overview -->
-    <div class="content-card" style="margin-top:1.5rem;">
-      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
-        <h3 class="card-title" style="color:white;">レッスン一覧</h3>
-      </div>
-      <div class="card-content">
-        ${['月曜日','火曜日','水曜日','木曜日','金曜日'].map(day => {
-          const dayColors = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
-          const classes = (app.scheduleData[day] || []);
-          if (!classes.length) return '';
-          return `
-            <div style="margin-bottom:1rem;">
-              <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px;">
-                <span style="width:8px;height:8px;border-radius:50%;background:${dayColors[day]};display:inline-block;"></span>
+    <!-- Lesson Overview (same width as content-grid) -->
+    <div class="content-grid" style="margin-top:1.5rem;grid-template-columns:1fr;">
+      <div class="content-card">
+        <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+          <h3 class="card-title" style="color:white;">レッスン一覧</h3>
+        </div>
+        <div class="card-content" style="padding:0;">
+          ${['月曜日','火曜日','水曜日','木曜日','金曜日'].map(day => {
+            const dayColors = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
+            const classes = (app.scheduleData[day] || []);
+            if (!classes.length) return '';
+            return `
+              <div style="font-weight:600;font-size:0.9rem;padding:0.5rem 1rem;background:${dayColors[day]}15;border-left:4px solid ${dayColors[day]};color:${dayColors[day]};display:flex;align-items:center;gap:8px;">
+                <span style="width:8px;height:8px;border-radius:50%;background:${dayColors[day]};display:inline-block;flex-shrink:0;"></span>
                 ${day}
               </div>
               ${classes.map(cls => {
@@ -206,15 +206,15 @@ export function renderDashboard(app) {
                 const time = te ? te.time : '';
                 const regularCount = (cls.students || []).filter(s => isRegularPlan(s.plan)).length;
                 return `
-                  <div class="revenue-row" style="padding:0.4rem 0.8rem;">
-                    <div class="rev-label" style="flex:2;font-size:0.85rem;">${cls.name}</div>
-                    <div style="flex:1;font-size:0.8rem;color:var(--text-secondary);">${loc}</div>
+                  <div style="display:flex;align-items:center;padding:0.5rem 1rem;border-bottom:1px solid var(--border-color);">
+                    <div style="flex:2;font-size:0.85rem;font-weight:500;">${cls.name}</div>
+                    <div style="flex:0.8;font-size:0.8rem;color:var(--text-secondary);">${loc}</div>
                     <div style="flex:1;font-size:0.8rem;color:var(--text-secondary);text-align:center;">${time}</div>
-                    <div class="rev-amount" style="flex:0.5;text-align:right;font-size:0.85rem;">${regularCount}名</div>
+                    <div style="flex:0.4;text-align:right;font-weight:600;font-size:0.85rem;">${regularCount}名</div>
                   </div>`;
-              }).join('')}
-            </div>`;
-        }).join('')}
+              }).join('')}`;
+          }).join('')}
+        </div>
       </div>
     </div>
   `;

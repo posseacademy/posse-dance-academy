@@ -2,7 +2,7 @@
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=9';
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
-import { renderDashboard } from './views/home.js?v=9';
+import { renderDashboard } from './views/home.js?v=10';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=28';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
