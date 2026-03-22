@@ -261,35 +261,48 @@ export const defaultSchedule = {
 // Time Schedule Data
 export const timeSchedule = {
     '月曜日': [
-        { time: '11:00〜', venue: '天神BUZZ校 11スタジオ', name: 'K-POP AI', color: '#16A34A' },
+        { time: '20:00-21:00', venue: '天神BUZZ校 11スタジオ', name: 'K-POP AI', color: '#16A34A' },
         { time: '16:50-17:50', venue: '大橋校', name: 'ヒップホップ HIMEKA', color: '#9333EA' },
+        { time: '16:50-17:50', venue: '大橋校', name: 'hiphop HIMEKA', color: '#9333EA' },
         { time: '18:00-19:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
         { time: '19:00-20:00', venue: '天神BUZZ校 2スタジオ', name: 'パワームーブ・アクロバット SOYA', color: '#EA580C' },
+        { time: '19:00-20:00', venue: '天神校', name: 'アクロバット SOYA', color: '#EA580C' },
         { time: '20:00-21:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン トップロック・フットワーク DAZU', color: '#DC2626' },
+        { time: '20:00-21:00', venue: '天神校', name: 'トップロック フットワーク DAZ', color: '#DC2626' },
         { time: '21:00-22:00', venue: '天神BUZZ校 2スタジオ', name: '練習会', color: '#F59E0B' }
     ],
     '火曜日': [
         { time: '17:30-18:30', venue: '大橋校', name: 'ブレイキンキッズダンス AYANO', color: '#EA580C' },
+        { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C' },
         { time: '18:40-19:40', venue: '大橋校', name: 'ブレイキン入門 AYANO / HARUHIKO', color: '#DC2626' },
+        { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#DC2626' },
         { time: '19:30-20:30', venue: '千早クラス', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
-        { time: '20:30-21:30', venue: '千早クラス', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' }
+        { time: '20:30-21:30', venue: '千早クラス', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' },
+        { time: '20:30-21:30', venue: '照葉校', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
     ],
     '水曜日': [
         { time: '18:30-19:30', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン入門 HARUHIKO', color: '#DC2626' },
-        { time: '19:30-21:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#EA580C' }
+        { time: '18:30-19:30', venue: '天神校', name: 'ブレイキン初級 HARUHIKO', color: '#DC2626' },
+        { time: '19:30-21:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#EA580C' },
+        { time: '19:30-21:00', venue: '天神校', name: 'ブレイキン中上級 HARUHIKO', color: '#EA580C' }
     ],
     '木曜日': [
         { time: '17:30-18:30', venue: '九産大前スタジオ', name: 'ブレイキン入門 RYUSEI', color: '#DC2626' },
         { time: '18:30-19:30', venue: '九産大前スタジオ', name: 'パワー・アクロ RYUSEI', color: '#EA580C' },
+        { time: '18:30-19:30', venue: '照葉校', name: 'アクロ＆パワー RYUSEI', color: '#EA580C' },
         { time: '19:20-20:20', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
         { time: '20:30-21:30', venue: '大橋校', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' },
+        { time: '20:30-21:30', venue: '大橋校', name: 'アクロ＆パワー SOYA', color: '#16A34A' },
         { time: '21:30-23:10', venue: '大橋校', name: '練習会', color: '#F59E0B' }
     ],
     '金曜日': [
         { time: '17:50-18:50', venue: '大橋校', name: 'ブレイキン入門 HARUHIKO', color: '#2563EB' },
         { time: '19:00-20:00', venue: '大橋校', name: 'パワー・アクロ RYUSEI', color: '#EA580C' },
+        { time: '19:00-20:00', venue: '大橋校', name: 'アクロ＆パワー RYUSEI', color: '#EA580C' },
         { time: '19:00-20:00', venue: '天神BUZZ校 5スタジオ', name: 'パワー・アクロ SOYA', color: '#DC2626' },
-        { time: '20:00-21:00', venue: '天神BUZZ校 5スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#16A34A' }
+        { time: '19:00-20:00', venue: '天神校', name: 'アクロ＆パワー SOYA', color: '#DC2626' },
+        { time: '20:00-21:00', venue: '天神BUZZ校 5スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#16A34A' },
+        { time: '20:00-21:00', venue: '天神校', name: 'ブレイキン初中級 HARUHIKO', color: '#16A34A' }
     ]
 };
 

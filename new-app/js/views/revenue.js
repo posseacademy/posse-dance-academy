@@ -1,5 +1,5 @@
 // POSSE Dance Academy - Revenue View Module
-import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE, ENROLLMENT_FEE, ANNUAL_FEE } from '../config.js?v=8';
+import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE, ENROLLMENT_FEE, ANNUAL_FEE } from '../config.js?v=9';
 import { calculateVisitorRevenue, calculateDetailedRevenue, calculatePracticeRevenue, calculateMonthlyTuition, calculateFeeRevenue } from '../utils.js?v=5';
 
 export function renderRevenue(app) {
