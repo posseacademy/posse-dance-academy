@@ -152,11 +152,11 @@ export const defaultSchedule = {
         { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
             { lastName: '愛甲', firstName: '大輪', plan: '1クラス' }
         ]},
-        { location: '千早', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
+        { location: '照葉', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
             { lastName: '西園', firstName: '千晃', plan: '1クラス' },
             { lastName: '榊', firstName: '花梨', plan: '２クラス' }
         ]},
-        { location: '千早', name: 'アクロ＆パワー SOYA', color: 'green', students: [
+        { location: '照葉', name: 'アクロ＆パワー SOYA', color: 'green', students: [
             { lastName: '堤', firstName: '勇仁', plan: '1クラス' },
             { lastName: '吉武', firstName: '凛保', plan: '３クラス' }
         ]}
@@ -203,7 +203,7 @@ export const defaultSchedule = {
             { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
             { lastName: '澤江', firstName: '悠', plan: '1クラス' }
         ]},
-        { location: '九産大前', name: 'ブレイキン入門 RYUSEI', color: 'blue', students: [
+        { location: '照葉', name: 'ブレイキン入門 RYUSEI', color: 'blue', students: [
             { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
             { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
             { lastName: 'しぎょう', firstName: 'とうま', plan: '1クラス' },
@@ -212,7 +212,7 @@ export const defaultSchedule = {
             { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
             { lastName: '長谷川', firstName: '丈', plan: '２クラス' }
         ]},
-        { location: '九産大前', name: 'アクロ＆パワー RYUSEI', color: 'green', students: [
+        { location: '照葉', name: 'アクロ＆パワー RYUSEI', color: 'green', students: [
             { lastName: '吉武', firstName: '凛保', plan: '２クラス' },
             { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
             { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
@@ -261,38 +261,35 @@ export const defaultSchedule = {
 // Time Schedule Data
 export const timeSchedule = {
     '月曜日': [
-        { time: '18:00-19:00', venue: '天神校', name: 'アクロバット SOYA', color: '#DC2626' },
-        { time: '18:00-19:00', venue: '天神校', name: 'ブレイキン入門 SOYA', color: '#EA580C' },
-        { time: '20:00-21:00', venue: '天神校', name: 'K-POP AI', color: '#16A34A' },
-        { time: '19:00-20:00', venue: '大橋校', name: 'hiphop HIMEKA', color: '#9333EA' },
-        { time: '20:00-21:00', venue: '大橋校', name: 'トップロック フットワーク DAZ', color: '#2563EB' },
-        { time: '21:00-22:00', venue: '大橋校', name: '練習会', color: '#F59E0B' }
+        { time: '11:00〜', venue: '天神BUZZ校 11スタジオ', name: 'K-POP AI', color: '#16A34A' },
+        { time: '16:50-17:50', venue: '大橋校', name: 'ヒップホップ HIMEKA', color: '#9333EA' },
+        { time: '18:00-19:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+        { time: '19:00-20:00', venue: '天神BUZZ校 2スタジオ', name: 'パワームーブ・アクロバット SOYA', color: '#EA580C' },
+        { time: '20:00-21:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン トップロック・フットワーク DAZU', color: '#DC2626' },
+        { time: '21:00-22:00', venue: '天神BUZZ校 2スタジオ', name: '練習会', color: '#F59E0B' }
     ],
     '火曜日': [
-        { time: '16:50-17:50', venue: '大橋校', name: 'HIPHOP ヒメカ', color: '#DC2626' },
-        { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C' },
-        { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#EA580C' },
-        { time: '19:00-20:00', venue: '千早スタジオ', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
-        { time: '20:00-21:00', venue: '千早スタジオ', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
+        { time: '17:30-18:30', venue: '大橋校', name: 'ブレイキンキッズダンス AYANO', color: '#EA580C' },
+        { time: '18:40-19:40', venue: '大橋校', name: 'ブレイキン入門 AYANO / HARUHIKO', color: '#DC2626' },
+        { time: '19:30-20:30', venue: '千早クラス', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+        { time: '20:30-21:30', venue: '千早クラス', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' }
     ],
     '水曜日': [
-        { time: '18:30-19:30', venue: '天神校', name: 'ブレイキン初級 HARUHIKO', color: '#DC2626' },
-        { time: '19:30-21:00', venue: '天神校', name: 'ブレイキン中上級 HARUHIKO', color: '#EA580C' }
+        { time: '18:30-19:30', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン入門 HARUHIKO', color: '#DC2626' },
+        { time: '19:30-21:00', venue: '天神BUZZ校 2スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#EA580C' }
     ],
     '木曜日': [
-        { time: '18:30-19:30', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#DC2626' },
-        { time: '19:20-20:20', venue: '大橋校', name: 'アクロ＆パワー SOYA', color: '#EA580C' },
-        { time: '20:30-21:30', venue: '大橋校', name: 'パワームーブ＆アクロ SOYA', color: '#2563EB' },
-        { time: '18:30-19:30', venue: '九産大前スタジオ', name: 'ブレイキン入門 RYUSEI', color: '#DC2626' },
-        { time: '19:30-20:30', venue: '九産大前スタジオ', name: 'パワーアクロ RYUSEI', color: '#EA580C' },
-        { time: '21:30-23:10', venue: '九産大前スタジオ', name: '練習会', color: '#F59E0B' }
+        { time: '17:30-18:30', venue: '九産大前スタジオ', name: 'ブレイキン入門 RYUSEI', color: '#DC2626' },
+        { time: '18:30-19:30', venue: '九産大前スタジオ', name: 'パワー・アクロ RYUSEI', color: '#EA580C' },
+        { time: '19:20-20:20', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+        { time: '20:30-21:30', venue: '大橋校', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' },
+        { time: '21:30-23:10', venue: '大橋校', name: '練習会', color: '#F59E0B' }
     ],
     '金曜日': [
         { time: '17:50-18:50', venue: '大橋校', name: 'ブレイキン入門 HARUHIKO', color: '#2563EB' },
-        { time: '19:00-20:00', venue: '天神校', name: 'アクロ＆パワー SOYA', color: '#DC2626' },
-        { time: '19:00-20:00', venue: '大橋校', name: 'パワーアクロ RYUSEI', color: '#EA580C' },
-        { time: '20:00-21:00', venue: '天神校', name: 'ブレイキン初中級 HARUHIKO', color: '#EA580C' },
-        { time: '20:00-21:00', venue: '大橋校', name: 'アクロ＆パワー RYUSEI', color: '#16A34A' }
+        { time: '19:00-20:00', venue: '大橋校', name: 'パワー・アクロ RYUSEI', color: '#EA580C' },
+        { time: '19:00-20:00', venue: '天神BUZZ校 5スタジオ', name: 'パワー・アクロ SOYA', color: '#DC2626' },
+        { time: '20:00-21:00', venue: '天神BUZZ校 5スタジオ', name: 'ブレイキン中級 HARUHIKO', color: '#16A34A' }
     ]
 };
 

@@ -1,12 +1,12 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=7';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=8';
 import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
-import { renderDashboard } from './views/home.js?v=7';
+import { renderDashboard } from './views/home.js?v=8';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=26';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=6';
-import { renderRevenue } from './views/revenue.js?v=9';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=27';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=7';
+import { renderRevenue } from './views/revenue.js?v=10';
 
 class DanceStudioApp {
     constructor() {
