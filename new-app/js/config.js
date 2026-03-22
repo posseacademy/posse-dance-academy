@@ -152,11 +152,11 @@ export const defaultSchedule = {
         { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
             { lastName: '愛甲', firstName: '大輪', plan: '1クラス' }
         ]},
-        { location: '照葉', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
+        { location: '千早', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
             { lastName: '西園', firstName: '千晃', plan: '1クラス' },
             { lastName: '榊', firstName: '花梨', plan: '２クラス' }
         ]},
-        { location: '照葉', name: 'アクロ＆パワー SOYA', color: 'green', students: [
+        { location: '千早', name: 'アクロ＆パワー SOYA', color: 'green', students: [
             { lastName: '堤', firstName: '勇仁', plan: '1クラス' },
             { lastName: '吉武', firstName: '凛保', plan: '３クラス' }
         ]}
@@ -203,7 +203,7 @@ export const defaultSchedule = {
             { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
             { lastName: '澤江', firstName: '悠', plan: '1クラス' }
         ]},
-        { location: '照葉', name: 'ブレイキン入門 リュウセイ', color: 'blue', students: [
+        { location: '九産大前', name: 'ブレイキン入門 RYUSEI', color: 'blue', students: [
             { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
             { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
             { lastName: 'しぎょう', firstName: 'とうま', plan: '1クラス' },
@@ -212,7 +212,7 @@ export const defaultSchedule = {
             { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
             { lastName: '長谷川', firstName: '丈', plan: '２クラス' }
         ]},
-        { location: '照葉', name: 'アクロ＆パワー リュウセイ', color: 'green', students: [
+        { location: '九産大前', name: 'アクロ＆パワー RYUSEI', color: 'green', students: [
             { lastName: '吉武', firstName: '凛保', plan: '２クラス' },
             { lastName: '楊', firstName: 'ビンチェンエイデン', plan: '２クラス' },
             { lastName: '楊', firstName: 'エクソ', plan: '２クラス' },
@@ -247,7 +247,7 @@ export const defaultSchedule = {
             { lastName: '久保田', firstName: '朱里', plan: '1クラス' },
             { lastName: '古賀', firstName: '心太郎', plan: '1クラス' }
         ]},
-        { location: '大橋', name: 'アクロ＆パワー ryusei', color: 'green', students: [
+        { location: '大橋', name: 'アクロ＆パワー RYUSEI', color: 'green', students: [
             { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
             { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
             { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
@@ -272,8 +272,8 @@ export const timeSchedule = {
         { time: '16:50-17:50', venue: '大橋校', name: 'HIPHOP ヒメカ', color: '#DC2626' },
         { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C' },
         { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#EA580C' },
-        { time: '19:00-20:00', venue: '照葉校', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
-        { time: '20:00-21:00', venue: '照葉校', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
+        { time: '19:00-20:00', venue: '千早スタジオ', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
+        { time: '20:00-21:00', venue: '千早スタジオ', name: 'アクロ＆パワー SOYA', color: '#16A34A' }
     ],
     '水曜日': [
         { time: '18:30-19:30', venue: '天神校', name: 'ブレイキン初級 HARUHIKO', color: '#DC2626' },
@@ -283,16 +283,16 @@ export const timeSchedule = {
         { time: '18:30-19:30', venue: '大橋校', name: 'ブレイキン入門 SOYA', color: '#DC2626' },
         { time: '19:20-20:20', venue: '大橋校', name: 'アクロ＆パワー SOYA', color: '#EA580C' },
         { time: '20:30-21:30', venue: '大橋校', name: 'パワームーブ＆アクロ SOYA', color: '#2563EB' },
-        { time: '18:30-19:30', venue: '照葉校', name: 'ブレイキン入門 リュウセイ', color: '#DC2626' },
-        { time: '19:30-20:30', venue: '照葉校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
-        { time: '21:30-23:10', venue: '照葉校', name: '練習会', color: '#F59E0B' }
+        { time: '18:30-19:30', venue: '九産大前スタジオ', name: 'ブレイキン入門 RYUSEI', color: '#DC2626' },
+        { time: '19:30-20:30', venue: '九産大前スタジオ', name: 'パワーアクロ RYUSEI', color: '#EA580C' },
+        { time: '21:30-23:10', venue: '九産大前スタジオ', name: '練習会', color: '#F59E0B' }
     ],
     '金曜日': [
         { time: '17:50-18:50', venue: '大橋校', name: 'ブレイキン入門 HARUHIKO', color: '#2563EB' },
         { time: '19:00-20:00', venue: '天神校', name: 'アクロ＆パワー SOYA', color: '#DC2626' },
-        { time: '19:00-20:00', venue: '大橋校', name: 'パワーアクロ リュウセイ', color: '#EA580C' },
+        { time: '19:00-20:00', venue: '大橋校', name: 'パワーアクロ RYUSEI', color: '#EA580C' },
         { time: '20:00-21:00', venue: '天神校', name: 'ブレイキン初中級 HARUHIKO', color: '#EA580C' },
-        { time: '20:00-21:00', venue: '大橋校', name: 'アクロ＆パワー ryusei', color: '#16A34A' }
+        { time: '20:00-21:00', venue: '大橋校', name: 'アクロ＆パワー RYUSEI', color: '#16A34A' }
     ]
 };
 

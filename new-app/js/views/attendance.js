@@ -1,9 +1,9 @@
 // POSSE Dance Academy - Attendance View Module
 // ES module for attendance recording and tracking
 
-import { pricing, visitorRevenueOverrides, timeSchedule } from '../config.js?v=6';
+import { pricing, visitorRevenueOverrides, timeSchedule } from '../config.js?v=7';
 import { calculateVisitorRevenue, calculateDetailedRevenue, getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=5';
-import { planOrder } from '../config.js?v=6';
+import { planOrder } from '../config.js?v=7';
 
 /**
  * Main attendance wrapper with subtabs
