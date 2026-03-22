@@ -183,8 +183,8 @@ export function renderDashboard(app) {
       </div>
     </div>
 
-    <!-- Lesson Overview (same width as content-grid) -->
-    <div class="content-grid" style="margin-top:1.5rem;grid-template-columns:1fr;">
+    <!-- Lesson Overview (same width as コース別内訳) -->
+    <div class="content-grid" style="margin-top:1.5rem;">
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
           <h3 class="card-title" style="color:white;">レッスン一覧</h3>
