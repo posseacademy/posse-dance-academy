@@ -21,9 +21,9 @@ export function renderTimeSchedule(app) {
     });
   });
 
-  // Populate schedule with classes
+  // Populate schedule with classes (skip alias entries used for attendance time lookup)
   daysOfWeek.forEach(day => {
-    (timeSchedule[day] || []).forEach(cls => {
+    (timeSchedule[day] || []).filter(cls => !cls.alias).forEach(cls => {
       if (cls.time) {
         const startHour = parseInt(cls.time.split(':')[0]);
         if (schedule[startHour]) {
