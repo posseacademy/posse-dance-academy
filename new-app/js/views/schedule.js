@@ -72,30 +72,30 @@ export function renderTimeSchedule(app) {
       </div>
     </div>
 
-    <div class="content-card" style="padding:0;overflow-x:auto;">
+    <div class="content-card" style="padding:0;overflow-x:auto;border:1px solid #d1d5db;">
       <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:700px;">
         <!-- Header row -->
-        <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;">時刻</div>
-        ${dayColumns.map(d => `
-          <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.8125rem;">${d.short}</div>
+        <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;border-right:1px solid #4b5563;">時刻</div>
+        ${dayColumns.map((d, i) => `
+          <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.8125rem;${i < dayColumns.length - 1 ? 'border-right:1px solid #4b5563;' : ''}">${d.short}</div>
         `).join('')}
 
         <!-- Time axis column -->
-        <div style="position:relative;height:${totalHeight}px;background:var(--bg-secondary);border-right:1px solid var(--border-color);">
+        <div style="position:relative;height:${totalHeight}px;background:#f9fafb;border-right:2px solid #d1d5db;">
           ${hourLines.map(l => `
-            <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid var(--border-color);padding:2px 4px;font-size:0.6875rem;font-weight:600;color:var(--text-secondary);">
+            <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid #d1d5db;padding:2px 4px;font-size:0.6875rem;font-weight:600;color:#6b7280;">
               ${l.hour}:00
             </div>
           `).join('')}
         </div>
 
         <!-- Day columns with 2-column layout for overlaps -->
-        ${dayColumns.map(d => {
+        ${dayColumns.map((d, di) => {
           const hasCol1 = d.blocks.some(b => b.col === 1);
           return `
-          <div style="position:relative;height:${totalHeight}px;border-right:1px solid var(--border-color);">
+          <div style="position:relative;height:${totalHeight}px;${di < dayColumns.length - 1 ? 'border-right:1px solid #e5e7eb;' : ''}">
             ${hourLines.map(l => `
-              <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid ${l.hour === startHour ? 'transparent' : 'var(--border-color)'};"></div>
+              <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid #e5e7eb;${l.top === 0 ? 'border-top-color:transparent;' : ''}"></div>
             `).join('')}
             ${d.blocks.map(b => {
               const left = hasCol1 ? (b.col === 0 ? '1px' : '50%') : '2px';
