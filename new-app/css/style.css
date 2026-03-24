@@ -2607,6 +2607,11 @@ tr:hover .student-actions {
   /* Content card adjustments */
   .content-card {
     border-radius: var(--border-radius-md);
+    padding: var(--spacing-3);
+  }
+
+  .attendance-grid .content-card .card-content {
+    padding: 0;
   }
 
   /* Forms */
@@ -2742,8 +2747,8 @@ tr:hover .student-actions {
   .att-table {
     font-size: 0.72rem;
     white-space: nowrap;
-    min-width: 0;
-    width: max-content;
+    min-width: 100%;
+    width: 100%;
   }
 
   .att-th-name,
