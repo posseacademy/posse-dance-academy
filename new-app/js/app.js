@@ -7,7 +7,7 @@ import { renderCustomers, renderAddForm, renderCustomerRow } from './views/custo
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
 import { renderRevenue } from './views/revenue.js?v=11';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=1';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=2';
 
 class DanceStudioApp {
     constructor() {
