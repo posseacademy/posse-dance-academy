@@ -8,33 +8,58 @@ import { timeSchedule } from '../config.js?v=9';
  * @param {Object} app - Application state
  * @returns {string} HTML string for time schedule
  */
+// Parse time string "HH:MM" to minutes from midnight
+function timeToMinutes(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
 export function renderTimeSchedule(app) {
   const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
-  const hours = [16, 17, 18, 19, 20, 21, 22];
+  const dayShort = ['月', '火', '水', '木', '金'];
 
-  // Build schedule by time slot
-  const schedule = {};
-  hours.forEach(hour => {
-    schedule[hour] = {};
-    daysOfWeek.forEach(day => {
-      schedule[hour][day] = [];
+  // Determine time range from actual classes
+  let minTime = 24 * 60, maxTime = 0;
+  daysOfWeek.forEach(day => {
+    (timeSchedule[day] || []).filter(c => !c.alias && c.time).forEach(cls => {
+      const parts = cls.time.split('-');
+      const start = timeToMinutes(parts[0].replace('〜', '').trim());
+      const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
+      if (start < minTime) minTime = start;
+      if (end > maxTime) maxTime = end;
     });
   });
+  // Round to full hours
+  const startHour = Math.floor(minTime / 60);
+  const endHour = Math.ceil(maxTime / 60);
+  const totalMinutes = (endHour - startHour) * 60;
+  const PX_PER_MIN = 2; // 2px per minute = 120px per hour
+  const totalHeight = totalMinutes * PX_PER_MIN;
 
-  // Populate schedule with classes (skip alias entries used for attendance time lookup)
-  daysOfWeek.forEach(day => {
-    (timeSchedule[day] || []).filter(cls => !cls.alias).forEach(cls => {
-      if (cls.time) {
-        const startHour = parseInt(cls.time.split(':')[0]);
-        if (schedule[startHour]) {
-          schedule[startHour][day].push(cls);
-        }
-      }
+  // Build hour lines
+  const hourLines = [];
+  for (let h = startHour; h <= endHour; h++) {
+    const top = (h - startHour) * 60 * PX_PER_MIN;
+    hourLines.push({ hour: h, top });
+  }
+
+  // Build class blocks per day
+  const dayColumns = daysOfWeek.map((day, di) => {
+    const classes = (timeSchedule[day] || []).filter(c => !c.alias && c.time);
+    const blocks = classes.map(cls => {
+      const parts = cls.time.split('-');
+      const start = timeToMinutes(parts[0].replace('〜', '').trim());
+      const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
+      const top = (start - startHour * 60) * PX_PER_MIN;
+      const height = (end - start) * PX_PER_MIN;
+      const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+      const instructor = cls.name.replace(shortName, '').trim();
+      return { cls, top, height, shortName, instructor };
     });
+    return { day, short: dayShort[di], blocks };
   });
 
   return `
-    <!-- Page Header -->
     <div class="page-header">
       <div>
         <h2>スケジュール</h2>
@@ -42,40 +67,39 @@ export function renderTimeSchedule(app) {
       </div>
     </div>
 
-    <!-- Time Schedule Grid -->
-    <div class="content-card">
-      <div style="overflow-x: auto;">
-        <table class="schedule-table" style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="background:#1d1d1f;">
-              <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color); font-weight: 600; color:white;">時刻</th>
-              ${daysOfWeek.map(day => `
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid var(--border-color); font-weight: 600; width: 15%; color:white;">${day}</th>
-              `).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${hours.map(hour => `
-              <tr>
-                <td style="padding: 0.75rem; border: 1px solid var(--border-color); font-weight: 600; background-color: var(--bg-secondary); width: 10%;">${hour}:00</td>
-                ${daysOfWeek.map(day => {
-                  const classes = schedule[hour][day] || [];
-                  return `
-                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); vertical-align: top; height: 120px;">
-                      ${classes.map(cls => `
-                        <div style="background-color: ${cls.color}; color: white; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 0.25rem; font-size: 0.75rem; line-height: 1.2;">
-                          <div style="font-weight: 600;">${cls.name}</div>
-                          <div>${cls.time}</div>
-                          <div>${cls.venue}</div>
-                        </div>
-                      `).join('')}
-                    </td>
-                  `;
-                }).join('')}
-              </tr>
+    <div class="content-card" style="padding:0;overflow-x:auto;">
+      <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:600px;">
+        <!-- Header row -->
+        <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;">時刻</div>
+        ${dayColumns.map(d => `
+          <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.8125rem;">${d.short}</div>
+        `).join('')}
+
+        <!-- Time axis column -->
+        <div style="position:relative;height:${totalHeight}px;background:var(--bg-secondary);border-right:1px solid var(--border-color);">
+          ${hourLines.map(l => `
+            <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid var(--border-color);padding:2px 4px;font-size:0.6875rem;font-weight:600;color:var(--text-secondary);">
+              ${l.hour}:00
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Day columns with positioned blocks -->
+        ${dayColumns.map(d => `
+          <div style="position:relative;height:${totalHeight}px;border-right:1px solid var(--border-color);">
+            ${hourLines.map(l => `
+              <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid ${l.hour === startHour ? 'transparent' : 'var(--border-color)'};"></div>
             `).join('')}
-          </tbody>
-        </table>
+            ${d.blocks.map(b => `
+              <div style="position:absolute;top:${b.top}px;left:2px;right:2px;height:${b.height - 2}px;background:${b.cls.color};color:white;border-radius:0.3rem;padding:0.25rem 0.35rem;font-size:0.6875rem;line-height:1.25;overflow:hidden;cursor:default;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
+                <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.shortName}</div>
+                ${b.height >= 60 ? `<div style="font-size:0.6rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
+                <div style="font-size:0.6rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
+                ${b.height >= 90 ? `<div style="font-size:0.6rem;opacity:0.8;margin-top:1px;">${b.cls.venue}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
