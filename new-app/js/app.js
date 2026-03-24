@@ -5,7 +5,7 @@ import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, 
 import { renderDashboard } from './views/home.js?v=11';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=13';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=14';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=3';
 

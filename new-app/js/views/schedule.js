@@ -43,7 +43,7 @@ export function renderTimeSchedule(app) {
     hourLines.push({ hour: h, top });
   }
 
-  // Build class blocks per day
+  // Build class blocks per day with column assignment for overlaps
   const dayColumns = daysOfWeek.map((day, di) => {
     const classes = (timeSchedule[day] || []).filter(c => !c.alias && c.time);
     const blocks = classes.map(cls => {
@@ -54,7 +54,12 @@ export function renderTimeSchedule(app) {
       const height = (end - start) * PX_PER_MIN;
       const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
       const instructor = cls.name.replace(shortName, '').trim();
-      return { cls, top, height, shortName, instructor };
+      return { cls, top, height, shortName, instructor, startMin: start, endMin: end, col: 0 };
+    });
+    // Assign columns: if a block overlaps with any block in col 0, put it in col 1
+    blocks.forEach((b, i) => {
+      const overlapsCol0 = blocks.some((other, j) => j < i && other.col === 0 && b.startMin < other.endMin && b.endMin > other.startMin);
+      if (overlapsCol0) b.col = 1;
     });
     return { day, short: dayShort[di], blocks };
   });
@@ -68,7 +73,7 @@ export function renderTimeSchedule(app) {
     </div>
 
     <div class="content-card" style="padding:0;overflow-x:auto;">
-      <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:600px;">
+      <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:700px;">
         <!-- Header row -->
         <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;">時刻</div>
         ${dayColumns.map(d => `
@@ -84,22 +89,27 @@ export function renderTimeSchedule(app) {
           `).join('')}
         </div>
 
-        <!-- Day columns with positioned blocks -->
-        ${dayColumns.map(d => `
+        <!-- Day columns with 2-column layout for overlaps -->
+        ${dayColumns.map(d => {
+          const hasCol1 = d.blocks.some(b => b.col === 1);
+          return `
           <div style="position:relative;height:${totalHeight}px;border-right:1px solid var(--border-color);">
             ${hourLines.map(l => `
               <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid ${l.hour === startHour ? 'transparent' : 'var(--border-color)'};"></div>
             `).join('')}
-            ${d.blocks.map(b => `
-              <div style="position:absolute;top:${b.top}px;left:2px;right:2px;height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.25rem 0.35rem;font-size:0.6875rem;line-height:1.25;overflow:hidden;cursor:default;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
+            ${d.blocks.map(b => {
+              const left = hasCol1 ? (b.col === 0 ? '1px' : '50%') : '2px';
+              const right = hasCol1 ? (b.col === 0 ? '50%' : '1px') : '2px';
+              return `
+              <div style="position:absolute;top:${b.top}px;left:${left};right:${right};height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.2rem 0.3rem;font-size:0.65rem;line-height:1.25;overflow:hidden;cursor:default;margin:0 1px;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
                 <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.shortName}</div>
-                ${b.height >= 60 ? `<div style="font-size:0.6rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
-                <div style="font-size:0.6rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
-                ${b.height >= 90 ? `<div style="font-size:0.6rem;opacity:0.8;margin-top:1px;">${b.cls.venue}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        `).join('')}
+                ${b.height >= 60 ? `<div style="font-size:0.55rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
+                <div style="font-size:0.55rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
+                ${b.height >= 90 ? `<div style="font-size:0.55rem;opacity:0.8;margin-top:1px;">${b.cls.venue}</div>` : ''}
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>
   `;
