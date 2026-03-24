@@ -44,12 +44,20 @@ export function renderRevenue(app) {
         <h2>売上管理</h2>
         <p class="subtitle">月別売上の確認</p>
       </div>
-      <div style="display:flex;align-items:center;gap:0.75rem;">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
         <button class="btn btn-secondary" onclick="window.app.previousMonth()">前月</button>
         <button class="btn btn-secondary" onclick="window.app.nextMonth()">翌月</button>
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
                onchange="window.app.setSelectedMonth(this.value)"
                style="width:150px;">
+        <button id="exportRevenueMonthlyBtn" class="btn btn-secondary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          月別CSV
+        </button>
+        <button id="exportRevenueYearlyBtn" class="btn btn-secondary btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          年間CSV
+        </button>
       </div>
     </div>
 

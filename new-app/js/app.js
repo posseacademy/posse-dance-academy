@@ -4,9 +4,10 @@ import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=11';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=29';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
-import { renderRevenue } from './views/revenue.js?v=10';
+import { renderRevenue } from './views/revenue.js?v=11';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=1';
 
 class DanceStudioApp {
     constructor() {
@@ -269,7 +270,60 @@ class DanceStudioApp {
     }
 
     handleExport() {
-        exportCustomersCSV(this.customers);
+        exportCustomersCSVNew(this.customers);
+    }
+
+    handleExportAttendanceMonthly() {
+        exportAttendanceMonthlyCSV(this.scheduleData, this.attendanceData, this.selectedMonth, isRegularPlan);
+    }
+
+    async handleExportAttendanceYearly() {
+        await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, isRegularPlan, db.loadAttendance);
+    }
+
+    handleExportRevenueMonthly() {
+        const data = this.buildRevenueData();
+        exportRevenueMonthlyCSV(data, this.selectedMonth);
+    }
+
+    async handleExportRevenueYearly() {
+        const year = this.selectedMonth.slice(0, 4);
+        const yearlyData = [];
+        for (let m = 1; m <= 12; m++) {
+            const monthStr = `${year}-${String(m).padStart(2, '0')}`;
+            try {
+                const att = await db.loadAttendance(monthStr);
+                const events = await db.loadEvents(monthStr);
+                const tuition = calculateMonthlyTuition(this.customers, this.scheduleData, coursePricesWithTransfer, combinedPrices15h, CLASS_15H);
+                const visitor = calculateVisitorRevenue(att, this.scheduleData, this.pricing, visitorRevenueOverrides, monthStr);
+                let eventTotal = 0;
+                Object.values(events || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
+                const feeData = calculateFeeRevenue(this.customers, monthStr);
+                const practiceRevenue = Object.entries(att || {}).filter(([k]) => k.includes('練習会')).reduce((s, [, v]) => {
+                    return s + ['week1','week2','week3','week4','week5'].filter(w => v[w] === '○').length * 500;
+                }, 0);
+                yearlyData.push({ month: `${m}月`, tuition: tuition.total || 0, visitor: visitor || 0, event: eventTotal, practice: practiceRevenue });
+            } catch { yearlyData.push({ month: `${m}月`, tuition: 0, visitor: 0, event: 0, practice: 0 }); }
+        }
+        exportRevenueYearlyCSV(yearlyData, year);
+    }
+
+    buildRevenueData() {
+        const tuition = calculateMonthlyTuition(this.customers, this.scheduleData, coursePricesWithTransfer, combinedPrices15h, CLASS_15H);
+        const visitor = calculateVisitorRevenue(this.attendanceData, this.scheduleData, this.pricing, visitorRevenueOverrides, this.selectedMonth);
+        let eventTotal = 0;
+        Object.values(this.eventsData || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
+        const feeData = calculateFeeRevenue(this.customers, this.selectedMonth);
+        const practiceRevenue = Object.entries(this.attendanceData || {}).filter(([k]) => k.includes('練習会')).reduce((s, [, v]) => {
+            return s + ['week1','week2','week3','week4','week5'].filter(w => v[w] === '○').length * 500;
+        }, 0);
+        return {
+            tuition: { total: tuition.total || 0, details: tuition.details || [] },
+            visitor: { total: visitor || 0, details: [] },
+            event: { total: eventTotal },
+            practice: { total: practiceRevenue },
+            grandTotal: (tuition.total || 0) + (visitor || 0) + eventTotal + practiceRevenue
+        };
     }
 
     // ===== ATTENDANCE =====
@@ -813,6 +867,10 @@ class DanceStudioApp {
     // ===== EVENT SETUP (CUSTOMERS) =====
     setupCustomerPageEvents() {
         document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
+        document.getElementById('exportAttendanceMonthlyBtn')?.addEventListener('click', () => this.handleExportAttendanceMonthly());
+        document.getElementById('exportAttendanceYearlyBtn')?.addEventListener('click', () => this.handleExportAttendanceYearly());
+        document.getElementById('exportRevenueMonthlyBtn')?.addEventListener('click', () => this.handleExportRevenueMonthly());
+        document.getElementById('exportRevenueYearlyBtn')?.addEventListener('click', () => this.handleExportRevenueYearly());
         document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
         document.getElementById('searchInput')?.addEventListener('input', (e) => { this.searchTerm = e.target.value; this.render(); });
         document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
