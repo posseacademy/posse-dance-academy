@@ -154,6 +154,12 @@ export function exportRevenueMonthlyCSV(revenueData, selectedMonth) {
     if (revenueData.practice) {
         rows.push(['練習会', '練習会合計', revenueData.practice.total || 0]);
     }
+    if (revenueData.enrollment) {
+        rows.push(['入会金', '入会金合計', revenueData.enrollment.total || 0]);
+    }
+    if (revenueData.annualFee) {
+        rows.push(['年会費', '年会費合計', revenueData.annualFee.total || 0]);
+    }
     rows.push(['', '総合計', revenueData.grandTotal || 0]);
     downloadCSV(`売上_${selectedMonth.replace('-', '')}.csv`, rows);
 }
@@ -162,18 +168,20 @@ export function exportRevenueMonthlyCSV(revenueData, selectedMonth) {
  * 売上 年間CSV書き出し
  */
 export function exportRevenueYearlyCSV(yearlyData, year) {
-    const header = ['月', '月謝', 'ビジター', 'イベント', '練習会', '合計'];
+    const header = ['月', '月謝', 'ビジター', 'イベント', '練習会', '入会金', '年会費', '合計'];
     const rows = [header];
-    let totals = { tuition: 0, visitor: 0, event: 0, practice: 0, grand: 0 };
+    let totals = { tuition: 0, visitor: 0, event: 0, practice: 0, enrollment: 0, annualFee: 0, grand: 0 };
     yearlyData.forEach(md => {
         const t = md.tuition || 0;
         const v = md.visitor || 0;
         const e = md.event || 0;
         const p = md.practice || 0;
-        const g = t + v + e + p;
-        totals.tuition += t; totals.visitor += v; totals.event += e; totals.practice += p; totals.grand += g;
-        rows.push([md.month, t, v, e, p, g]);
+        const en = md.enrollment || 0;
+        const af = md.annualFee || 0;
+        const g = t + v + e + p + en + af;
+        totals.tuition += t; totals.visitor += v; totals.event += e; totals.practice += p; totals.enrollment += en; totals.annualFee += af; totals.grand += g;
+        rows.push([md.month, t, v, e, p, en, af, g]);
     });
-    rows.push(['年間合計', totals.tuition, totals.visitor, totals.event, totals.practice, totals.grand]);
+    rows.push(['年間合計', totals.tuition, totals.visitor, totals.event, totals.practice, totals.enrollment, totals.annualFee, totals.grand]);
     downloadCSV(`売上_${year}年間.csv`, rows);
 }

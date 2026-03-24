@@ -1,13 +1,13 @@
 // Imports
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=9';
 import * as db from './firebase-service.js?v=5';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=11';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
 import { renderRevenue } from './views/revenue.js?v=11';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=2';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=3';
 
 class DanceStudioApp {
     constructor() {
@@ -298,12 +298,12 @@ class DanceStudioApp {
                 const visitor = calculateVisitorRevenue(att, this.scheduleData, this.pricing, visitorRevenueOverrides, monthStr);
                 let eventTotal = 0;
                 Object.values(events || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
+                const practice = calculatePracticeRevenue(att);
                 const feeData = calculateFeeRevenue(this.customers, monthStr);
-                const practiceRevenue = Object.entries(att || {}).filter(([k]) => k.includes('練習会')).reduce((s, [, v]) => {
-                    return s + ['week1','week2','week3','week4','week5'].filter(w => v[w] === '○').length * 500;
-                }, 0);
-                yearlyData.push({ month: `${m}月`, tuition: tuition.total || 0, visitor: visitor || 0, event: eventTotal, practice: practiceRevenue });
-            } catch { yearlyData.push({ month: `${m}月`, tuition: 0, visitor: 0, event: 0, practice: 0 }); }
+                const enrollment = feeData?.enrollment?.total || 0;
+                const annualFee = feeData?.annualFee?.total || 0;
+                yearlyData.push({ month: `${m}月`, tuition: tuition.total || 0, visitor: visitor || 0, event: eventTotal, practice: practice.revenue || 0, enrollment, annualFee });
+            } catch { yearlyData.push({ month: `${m}月`, tuition: 0, visitor: 0, event: 0, practice: 0, enrollment: 0, annualFee: 0 }); }
         }
         exportRevenueYearlyCSV(yearlyData, year);
     }
@@ -313,16 +313,18 @@ class DanceStudioApp {
         const visitor = calculateVisitorRevenue(this.attendanceData, this.scheduleData, this.pricing, visitorRevenueOverrides, this.selectedMonth);
         let eventTotal = 0;
         Object.values(this.eventsData || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
+        const practice = calculatePracticeRevenue(this.attendanceData);
         const feeData = calculateFeeRevenue(this.customers, this.selectedMonth);
-        const practiceRevenue = Object.entries(this.attendanceData || {}).filter(([k]) => k.includes('練習会')).reduce((s, [, v]) => {
-            return s + ['week1','week2','week3','week4','week5'].filter(w => v[w] === '○').length * 500;
-        }, 0);
+        const enrollment = feeData?.enrollment?.total || 0;
+        const annualFee = feeData?.annualFee?.total || 0;
         return {
             tuition: { total: tuition.total || 0, details: tuition.details || [] },
             visitor: { total: visitor || 0, details: [] },
             event: { total: eventTotal },
-            practice: { total: practiceRevenue },
-            grandTotal: (tuition.total || 0) + (visitor || 0) + eventTotal + practiceRevenue
+            practice: { total: practice.revenue || 0 },
+            enrollment: { total: enrollment },
+            annualFee: { total: annualFee },
+            grandTotal: (tuition.total || 0) + (visitor || 0) + eventTotal + (practice.revenue || 0) + enrollment + annualFee
         };
     }
 
