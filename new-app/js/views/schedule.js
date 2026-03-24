@@ -152,7 +152,7 @@ export function renderMonthlySchedule(app) {
     if (cur > lastDay && cur.getDay() === 1) break;
   }
 
-  const dayHeaders = ['月', '火', '水', '木', '金', '土', '日'];
+  const dayHeaders = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
   const dayColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#9ca3af', '#9ca3af'];
 
   // Build detail panel if a date is selected
@@ -246,8 +246,8 @@ export function renderMonthlySchedule(app) {
     <div class="content-card" style="padding:0;">
       <div class="calendar-grid">
         ${dayHeaders.map((d, i) => `
-          <div class="cal-header" style="background:#1d1d1f;color:white;padding:0.5rem;text-align:center;font-weight:600;font-size:0.875rem;">
-            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dayColors[i]};margin-right:4px;"></span>${d}
+          <div class="cal-header" style="background:#1d1d1f;color:white;padding:0.6rem 0.25rem;text-align:center;font-weight:700;font-size:0.75rem;letter-spacing:0.05em;">
+            ${d}
           </div>
         `).join('')}
         ${weeks.map(week => week.map(date => {
@@ -256,27 +256,39 @@ export function renderMonthlySchedule(app) {
           const dateKey = String(date.getDate());
           const isSelected = selectedDate === dateKey && isCurrentMonth;
           const info = isCurrentMonth ? getLessonsForDate(date, calendarData) : null;
-          const activeCount = info ? info.lessons.filter(l => !l.cancelled).length : 0;
-          const wsCount = info ? info.workshops.length : 0;
 
-          // Unique venue dots
-          const venueDots = info && !info.holiday
-            ? [...new Set(info.lessons.filter(l => !l.cancelled).map(l => l.venue))].map(v =>
-                `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${getVenueColor(v)};"></span>`
-              ).join('')
-            : '';
+          // Build lesson name badges
+          let badges = '';
+          if (isCurrentMonth && info) {
+            if (info.holiday && !info.workshops.length) {
+              badges = '<div class="cal-tag" style="background:#e5e7eb;color:#6b7280;">休校</div>';
+            } else {
+              // Active regular lessons as colored tags
+              badges = info.lessons.filter(l => !l.cancelled).map(cls => {
+                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+                const bg = getVenueColor(cls.venue);
+                return `<div class="cal-tag" style="background:${bg};color:white;">${shortName}</div>`;
+              }).join('');
+              // Cancelled lessons with strikethrough
+              badges += info.lessons.filter(l => l.cancelled).map(cls => {
+                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+                return `<div class="cal-tag cal-tag-cancelled">${shortName}</div>`;
+              }).join('');
+              // Workshops in orange
+              badges += (info.workshops || []).map(ws =>
+                `<div class="cal-tag" style="background:#f59e0b;color:white;">${ws.name}</div>`
+              ).join('');
+            }
+            if (info.note) {
+              badges += `<div class="cal-tag" style="background:#fef3c7;color:#92400e;font-size:0.55rem;">📝 ${info.note}</div>`;
+            }
+          }
 
           return `
-            <div class="cal-cell ${!isCurrentMonth ? 'outside' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${info?.holiday ? 'holiday' : ''}"
+            <div class="cal-cell ${!isCurrentMonth ? 'outside' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}"
                  ${isCurrentMonth ? `onclick="window.app.selectCalendarDate('${dateKey}')"` : ''}>
               <div class="cal-date">${date.getDate()}</div>
-              ${isCurrentMonth ? `
-                <div class="cal-dots">${venueDots}${wsCount ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;"></span>` : ''}</div>
-                ${info.holiday ? '<div class="cal-badge-holiday">休</div>' : ''}
-                ${info.cancelledCount > 0 ? `<div class="cal-badge-cancel">${info.cancelledCount}休講</div>` : ''}
-                ${wsCount > 0 ? `<div class="cal-badge-ws">WS</div>` : ''}
-                ${info.note ? `<div class="cal-note-indicator" title="${info.note}">📝</div>` : ''}
-              ` : ''}
+              <div class="cal-tags">${badges}</div>
             </div>
           `;
         }).join('')).join('')}
