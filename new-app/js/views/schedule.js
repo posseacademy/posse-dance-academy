@@ -64,6 +64,11 @@ export function renderTimeSchedule(app) {
     return { day, short: dayShort[di], blocks };
   });
 
+  // Mobile: selected day for tab view
+  const mobileDay = app.selectedDay || '月曜日';
+  const mobileDayData = dayColumns.find(d => d.day === mobileDay) || dayColumns[0];
+  const dayColors2 = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
+
   return `
     <div class="page-header">
       <div>
@@ -72,7 +77,38 @@ export function renderTimeSchedule(app) {
       </div>
     </div>
 
-    <div class="content-card" style="padding:0;overflow-x:auto;border:1px solid #d1d5db;">
+    <!-- Mobile: day tabs + vertical list -->
+    <div class="ts-mobile-only">
+      <div class="att-day-nav" style="margin-bottom:0.75rem;">
+        <div class="tab-nav att-day-tabs" style="margin-bottom:0;flex:1;">
+          ${daysOfWeek.map(day => `
+            <button class="tab-btn ${day === mobileDay ? 'active' : ''}"
+                    onclick="window.app.selectedDay='${day}';window.app.render();">
+              <span class="day-dot" style="background:${dayColors2[day]};"></span>
+              <span>${day.charAt(0)}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="content-card" style="padding:0.75rem;">
+        ${mobileDayData.blocks.length === 0 ? '<div style="color:var(--text-secondary);font-size:0.875rem;text-align:center;padding:2rem 0;">この曜日のレッスンはありません</div>' :
+          mobileDayData.blocks
+            .sort((a, b) => a.startMin - b.startMin)
+            .map(b => `
+            <div style="display:flex;align-items:stretch;gap:0.5rem;margin-bottom:0.5rem;">
+              <div style="width:4px;border-radius:2px;background:${getVenueColor(b.cls.venue)};flex-shrink:0;"></div>
+              <div style="flex:1;padding:0.4rem 0;">
+                <div style="font-weight:700;font-size:0.875rem;">${b.shortName}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.15rem;">${b.instructor}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);">${b.cls.time} ｜ ${b.cls.venue}</div>
+              </div>
+            </div>
+          `).join('')}
+      </div>
+    </div>
+
+    <!-- Desktop: full grid -->
+    <div class="ts-desktop-only content-card" style="padding:0;overflow-x:auto;border:1px solid #d1d5db;">
       <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:700px;">
         <!-- Header row -->
         <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;border-right:1px solid #4b5563;">時刻</div>

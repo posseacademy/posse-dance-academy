@@ -3036,15 +3036,16 @@ a:focus-visible {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  border: 1px solid #d1d5db;
 }
 .cal-header {
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid #4b5563;
   font-size: 0.875rem;
 }
 .cal-cell {
   min-height: 90px;
   padding: 0.4rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid #d1d5db;
   background: white;
   cursor: pointer;
   position: relative;
@@ -3074,11 +3075,25 @@ a:focus-visible {
   text-decoration: line-through;
 }
 
+/* Schedule mobile/desktop toggle */
+.ts-mobile-only { display: none; }
+.ts-desktop-only { display: block; }
+
 @media (max-width: 768px) {
-  .cal-cell { min-height: 55px; padding: 0.2rem; }
-  .cal-date { font-size: 0.75rem; }
-  .cal-tag { font-size: 0.5rem; padding: 0.1rem 0.2rem; }
+  /* Time schedule: show mobile tabs, hide desktop grid */
+  .ts-mobile-only { display: block; }
+  .ts-desktop-only { display: none !important; }
+
+  /* Monthly calendar compact */
+  .cal-cell { min-height: 50px; padding: 0.15rem; }
+  .cal-date { font-size: 0.7rem; margin-bottom: 0.1rem; }
+  .cal-tag { font-size: 0.45rem; padding: 0.05rem 0.15rem; line-height: 1.2; }
+  .cal-header { font-size: 0.6rem !important; padding: 0.35rem 0.1rem !important; letter-spacing: 0 !important; }
   .cal-detail-panel .card-content { padding: 0.75rem !important; }
+
+  /* Calendar venue legend compact */
+  .cal-venue-legend { gap: 0.4rem !important; }
+  .cal-venue-legend span { font-size: 0.7rem !important; }
 }
 
 /* ============================================================================
