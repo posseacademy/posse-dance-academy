@@ -77,6 +77,22 @@ export function renderTimeSchedule(app) {
       </div>
     </div>
 
+    <!-- Venue Legend -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:center;">
+      ${[
+        { name: '天神BUZZ校', color: '#3b82f6' },
+        { name: '大橋校', color: '#ef4444' },
+        { name: '照葉校', color: '#10b981' },
+        { name: '千早クラス', color: '#8b5cf6' },
+        { name: '九産大前', color: '#f59e0b' }
+      ].map(v => `
+        <div style="display:flex;align-items:center;gap:0.35rem;">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:0.15rem;background:${v.color};"></span>
+          <span style="font-size:0.8125rem;font-weight:500;">${v.name}</span>
+        </div>
+      `).join('')}
+    </div>
+
     <!-- Mobile: day tabs + vertical list -->
     <div class="ts-mobile-only">
       <div class="att-day-nav" style="margin-bottom:0.75rem;">
@@ -223,6 +239,7 @@ export function renderMonthlySchedule(app) {
   }
 
   const dayHeaders = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+  const dayHeadersShort = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
   const dayColors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#9ca3af', '#9ca3af'];
 
   // Build detail panel if a date is selected
@@ -332,8 +349,8 @@ export function renderMonthlySchedule(app) {
     <div class="content-card" style="padding:0;">
       <div class="calendar-grid">
         ${dayHeaders.map((d, i) => `
-          <div class="cal-header" style="background:#1d1d1f;color:white;padding:0.6rem 0.25rem;text-align:center;font-weight:700;font-size:0.75rem;letter-spacing:0.05em;">
-            ${d}
+          <div class="cal-header" style="background:#1d1d1f;color:white;padding:0.6rem 0.25rem;text-align:center;font-weight:700;font-size:0.75rem;letter-spacing:0.05em;overflow:hidden;">
+            <span class="day-full">${d}</span><span class="day-short">${dayHeadersShort[i]}</span>
           </div>
         `).join('')}
         ${weeks.map(week => week.map(date => {
