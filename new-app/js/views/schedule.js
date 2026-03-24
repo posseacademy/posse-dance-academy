@@ -243,6 +243,22 @@ export function renderMonthlySchedule(app) {
       </div>
     </div>
 
+    <!-- Venue Legend -->
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:center;">
+      ${[
+        { name: '天神BUZZ校', color: '#3b82f6' },
+        { name: '大橋校', color: '#ef4444' },
+        { name: '照葉校', color: '#10b981' },
+        { name: '千早クラス', color: '#8b5cf6' },
+        { name: '九産大前', color: '#f59e0b' }
+      ].map(v => `
+        <div style="display:flex;align-items:center;gap:0.35rem;">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:0.15rem;background:${v.color};"></span>
+          <span style="font-size:0.8125rem;font-weight:500;">${v.name}</span>
+        </div>
+      `).join('')}
+    </div>
+
     <div class="content-card" style="padding:0;">
       <div class="calendar-grid">
         ${dayHeaders.map((d, i) => `
