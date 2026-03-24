@@ -4,7 +4,7 @@ import * as db from './firebase-service.js?v=5';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=11';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=28';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=29';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
 import { renderRevenue } from './views/revenue.js?v=10';
 
@@ -921,17 +921,32 @@ class DanceStudioApp {
             });
         });
 
-        // Edit student buttons
-        document.querySelectorAll('.edit-student-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.startEditStudent(btn.getAttribute('data-edit-student-day'), btn.getAttribute('data-edit-student-location'), btn.getAttribute('data-edit-student-class'), btn.getAttribute('data-edit-student-lastname'), btn.getAttribute('data-edit-student-firstname'));
-            });
-        });
-
-        // Delete student buttons
-        document.querySelectorAll('.delete-student-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.deleteStudent(btn.getAttribute('data-delete-day'), btn.getAttribute('data-delete-location'), btn.getAttribute('data-delete-class'), btn.getAttribute('data-delete-lastname'), btn.getAttribute('data-delete-firstname'));
+        // Student menu buttons (pencil icon → dropdown with edit/delete)
+        document.querySelectorAll('.student-menu-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.student-action-menu').forEach(m => m.remove());
+                const day = btn.getAttribute('data-menu-day');
+                const loc = btn.getAttribute('data-menu-location');
+                const cls = btn.getAttribute('data-menu-class');
+                const ln = btn.getAttribute('data-menu-lastname');
+                const fn = btn.getAttribute('data-menu-firstname');
+                const menu = document.createElement('div');
+                menu.className = 'student-action-menu';
+                menu.innerHTML = `
+                    <button class="student-action-menu-item" data-action="edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        編集
+                    </button>
+                    <button class="student-action-menu-item danger" data-action="delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        削除
+                    </button>`;
+                btn.closest('.student-actions').appendChild(menu);
+                menu.querySelector('[data-action="edit"]').addEventListener('click', () => { menu.remove(); this.startEditStudent(day, loc, cls, ln, fn); });
+                menu.querySelector('[data-action="delete"]').addEventListener('click', () => { menu.remove(); this.deleteStudent(day, loc, cls, ln, fn); });
+                const closeMenu = (ev) => { if (!menu.contains(ev.target) && ev.target !== btn) { menu.remove(); document.removeEventListener('click', closeMenu); } };
+                setTimeout(() => document.addEventListener('click', closeMenu), 0);
             });
         });
 

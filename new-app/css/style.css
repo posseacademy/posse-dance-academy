@@ -1383,11 +1383,7 @@ textarea {
 .student-actions {
   display: flex;
   gap: var(--spacing-1);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-tr:hover .student-actions {
-  opacity: 1;
+  position: relative;
 }
 .student-action-btn {
   display: inline-flex;
@@ -1399,16 +1395,56 @@ tr:hover .student-actions {
   border-radius: var(--border-radius-sm);
   background: none;
   cursor: pointer;
-  color: var(--color-gray-400);
+  color: #1d1d1f;
   transition: all var(--transition-fast);
 }
 .student-action-btn:hover {
   background-color: var(--color-gray-100);
-  color: var(--color-gray-700);
+  color: #000;
 }
 .student-action-btn svg {
   width: 14px;
   height: 14px;
+}
+/* Student action dropdown menu */
+.student-action-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  min-width: 120px;
+  overflow: hidden;
+}
+.student-action-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: #1d1d1f;
+  white-space: nowrap;
+}
+.student-action-menu-item:hover {
+  background-color: var(--color-gray-50);
+}
+.student-action-menu-item.danger {
+  color: #dc2626;
+}
+.student-action-menu-item.danger:hover {
+  background-color: #fef2f2;
+}
+.student-action-menu-item svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 /* Customer detail modal */

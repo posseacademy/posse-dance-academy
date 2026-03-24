@@ -243,23 +243,14 @@ export function renderAttendanceRecord(app) {
                         <td class="att-td-rate">${rate}%</td>
                         <td class="att-td-actions">
                           <div class="student-actions">
-                            <button class="student-action-btn edit-student-btn"
-                                    data-edit-student-day="${currentDay}"
-                                    data-edit-student-location="${cls.location || cls.venue}"
-                                    data-edit-student-class="${cls.name}"
-                                    data-edit-student-lastname="${student.lastName}"
-                                    data-edit-student-firstname="${student.firstName}"
-                                    title="編集">
+                            <button class="student-action-btn student-menu-btn"
+                                    data-menu-day="${currentDay}"
+                                    data-menu-location="${cls.location || cls.venue}"
+                                    data-menu-class="${cls.name}"
+                                    data-menu-lastname="${student.lastName}"
+                                    data-menu-firstname="${student.firstName}"
+                                    title="メニュー">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            </button>
-                            <button class="student-action-btn delete-student-btn"
-                                    data-delete-day="${currentDay}"
-                                    data-delete-location="${cls.location || cls.venue}"
-                                    data-delete-class="${cls.name}"
-                                    data-delete-lastname="${student.lastName}"
-                                    data-delete-firstname="${student.firstName}"
-                                    title="削除">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                             </button>
                           </div>
                         </td>
