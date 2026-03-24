@@ -1,11 +1,11 @@
 // Imports
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=9';
-import * as db from './firebase-service.js?v=5';
+import * as db from './firebase-service.js?v=6';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=11';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=8';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=9';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=3';
 
@@ -50,6 +50,10 @@ class DanceStudioApp {
         this.courseColors = courseColors;
         this.scheduleData = JSON.parse(JSON.stringify(defaultSchedule));
         this.timeScheduleData = timeSchedule;
+
+        // Calendar
+        this.calendarData = {};
+        this.selectedCalendarDate = null;
     }
 
     // ===== INITIALIZATION =====
@@ -66,12 +70,14 @@ class DanceStudioApp {
                 withTimeout(db.loadCustomers()),
                 withTimeout(db.loadScheduleData(this.scheduleData)),
                 withTimeout(db.loadAttendance(this.selectedMonth)),
-                withTimeout(db.loadEvents(this.selectedMonth))
+                withTimeout(db.loadEvents(this.selectedMonth)),
+                withTimeout(db.loadCalendarData(this.selectedMonth))
             ]);
             if (results[0].status === 'fulfilled') this.customers = results[0].value;
             if (results[1].status === 'fulfilled' && results[1].value) this.scheduleData = results[1].value;
             if (results[2].status === 'fulfilled') this.attendanceData = results[2].value;
             if (results[3].status === 'fulfilled') this.eventsData = results[3].value;
+            if (results[4].status === 'fulfilled') this.calendarData = results[4].value;
         } catch (error) {
             console.error('初期化エラー:', error);
         }
@@ -328,6 +334,71 @@ class DanceStudioApp {
         };
     }
 
+    // ===== CALENDAR =====
+    selectCalendarDate(dateStr) {
+        this.selectedCalendarDate = dateStr;
+        this.render();
+    }
+
+    async toggleCalendarHoliday(dateStr) {
+        const data = this.calendarData[dateStr] || {};
+        data.holiday = !data.holiday;
+        if (!data.holiday) delete data.holiday;
+        await this._saveCalendarDay(dateStr, data);
+    }
+
+    async cancelLesson(dateStr, lessonKey) {
+        const data = this.calendarData[dateStr] || {};
+        if (!data.cancelledLessons) data.cancelledLessons = [];
+        if (data.cancelledLessons.includes(lessonKey)) {
+            data.cancelledLessons = data.cancelledLessons.filter(k => k !== lessonKey);
+        } else {
+            data.cancelledLessons.push(lessonKey);
+        }
+        if (!data.cancelledLessons.length) delete data.cancelledLessons;
+        await this._saveCalendarDay(dateStr, data);
+    }
+
+    async addWorkshop(dateStr) {
+        const name = document.getElementById('calWsName')?.value?.trim();
+        const venue = document.getElementById('calWsVenue')?.value?.trim();
+        const time = document.getElementById('calWsTime')?.value?.trim();
+        if (!name) { alert('レッスン名を入力してください'); return; }
+        const data = this.calendarData[dateStr] || {};
+        if (!data.workshops) data.workshops = [];
+        data.workshops.push({ name, venue: venue || '', time: time || '' });
+        await this._saveCalendarDay(dateStr, data);
+    }
+
+    async removeWorkshop(dateStr, index) {
+        const data = this.calendarData[dateStr] || {};
+        if (data.workshops) {
+            data.workshops.splice(index, 1);
+            if (!data.workshops.length) delete data.workshops;
+        }
+        await this._saveCalendarDay(dateStr, data);
+    }
+
+    async saveCalendarNote(dateStr) {
+        const note = document.getElementById('calNote')?.value?.trim() || '';
+        const data = this.calendarData[dateStr] || {};
+        if (note) data.note = note; else delete data.note;
+        await this._saveCalendarDay(dateStr, data);
+    }
+
+    async _saveCalendarDay(dateStr, data) {
+        // Clean empty overrides
+        const isEmpty = !data.holiday && !data.cancelledLessons?.length && !data.workshops?.length && !data.note;
+        if (isEmpty) {
+            delete this.calendarData[dateStr];
+            await db.deleteCalendarDay(this.selectedMonth, dateStr);
+        } else {
+            this.calendarData[dateStr] = data;
+            await db.saveCalendarDay(this.selectedMonth, dateStr, data);
+        }
+        this.render();
+    }
+
     // ===== ATTENDANCE =====
     calculateAge(birthDate) {
         return calculateAge(birthDate);
@@ -393,6 +464,8 @@ class DanceStudioApp {
             this.selectedMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
+            this.calendarData = await db.loadCalendarData(this.selectedMonth);
+            this.selectedCalendarDate = null;
         } catch (error) {
             console.error('月切り替えエラー:', error);
         } finally {
@@ -863,6 +936,19 @@ class DanceStudioApp {
         } else if (this.currentTab === 'revenue') {
             document.getElementById('exportRevenueMonthlyBtn')?.addEventListener('click', () => this.handleExportRevenueMonthly());
             document.getElementById('exportRevenueYearlyBtn')?.addEventListener('click', () => this.handleExportRevenueYearly());
+        } else if (this.currentTab === 'monthlySchedule') {
+            const sel = this.selectedCalendarDate;
+            if (sel) {
+                document.getElementById('calToggleHoliday')?.addEventListener('click', () => this.toggleCalendarHoliday(sel));
+                document.querySelectorAll('.cal-cancel-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => { e.stopPropagation(); this.cancelLesson(sel, btn.dataset.lessonKey); });
+                });
+                document.querySelectorAll('.cal-remove-ws-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => { e.stopPropagation(); this.removeWorkshop(sel, parseInt(btn.dataset.wsIndex)); });
+                });
+                document.getElementById('calAddWsBtn')?.addEventListener('click', () => this.addWorkshop(sel));
+                document.getElementById('calSaveNote')?.addEventListener('click', () => this.saveCalendarNote(sel));
+            }
         }
 
         // Save navigation state to URL hash

@@ -300,3 +300,35 @@ export async function createBackup() {
         throw error;
     }
 }
+
+// ===== CALENDAR DATA =====
+
+export async function loadCalendarData(selectedMonth) {
+    const data = {};
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        const snapshot = await getDocs(collection(db, `calendar_${monthKey}`));
+        snapshot.forEach(docSnap => { data[docSnap.id] = docSnap.data(); });
+    } catch (error) {
+        console.error('カレンダーデータ読込エラー:', error);
+    }
+    return data;
+}
+
+export async function saveCalendarDay(selectedMonth, dateStr, dayData) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        await setDoc(doc(db, `calendar_${monthKey}`, dateStr), dayData);
+    } catch (error) {
+        console.error('カレンダー保存エラー:', error);
+    }
+}
+
+export async function deleteCalendarDay(selectedMonth, dateStr) {
+    try {
+        const monthKey = selectedMonth.replace('-', '');
+        await deleteDoc(doc(db, `calendar_${monthKey}`, dateStr));
+    } catch (error) {
+        console.error('カレンダー削除エラー:', error);
+    }
+}

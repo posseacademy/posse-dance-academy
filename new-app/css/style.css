@@ -3031,5 +3031,44 @@ a:focus-visible {
 }
 
 /* ============================================================================
+   25. MONTHLY CALENDAR
+   ============================================================================ */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.cal-header {
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.875rem;
+}
+.cal-cell {
+  min-height: 90px;
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  background: white;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s;
+}
+.cal-cell:hover { background: #f0f9ff; }
+.cal-cell.outside { background: var(--bg-secondary); opacity: 0.4; cursor: default; }
+.cal-cell.today { box-shadow: inset 0 0 0 2px #3b82f6; }
+.cal-cell.selected { background: #eff6ff; box-shadow: inset 0 0 0 2px #2563eb; }
+.cal-cell.holiday { background: #fef2f2; }
+.cal-date { font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem; }
+.cal-dots { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 0.2rem; }
+.cal-badge-holiday { font-size: 0.625rem; background: #fecaca; color: #991b1b; padding: 0.1rem 0.3rem; border-radius: 0.2rem; display: inline-block; }
+.cal-badge-cancel { font-size: 0.6rem; background: #fed7aa; color: #9a3412; padding: 0.1rem 0.3rem; border-radius: 0.2rem; display: inline-block; }
+.cal-badge-ws { font-size: 0.625rem; background: #fef08a; color: #854d0e; padding: 0.1rem 0.3rem; border-radius: 0.2rem; display: inline-block; font-weight: 600; }
+.cal-note-indicator { font-size: 0.7rem; position: absolute; bottom: 2px; right: 4px; }
+
+@media (max-width: 768px) {
+  .cal-cell { min-height: 55px; padding: 0.25rem; }
+  .cal-date { font-size: 0.75rem; }
+  .cal-badge-holiday, .cal-badge-cancel, .cal-badge-ws { font-size: 0.55rem; padding: 0 0.2rem; }
+  .cal-detail-panel .card-content { padding: 0.75rem !important; }
+}
+
+/* ============================================================================
    END OF CSS
    ============================================================================ */
