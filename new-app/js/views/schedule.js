@@ -91,7 +91,7 @@ export function renderTimeSchedule(app) {
               <div style="position:absolute;top:${l.top}px;left:0;right:0;border-top:1px solid ${l.hour === startHour ? 'transparent' : 'var(--border-color)'};"></div>
             `).join('')}
             ${d.blocks.map(b => `
-              <div style="position:absolute;top:${b.top}px;left:2px;right:2px;height:${b.height - 2}px;background:${b.cls.color};color:white;border-radius:0.3rem;padding:0.25rem 0.35rem;font-size:0.6875rem;line-height:1.25;overflow:hidden;cursor:default;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
+              <div style="position:absolute;top:${b.top}px;left:2px;right:2px;height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.25rem 0.35rem;font-size:0.6875rem;line-height:1.25;overflow:hidden;cursor:default;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
                 <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.shortName}</div>
                 ${b.height >= 60 ? `<div style="font-size:0.6rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
                 <div style="font-size:0.6rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
