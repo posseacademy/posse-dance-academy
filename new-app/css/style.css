@@ -270,8 +270,10 @@ pre {
   margin-left: var(--sidebar-width);
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background-color: var(--color-gray-50);
   padding: var(--spacing-6) var(--spacing-8);
+  min-width: 0;
 }
 
 /* ============================================================================
@@ -648,6 +650,8 @@ pre {
   border: 1px solid var(--color-gray-200);
   padding: var(--spacing-6);
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  overflow-x: auto;
 }
 .card-header {
   display: flex;
@@ -2372,6 +2376,12 @@ tr:hover .student-actions {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+  max-width: 100%;
+}
+@media (max-width: 1100px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
 }
 .grid-5col {
   display: grid;
