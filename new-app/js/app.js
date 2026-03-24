@@ -858,6 +858,9 @@ class DanceStudioApp {
             this.setupCustomerPageEvents();
         } else if (this.currentTab === 'attendance') {
             this.setupAttendanceEvents();
+        } else if (this.currentTab === 'revenue') {
+            document.getElementById('exportRevenueMonthlyBtn')?.addEventListener('click', () => this.handleExportRevenueMonthly());
+            document.getElementById('exportRevenueYearlyBtn')?.addEventListener('click', () => this.handleExportRevenueYearly());
         }
 
         // Save navigation state to URL hash
@@ -867,10 +870,6 @@ class DanceStudioApp {
     // ===== EVENT SETUP (CUSTOMERS) =====
     setupCustomerPageEvents() {
         document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
-        document.getElementById('exportAttendanceMonthlyBtn')?.addEventListener('click', () => this.handleExportAttendanceMonthly());
-        document.getElementById('exportAttendanceYearlyBtn')?.addEventListener('click', () => this.handleExportAttendanceYearly());
-        document.getElementById('exportRevenueMonthlyBtn')?.addEventListener('click', () => this.handleExportRevenueMonthly());
-        document.getElementById('exportRevenueYearlyBtn')?.addEventListener('click', () => this.handleExportRevenueYearly());
         document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
         document.getElementById('searchInput')?.addEventListener('input', (e) => { this.searchTerm = e.target.value; this.render(); });
         document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
@@ -941,6 +940,10 @@ class DanceStudioApp {
 
     // ===== EVENT SETUP (ATTENDANCE) =====
     setupAttendanceEvents() {
+        // CSV export buttons
+        document.getElementById('exportAttendanceMonthlyBtn')?.addEventListener('click', () => this.handleExportAttendanceMonthly());
+        document.getElementById('exportAttendanceYearlyBtn')?.addEventListener('click', () => this.handleExportAttendanceYearly());
+
         // Subtab navigation
         document.getElementById('attendanceOverviewTab')?.addEventListener('click', () => { this.attendanceSubtab = '概要'; this.render(); });
         document.getElementById('attendanceRecordTab')?.addEventListener('click', () => { this.attendanceSubtab = '出席記録'; this.render(); });
