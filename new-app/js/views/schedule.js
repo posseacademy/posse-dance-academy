@@ -379,7 +379,7 @@ export function renderMonthlySchedule(app) {
               }).join('');
               // Workshops in orange
               badges += (info.workshops || []).map(ws =>
-                `<div class="cal-tag" style="background:#f59e0b;color:white;">${ws.name}</div>`
+                `<div class="cal-tag" style="background:#1d1d1f;color:white;">${ws.name}</div>`
               ).join('');
             }
             if (info.note) {
