@@ -270,11 +270,8 @@ pre {
   margin-left: var(--sidebar-width);
   flex: 1;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  will-change: scroll-position;
   background-color: var(--color-gray-50);
   padding: var(--spacing-6) var(--spacing-8);
   min-width: 0;
