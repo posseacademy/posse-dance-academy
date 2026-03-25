@@ -124,7 +124,7 @@ export function renderTimeSchedule(app) {
     </div>
 
     <!-- Desktop: full grid -->
-    <div class="ts-desktop-only content-card" style="padding:0;overflow-x:auto;overscroll-behavior-x:contain;border:1px solid #d1d5db;">
+    <div class="ts-desktop-only content-card" style="padding:0;overflow:visible;border:1px solid #d1d5db;">
       <div class="ts-grid" style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:700px;">
         <!-- Header row -->
         <div style="background:#1d1d1f;padding:0.5rem;text-align:center;color:white;font-weight:600;font-size:0.75rem;border-right:1px solid #4b5563;">時刻</div>
