@@ -144,6 +144,39 @@ export async function saveScheduleData(scheduleData) {
 }
 
 /**
+ * Load time schedule from Firestore
+ * @param {Object} defaultTimeSchedule - Fallback from config.js
+ * @returns {Promise<Object>} Time schedule keyed by day
+ */
+export async function loadTimeSchedule(defaultTimeSchedule) {
+    try {
+        const tsRef = collection(db, 'timeSchedule');
+        const snapshot = await getDocs(tsRef);
+        if (snapshot.empty) return defaultTimeSchedule;
+        const loaded = {};
+        snapshot.forEach(d => { loaded[d.id] = d.data().lessons || []; });
+        return Object.keys(loaded).length > 0 ? loaded : defaultTimeSchedule;
+    } catch (error) {
+        console.error('Error loading timeSchedule:', error);
+        return defaultTimeSchedule;
+    }
+}
+
+/**
+ * Save time schedule for a specific day
+ * @param {string} day - Day name (e.g. '月曜日')
+ * @param {Array} lessons - Array of lesson objects
+ */
+export async function saveTimeScheduleDay(day, lessons) {
+    try {
+        await setDoc(doc(db, 'timeSchedule', day), { lessons });
+    } catch (error) {
+        console.error('Error saving timeSchedule:', error);
+        throw error;
+    }
+}
+
+/**
  * Load attendance records for a specific month
  * @param {string} selectedMonth - Month in format 'YYYY-MM'
  * @returns {Promise<Array>} Array of attendance records

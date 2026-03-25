@@ -1,11 +1,11 @@
 // Imports
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=9';
-import * as db from './firebase-service.js?v=6';
+import * as db from './firebase-service.js?v=7';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
-import { renderDashboard } from './views/home.js?v=11';
+import { renderDashboard } from './views/home.js?v=12';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=30';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=23';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=31';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=3';
 
@@ -49,7 +49,9 @@ class DanceStudioApp {
         this.coursePrices = coursePrices;
         this.courseColors = courseColors;
         this.scheduleData = JSON.parse(JSON.stringify(defaultSchedule));
-        this.timeScheduleData = timeSchedule;
+        this.timeScheduleData = JSON.parse(JSON.stringify(timeSchedule));
+        this.editingLessonDay = null;
+        this.editingLessonIndex = null;
 
         // Calendar
         this.calendarData = {};
@@ -71,13 +73,15 @@ class DanceStudioApp {
                 withTimeout(db.loadScheduleData(this.scheduleData)),
                 withTimeout(db.loadAttendance(this.selectedMonth)),
                 withTimeout(db.loadEvents(this.selectedMonth)),
-                withTimeout(db.loadCalendarData(this.selectedMonth))
+                withTimeout(db.loadCalendarData(this.selectedMonth)),
+                withTimeout(db.loadTimeSchedule(this.timeScheduleData))
             ]);
             if (results[0].status === 'fulfilled') this.customers = results[0].value;
             if (results[1].status === 'fulfilled' && results[1].value) this.scheduleData = results[1].value;
             if (results[2].status === 'fulfilled') this.attendanceData = results[2].value;
             if (results[3].status === 'fulfilled') this.eventsData = results[3].value;
             if (results[4].status === 'fulfilled') this.calendarData = results[4].value;
+            if (results[5].status === 'fulfilled' && results[5].value) this.timeScheduleData = results[5].value;
         } catch (error) {
             console.error('初期化エラー:', error);
         }
@@ -119,6 +123,117 @@ class DanceStudioApp {
     // No cleanup needed — visitors only show for months where they have attendance records
     cleanupNonRegularStudents() {
         // No-op: display filtering replaces destructive cleanup
+    }
+
+    // ===== LESSON MANAGEMENT (TimeSchedule CRUD) =====
+    getVenueColor(venue) {
+        if (venue.includes('天神')) return '#3b82f6';
+        if (venue.includes('大橋')) return '#ef4444';
+        if (venue.includes('照葉')) return '#10b981';
+        if (venue.includes('千早')) return '#8b5cf6';
+        if (venue.includes('九産大前')) return '#f59e0b';
+        return '#6b7280';
+    }
+
+    showLessonForm(day, index = null) {
+        this.editingLessonDay = day;
+        this.editingLessonIndex = index;
+        this.render();
+        // Scroll to form
+        setTimeout(() => document.getElementById('lessonFormModal')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    }
+
+    cancelLessonForm() {
+        this.editingLessonDay = null;
+        this.editingLessonIndex = null;
+        this.render();
+    }
+
+    async saveLessonForm() {
+        const day = document.getElementById('lessonDay')?.value || this.editingLessonDay;
+        const timeStart = document.getElementById('lessonTimeStart')?.value;
+        const timeEnd = document.getElementById('lessonTimeEnd')?.value;
+        const venue = document.getElementById('lessonVenue')?.value;
+        const lessonName = document.getElementById('lessonName')?.value?.trim();
+        const instructor = document.getElementById('lessonInstructor')?.value?.trim();
+
+        if (!day || !timeStart || !timeEnd || !venue || !lessonName || !instructor) {
+            alert('全ての項目を入力してください');
+            return;
+        }
+
+        const fullName = `${lessonName} ${instructor}`;
+        const time = `${timeStart}-${timeEnd}`;
+        const color = this.getVenueColor(venue);
+        const lessonData = { time, venue, name: fullName, color };
+
+        if (!this.timeScheduleData[day]) this.timeScheduleData[day] = [];
+
+        if (this.editingLessonIndex !== null) {
+            // Edit existing
+            const old = this.timeScheduleData[day][this.editingLessonIndex];
+            this.timeScheduleData[day][this.editingLessonIndex] = lessonData;
+            // Update scheduleData class name/location if changed
+            if (old && this.scheduleData[day]) {
+                const clsIdx = this.scheduleData[day].findIndex(c => c.name === old.name);
+                if (clsIdx !== -1) {
+                    this.scheduleData[day][clsIdx].name = fullName;
+                    this.scheduleData[day][clsIdx].location = venue.replace(/校$|スタジオ$|クラス$/, '').trim();
+                }
+            }
+        } else {
+            // Add new
+            this.timeScheduleData[day].push(lessonData);
+            // Auto-create class in scheduleData for attendance
+            if (!this.scheduleData[day]) this.scheduleData[day] = [];
+            const exists = this.scheduleData[day].some(c => c.name === fullName);
+            if (!exists) {
+                this.scheduleData[day].push({
+                    location: venue.replace(/校$|スタジオ$|クラス$/, '').trim(),
+                    name: fullName,
+                    students: []
+                });
+            }
+        }
+
+        try {
+            await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
+            await db.saveScheduleData(this.scheduleData);
+        } catch (e) {
+            console.error('レッスン保存エラー:', e);
+            alert('保存に失敗しました');
+        }
+
+        this.editingLessonDay = null;
+        this.editingLessonIndex = null;
+        this.render();
+    }
+
+    async deleteLesson(day, index) {
+        const lesson = this.timeScheduleData[day]?.[index];
+        if (!lesson) return;
+
+        // Check for students
+        const cls = this.scheduleData[day]?.find(c => c.name === lesson.name);
+        const studentCount = cls?.students?.length || 0;
+        const msg = studentCount > 0
+            ? `「${lesson.name}」を削除しますか？\n（${studentCount}名の生徒が登録されています）`
+            : `「${lesson.name}」を削除しますか？`;
+        if (!confirm(msg)) return;
+
+        this.timeScheduleData[day].splice(index, 1);
+        // Remove from scheduleData too
+        if (this.scheduleData[day]) {
+            this.scheduleData[day] = this.scheduleData[day].filter(c => c.name !== lesson.name);
+        }
+
+        try {
+            await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
+            await db.saveScheduleData(this.scheduleData);
+        } catch (e) {
+            console.error('レッスン削除エラー:', e);
+        }
+        this.render();
     }
 
     // ===== CUSTOMER MANAGEMENT =====

@@ -174,17 +174,19 @@ export function renderAttendanceRecord(app) {
       ${[...schedule].sort((a, b) => {
         const locA = a.location || a.venue || '';
         const locB = b.location || b.venue || '';
-        const tA = (timeSchedule[currentDay] || []).find(t => t.name === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
-          || (timeSchedule[currentDay] || []).find(t => t.name === a.name);
-        const tB = (timeSchedule[currentDay] || []).find(t => t.name === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
-          || (timeSchedule[currentDay] || []).find(t => t.name === b.name);
+        const tsData = app.timeScheduleData || timeSchedule;
+        const tA = (tsData[currentDay] || []).find(t => t.name === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
+          || (tsData[currentDay] || []).find(t => t.name === a.name);
+        const tB = (tsData[currentDay] || []).find(t => t.name === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
+          || (tsData[currentDay] || []).find(t => t.name === b.name);
         const timeA = tA ? tA.time.split('-')[0].replace(':', '') : '9999';
         const timeB = tB ? tB.time.split('-')[0].replace(':', '') : '9999';
         return timeA.localeCompare(timeB);
       }).map((cls, idx) => {
         const loc = cls.location || cls.venue || '';
-        const timeEntry = (timeSchedule[currentDay] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
-          || (timeSchedule[currentDay] || []).find(t => t.name === cls.name);
+        const tsData2 = app.timeScheduleData || timeSchedule;
+        const timeEntry = (tsData2[currentDay] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+          || (tsData2[currentDay] || []).find(t => t.name === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
         <div class="content-card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;">

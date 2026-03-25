@@ -201,8 +201,9 @@ export function renderDashboard(app) {
               </div>
               ${classes.map(cls => {
                 const loc = cls.location || cls.venue || '';
-                const te = (timeSchedule[day] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
-                  || (timeSchedule[day] || []).find(t => t.name === cls.name && !t.alias);
+                const tsH = app.timeScheduleData || timeSchedule;
+                const te = (tsH[day] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+                  || (tsH[day] || []).find(t => t.name === cls.name && !t.alias);
                 const time = te ? te.time : '';
                 const regularCount = (cls.students || []).filter(s => isRegularPlan(s.plan)).length;
                 return `

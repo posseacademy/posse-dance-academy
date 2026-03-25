@@ -18,10 +18,13 @@ export function renderTimeSchedule(app) {
   const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
   const dayShort = ['月', '火', '水', '木', '金'];
 
+  // Use app's editable timeScheduleData (loaded from Firestore or config fallback)
+  const ts = app.timeScheduleData || timeSchedule;
+
   // Determine time range from actual classes
   let minTime = 24 * 60, maxTime = 0;
   daysOfWeek.forEach(day => {
-    (timeSchedule[day] || []).filter(c => !c.alias && c.time).forEach(cls => {
+    (ts[day] || []).filter(c => !c.alias && c.time).forEach(cls => {
       const parts = cls.time.split('-');
       const start = timeToMinutes(parts[0].replace('〜', '').trim());
       const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
@@ -45,8 +48,10 @@ export function renderTimeSchedule(app) {
 
   // Build class blocks per day with column assignment for overlaps
   const dayColumns = daysOfWeek.map((day, di) => {
-    const classes = (timeSchedule[day] || []).filter(c => !c.alias && c.time);
+    const classes = (ts[day] || []).filter(c => !c.alias && c.time);
+    const allLessons = ts[day] || [];
     const blocks = classes.map(cls => {
+      const origIndex = allLessons.indexOf(cls);
       const parts = cls.time.split('-');
       const start = timeToMinutes(parts[0].replace('〜', '').trim());
       const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
@@ -54,7 +59,7 @@ export function renderTimeSchedule(app) {
       const height = (end - start) * PX_PER_MIN;
       const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
       const instructor = cls.name.replace(shortName, '').trim();
-      return { cls, top, height, shortName, instructor, startMin: start, endMin: end, col: 0 };
+      return { cls, top, height, shortName, instructor, startMin: start, endMin: end, col: 0, origIndex };
     });
     // Assign columns: if a block overlaps with any block in col 0, put it in col 1
     blocks.forEach((b, i) => {
@@ -70,12 +75,17 @@ export function renderTimeSchedule(app) {
   const dayColors2 = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
 
   return `
-    <div class="page-header">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <h2>スケジュール</h2>
         <p class="subtitle">週間時間割</p>
       </div>
+      <button class="btn btn-primary btn-sm" onclick="window.app.showLessonForm('月曜日')" style="white-space:nowrap;">
+        ＋ レッスン追加
+      </button>
     </div>
+
+    ${app.editingLessonDay !== null ? renderLessonForm(app) : ''}
 
     <!-- Venue Legend -->
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;align-items:center;">
@@ -153,7 +163,7 @@ export function renderTimeSchedule(app) {
               const left = hasCol1 ? (b.col === 0 ? '1px' : '50%') : '2px';
               const right = hasCol1 ? (b.col === 0 ? '50%' : '1px') : '2px';
               return `
-              <div style="position:absolute;top:${b.top}px;left:${left};right:${right};height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.2rem 0.3rem;font-size:0.65rem;line-height:1.25;overflow:hidden;cursor:default;margin:0 1px;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}">
+              <div class="ts-block" style="position:absolute;top:${b.top}px;left:${left};right:${right};height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.2rem 0.3rem;font-size:0.65rem;line-height:1.25;overflow:hidden;cursor:pointer;margin:0 1px;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}" onclick="window.app.showLessonForm('${d.day}', ${b.origIndex})">
                 <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.shortName}</div>
                 ${b.height >= 60 ? `<div style="font-size:0.55rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
                 <div style="font-size:0.55rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
@@ -168,12 +178,85 @@ export function renderTimeSchedule(app) {
 }
 
 /**
+ * Lesson add/edit form
+ */
+function renderLessonForm(app) {
+  const day = app.editingLessonDay;
+  const idx = app.editingLessonIndex;
+  const ts = app.timeScheduleData || timeSchedule;
+  const existing = idx !== null ? (ts[day] || [])[idx] : null;
+
+  // Parse existing data
+  let timeStart = '', timeEnd = '', venue = '', lessonName = '', instructor = '';
+  if (existing) {
+    const parts = existing.time.split('-');
+    timeStart = parts[0]?.replace('〜', '').trim() || '';
+    timeEnd = parts[1]?.trim() || '';
+    venue = existing.venue || '';
+    const nameMatch = existing.name.match(/^(.+?)\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO|.+)$/i);
+    if (nameMatch) {
+      lessonName = nameMatch[1].trim();
+      instructor = nameMatch[2].trim();
+    } else {
+      lessonName = existing.name;
+    }
+  }
+
+  const venues = ['天神BUZZ校 2スタジオ', '天神BUZZ校 5スタジオ', '天神BUZZ校 11スタジオ', '大橋校', '照葉校', '千早クラス', '九産大前スタジオ'];
+  const days = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
+
+  return `
+    <div id="lessonFormModal" class="content-card" style="margin-bottom:1rem;border:2px solid #3b82f6;">
+      <div class="card-header" style="margin-bottom:1rem;padding-bottom:0.75rem;">
+        <h3 class="card-title">${existing ? 'レッスン編集' : 'レッスン追加'}</h3>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">曜日</label>
+          <select id="lessonDay" class="input" style="margin-top:0.25rem;">
+            ${days.map(d => `<option value="${d}" ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">スタジオ</label>
+          <select id="lessonVenue" class="input" style="margin-top:0.25rem;">
+            ${venues.map(v => `<option value="${v}" ${v === venue ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">開始時間</label>
+          <input type="time" id="lessonTimeStart" class="input" value="${timeStart}" style="margin-top:0.25rem;">
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">終了時間</label>
+          <input type="time" id="lessonTimeEnd" class="input" value="${timeEnd}" style="margin-top:0.25rem;">
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">レッスン名</label>
+          <input type="text" id="lessonName" class="input" value="${lessonName}" placeholder="例: ブレイキン入門" style="margin-top:0.25rem;">
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">講師名</label>
+          <input type="text" id="lessonInstructor" class="input" value="${instructor}" placeholder="例: SOYA" style="margin-top:0.25rem;">
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;">
+        ${existing ? `<button class="btn btn-sm" style="background:#ef4444;color:white;" onclick="window.app.deleteLesson('${day}', ${idx})">削除</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="window.app.cancelLessonForm()">キャンセル</button>
+        <button class="btn btn-primary btn-sm" onclick="window.app.saveLessonForm()">保存</button>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Calendar month view
  * @param {Object} app - Application state
  * @returns {string} HTML string for monthly schedule
  */
 // Get lessons for a specific date, merging timeSchedule with calendar overrides
-function getLessonsForDate(date, calendarData) {
+function getLessonsForDate(date, calendarData, app) {
+  const ts = (app && app.timeScheduleData) || timeSchedule;
   const dayNames = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
   const dayOfWeek = dayNames[date.getDay()];
   const dateKey = String(date.getDate());
@@ -188,7 +271,7 @@ function getLessonsForDate(date, calendarData) {
   }
 
   const cancelled = override.cancelledLessons || [];
-  const regularLessons = (timeSchedule[dayOfWeek] || [])
+  const regularLessons = (ts[dayOfWeek] || [])
     .filter(cls => !cls.alias)
     .map(cls => ({ ...cls, cancelled: cancelled.includes(`${cls.name}__${cls.venue}`) }));
 
@@ -248,7 +331,7 @@ export function renderMonthlySchedule(app) {
     const selDateObj = new Date(year, month, parseInt(selectedDate));
     const dayNames = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
     const dayLabel = dayNames[selDateObj.getDay()];
-    const info = getLessonsForDate(selDateObj, calendarData);
+    const info = getLessonsForDate(selDateObj, calendarData, app);
     const override = calendarData[selectedDate] || {};
 
     detailPanel = `
@@ -358,7 +441,7 @@ export function renderMonthlySchedule(app) {
           const isToday = date.toDateString() === today.toDateString();
           const dateKey = String(date.getDate());
           const isSelected = selectedDate === dateKey && isCurrentMonth;
-          const info = isCurrentMonth ? getLessonsForDate(date, calendarData) : null;
+          const info = isCurrentMonth ? getLessonsForDate(date, calendarData, app) : null;
 
           // Build lesson name badges
           let badges = '';
