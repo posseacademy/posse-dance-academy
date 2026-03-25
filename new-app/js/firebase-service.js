@@ -153,9 +153,10 @@ export async function loadTimeSchedule(defaultTimeSchedule) {
         const tsRef = collection(db, 'timeSchedule');
         const snapshot = await getDocs(tsRef);
         if (snapshot.empty) return defaultTimeSchedule;
-        const loaded = {};
-        snapshot.forEach(d => { loaded[d.id] = d.data().lessons || []; });
-        return Object.keys(loaded).length > 0 ? loaded : defaultTimeSchedule;
+        // Merge: start with defaults, override only days that exist in Firestore
+        const merged = JSON.parse(JSON.stringify(defaultTimeSchedule));
+        snapshot.forEach(d => { merged[d.id] = d.data().lessons || []; });
+        return merged;
     } catch (error) {
         console.error('Error loading timeSchedule:', error);
         return defaultTimeSchedule;
