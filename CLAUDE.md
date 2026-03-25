@@ -33,25 +33,29 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-03-24):**
-- `app.html`: `style.css?v=13`, `app.js?v=38`
-- `app.js`: `config.js?v=9`, `utils.js?v=5`, `firebase-service.js?v=5`
-- `app.js`: `home.js?v=11`, `customers.js?v=10`, `attendance.js?v=28`, `schedule.js?v=8`, `revenue.js?v=10`
+**現在のバージョン (2026-03-25):**
+- `app.html`: `style.css?v=23`, `app.js?v=62`
+- `app.js`: `config.js?v=9`, `utils.js?v=5`, `firebase-service.js?v=8`
+- `app.js`: `home.js?v=12`, `customers.js?v=10`, `attendance.js?v=31`, `schedule.js?v=24`, `revenue.js?v=10`
 
 **手順:** ファイル修正 → 親ファイルの `?v=N+1` 更新 → コミット → push
 
-## デプロイ（二重パス構造に注意）
-ローカル作業は `posse/new-app/` だが、gitリポジトリのルートは `posse/` の親ディレクトリ。
-デプロイ時は `posse/new-app/` → `new-app/` へコピーしてからコミットすること。
+## デプロイ
+gitリポジトリのルートは `posse/` ディレクトリ。直接pushでデプロイ可能。
 
 ```bash
-cp posse/new-app/js/app.js new-app/js/app.js
-cd /Users/ATSUSHITO_RYCE/CLAUDE && git add new-app/ && git commit && git push
+cd /Users/ATSUSHITO_RYCE/CLAUDE/posse
+git add new-app/js/app.js
+git commit -m "修正内容"
+git push origin main
+# 2-5分後にブラウザでハードリフレッシュ（Cmd+Shift+R）
 ```
 
 ## Firestoreアーキテクチャ
+- `timeSchedule` コレクション: レッスン時間・場所・講師（曜日ごとにドキュメント、config.jsがフォールバック）
 - `schedule` コレクション: 全月共通の生徒名簿（曜日ごとにドキュメント）
 - `attendance_YYYYMM`: 月別出席データ（キー形式: `曜日_場所_クラス名_姓名`）
+- `calendar_YYYYMM`: 月別カレンダーオーバーライド（休校・休講・WS）
 - `customers`: 顧客マスターデータ
 
 ## 重要な仕様
