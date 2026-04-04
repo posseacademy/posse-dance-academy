@@ -3,7 +3,7 @@ import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSched
 import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=12';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=10';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=11';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=31';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
@@ -386,6 +386,9 @@ class DanceStudioApp {
             alert('会員番号を入力してください'); return;
         }
         try {
+            if (this.newCustomer.plan) {
+                this.newCustomer.planUpdatedAt = this.selectedMonth;
+            }
             await db.addCustomer(this.newCustomer);
             this.customers = await db.loadCustomers();
             this.newCustomer = getEmptyCustomer();
@@ -420,13 +423,26 @@ class DanceStudioApp {
     async saveEdit() {
         if (!this.editForm.id) { alert('保存エラー: IDが見つかりません'); return; }
         try {
+            // プラン変更検出
+            const oldCustomer = this.customers.find(c => c.id === this.editForm.id);
+            const planChanged = oldCustomer && this.editForm.plan && this.editForm.plan !== oldCustomer.plan;
+            if (planChanged) {
+                this.editForm.planUpdatedAt = this.selectedMonth;
+            }
+
             const { id, ...dataToSave } = this.editForm;
             await db.updateCustomer(id, dataToSave);
+
+            // プラン変更時：schedule + 当月attendanceに同期
+            if (planChanged) {
+                await this.syncPlanToCurrentMonth(this.editForm);
+            }
+
             this.customers = await db.loadCustomers();
             this.editingId = null;
             this.editForm = {};
             this.render();
-            alert('更新しました');
+            alert(planChanged ? 'プランを更新しました（出席記録にも反映済み）' : '更新しました');
         } catch (error) {
             console.error('更新エラー:', error);
             alert('更新エラー: ' + error.message);
@@ -1165,7 +1181,7 @@ class DanceStudioApp {
         });
 
         // Form field events
-        const fields = ['memberNumber', 'status', 'course', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'enrollmentFeeDate', 'annualFeeMonth'];
+        const fields = ['memberNumber', 'status', 'course', 'plan', 'annualFee', 'lastName', 'firstName', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'enrollmentFeeDate', 'annualFeeMonth'];
         fields.forEach(field => {
             const el = document.getElementById(`new_${field}`);
             if (el) {
@@ -1204,7 +1220,7 @@ class DanceStudioApp {
             if (e.target.id === 'editOverlay') this.cancelEdit();
         });
 
-        const editFields = ['memberNumber', 'status', 'course', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'phone2', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'lastName', 'firstName', 'enrollmentFeeDate', 'annualFeeMonth'];
+        const editFields = ['memberNumber', 'status', 'course', 'plan', 'annualFee', 'reading', 'guardianName', 'hakomonoName', 'gender', 'birthDate', 'phone1', 'phone2', 'email', 'postalCode', 'prefecture', 'city', 'address', 'building', 'joinDate', 'memo', 'lastName', 'firstName', 'enrollmentFeeDate', 'annualFeeMonth'];
         editFields.forEach(field => {
             const el = document.getElementById(`edit_${field}`);
             if (el) {

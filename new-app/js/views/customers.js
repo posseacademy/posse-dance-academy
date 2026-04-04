@@ -99,6 +99,7 @@ export function renderCustomers(app) {
               <th class="sortable-header" data-field="memberNumber" style="color:white;">会員番号${sortIcon('memberNumber')}</th>
               <th class="sortable-header" data-field="lastName" style="color:white;">氏名${sortIcon('lastName')}</th>
               <th class="sortable-header" data-field="course" style="color:white;">コース${sortIcon('course')}</th>
+              <th class="sortable-header" data-field="plan" style="color:white;">プラン${sortIcon('plan')}</th>
               <th class="sortable-header" data-field="phone1" style="color:white;">電話番号${sortIcon('phone1')}</th>
               <th class="sortable-header" data-field="email" style="color:white;">メール${sortIcon('email')}</th>
               <th class="sortable-header" data-field="joinDate" style="color:white;">入会日${sortIcon('joinDate')}</th>
@@ -148,6 +149,17 @@ export function renderAddForm(app) {
           <div>
             <label class="form-label">コース</label>
             <input type="text" class="form-input" id="new_course" placeholder="例: ４" value="${form.course || ''}">
+          </div>
+          <div>
+            <label class="form-label">プラン</label>
+            <select class="form-input" id="new_plan">
+              <option value="">未設定</option>
+              <option value="１クラス" ${form.plan === '１クラス' ? 'selected' : ''}>１クラス</option>
+              <option value="２クラス" ${form.plan === '２クラス' ? 'selected' : ''}>２クラス</option>
+              <option value="３クラス" ${form.plan === '３クラス' ? 'selected' : ''}>３クラス</option>
+              <option value="４クラス" ${form.plan === '４クラス' ? 'selected' : ''}>４クラス</option>
+              <option value="1.5hクラス" ${form.plan === '1.5hクラス' ? 'selected' : ''}>1.5hクラス</option>
+            </select>
           </div>
           <div>
             <label class="form-label">年会費更新日</label>
@@ -265,6 +277,7 @@ export function renderCustomerRow(app, customer) {
         ${customer.reading ? `<span class="reading">${customer.reading}</span>` : ''}
       </td>
       <td>${courseLabel}</td>
+      <td>${customer.plan || '—'}</td>
       <td>${customer.phone1 || ''}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${customer.email || ''}</td>
       <td>${customer.joinDate || ''}</td>
@@ -329,6 +342,10 @@ function renderCustomerDetailModal(app) {
               <div class="detail-item">
                 <label>コース</label>
                 <div class="detail-value">${customer.course ? 'コース' + customer.course : '—'}</div>
+              </div>
+              <div class="detail-item">
+                <label>プラン</label>
+                <div class="detail-value">${customer.plan || '—'}</div>
               </div>
               <div class="detail-item">
                 <label>性別</label>
@@ -504,6 +521,17 @@ function renderEditModal(app) {
               <div class="detail-item">
                 <label>コース</label>
                 <input type="text" class="form-input" id="edit_course" placeholder="例: ４" value="${ef.course || ''}">
+              </div>
+              <div class="detail-item">
+                <label>プラン</label>
+                <select class="form-input" id="edit_plan">
+                  <option value="">未設定</option>
+                  <option value="１クラス" ${ef.plan === '１クラス' ? 'selected' : ''}>１クラス</option>
+                  <option value="２クラス" ${ef.plan === '２クラス' ? 'selected' : ''}>２クラス</option>
+                  <option value="３クラス" ${ef.plan === '３クラス' ? 'selected' : ''}>３クラス</option>
+                  <option value="４クラス" ${ef.plan === '４クラス' ? 'selected' : ''}>４クラス</option>
+                  <option value="1.5hクラス" ${ef.plan === '1.5hクラス' ? 'selected' : ''}>1.5hクラス</option>
+                </select>
               </div>
               <div class="detail-item">
                 <label>性別</label>
