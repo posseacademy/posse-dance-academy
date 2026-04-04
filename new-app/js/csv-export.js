@@ -78,7 +78,7 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
                 const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                 rows.push([
                     day, cls.location || cls.venue || '', cls.name,
-                    `${student.lastName}${student.firstName}`, student.plan || '',
+                    `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
                     ...weeks, rate
                 ]);
             });
@@ -116,7 +116,7 @@ export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, isR
                     const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                     rows.push([
                         `${year}年${m}月`, day, cls.location || cls.venue || '', cls.name,
-                        `${student.lastName}${student.firstName}`, student.plan || '',
+                        `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
                         ...weeks, rate
                     ]);
                 });

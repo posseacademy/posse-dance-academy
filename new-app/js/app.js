@@ -4,10 +4,10 @@ import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=12';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=11';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=31';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=32';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=3';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=4';
 
 class DanceStudioApp {
     constructor() {
@@ -85,6 +85,9 @@ class DanceStudioApp {
         } catch (error) {
             console.error('初期化エラー:', error);
         }
+
+        // 月別プランスナップショット初期化
+        try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
         this.render();
     }
@@ -669,6 +672,7 @@ class DanceStudioApp {
             this.eventsData = await db.loadEvents(this.selectedMonth);
             this.calendarData = await db.loadCalendarData(this.selectedMonth);
             this.selectedCalendarDate = null;
+            await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月切り替えエラー:', error);
         } finally {
@@ -686,6 +690,7 @@ class DanceStudioApp {
         try {
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
+            await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月選択エラー:', error);
         } finally {
@@ -771,6 +776,15 @@ class DanceStudioApp {
         const { day, location, className, lastName, firstName } = this.editingStudent;
         const normLoc = (loc) => (loc || '').replace(/校$/, '');
         const classIndex = this.scheduleData[day].findIndex(c => normLoc(c.location || c.venue || '') === normLoc(location) && c.name === className);
+
+        // レギュラー→レギュラーのプラン変更は顧客管理から行う
+        if (classIndex !== -1) {
+            const student = this.scheduleData[day][classIndex].students.find(s => s.lastName === lastName && s.firstName === firstName);
+            if (student && isRegularPlan(student.plan) && isRegularPlan(newPlan) && student.plan !== newPlan) {
+                alert('レギュラープランの変更は「顧客一覧」から行ってください。\n顧客一覧で変更すると全クラスに一括反映されます。');
+                return;
+            }
+        }
         if (classIndex !== -1) {
             const studentIndex = this.scheduleData[day][classIndex].students.findIndex(s => s.lastName === lastName && s.firstName === firstName);
             if (studentIndex !== -1) {

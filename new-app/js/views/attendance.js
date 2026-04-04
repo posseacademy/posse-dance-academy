@@ -231,11 +231,12 @@ export function renderAttendanceRecord(app) {
                       '月謝クラス振替': '振替',
                       '1.5hクラス': '1.5h'
                     };
-                    const planShort = planShortMap[student.plan] || student.plan.replace('クラス', '');
+                    const displayPlan = attData._plan || student.plan;
+                    const planShort = planShortMap[displayPlan] || displayPlan.replace('クラス', '');
                     return `
                       <tr class="att-row">
                         <td class="att-td-name">${student.lastName}${student.firstName}</td>
-                        <td class="att-td-plan"><span class="plan-full">${student.plan}</span><span class="plan-short">${planShort}</span></td>
+                        <td class="att-td-plan"><span class="plan-full">${displayPlan}</span><span class="plan-short">${planShort}</span></td>
                         ${['week1', 'week2', 'week3', 'week4', 'week5'].map(week => {
                           const current = attData[week] || '';
                           const cellClass = current === '○' ? 'att-present' : current === '×' ? 'att-absent' : current === '休講' ? 'att-cancelled' : 'att-empty';
