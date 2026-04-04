@@ -1,5 +1,5 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=9';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=10';
 import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=12';
@@ -123,6 +123,78 @@ class DanceStudioApp {
     // No cleanup needed — visitors only show for months where they have attendance records
     cleanupNonRegularStudents() {
         // No-op: display filtering replaces destructive cleanup
+    }
+
+    // ===== PLAN MANAGEMENT =====
+    // 顧客のプラン変更を当月のattendance + scheduleに同期
+    async syncPlanToCurrentMonth(customer) {
+        const fullName = `${customer.lastName}${customer.firstName}`;
+        const newPlan = customer.plan;
+        if (!newPlan) return;
+
+        // 1. scheduleの全曜日で該当生徒のplanを更新
+        let scheduleChanged = false;
+        for (const day of Object.keys(this.scheduleData)) {
+            const classes = this.scheduleData[day];
+            if (!Array.isArray(classes)) continue;
+            for (const cls of classes) {
+                for (const student of (cls.students || [])) {
+                    if (`${student.lastName}${student.firstName}` === fullName && isRegularPlan(student.plan)) {
+                        student.plan = newPlan;
+                        scheduleChanged = true;
+                    }
+                }
+            }
+        }
+        if (scheduleChanged) {
+            await db.saveScheduleData(this.scheduleData);
+        }
+
+        // 2. 当月のattendance_YYYYMMで該当生徒の_planを更新
+        for (const [key, data] of Object.entries(this.attendanceData)) {
+            if (key.endsWith(`_${fullName}`)) {
+                data._plan = newPlan;
+                await db.saveAttendance(this.selectedMonth, key, data);
+            }
+        }
+    }
+
+    // 新月アクセス時にcustomers.planをattendance._planにスナップショット保存
+    async ensureMonthlyPlanSnapshot() {
+        // レギュラー生徒で_planが1つでもあれば初期化済みとみなす
+        const hasAnyRegularPlan = Object.values(this.attendanceData).some(d =>
+            d._plan && isRegularPlan(d._plan)
+        );
+        if (hasAnyRegularPlan) return;
+
+        // scheduleの全生徒について、customers.planまたはschedule.planをattendanceに記録
+        for (const day of Object.keys(this.scheduleData)) {
+            const classes = this.scheduleData[day];
+            if (!Array.isArray(classes)) continue;
+            for (const cls of classes) {
+                for (const student of (cls.students || [])) {
+                    if (!isRegularPlan(student.plan)) continue;
+                    const fullName = `${student.lastName}${student.firstName}`;
+                    const loc = cls.location || cls.venue || '';
+                    const studentKey = `${day}_${loc}_${cls.name}_${fullName}`;
+
+                    // 既存の_planがあればスキップ
+                    if (this.attendanceData[studentKey]?._plan) continue;
+
+                    // customers.planを優先、なければschedule.planを使用
+                    const customer = this.customers.find(c =>
+                        `${c.lastName}${c.firstName}` === fullName
+                    );
+                    const plan = customer?.plan || student.plan;
+
+                    if (!this.attendanceData[studentKey]) {
+                        this.attendanceData[studentKey] = {};
+                    }
+                    this.attendanceData[studentKey]._plan = plan;
+                    await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
+                }
+            }
+        }
     }
 
     // ===== LESSON MANAGEMENT (TimeSchedule CRUD) =====
@@ -631,6 +703,12 @@ class DanceStudioApp {
             alert('姓名とプランを入力してください'); return;
         }
         const { day, location, className } = this.selectedClassForAdd;
+        // Auto-detect 1.5h class and upgrade visitor plan pricing
+        const is15hClass = CLASS_15H && day === CLASS_15H.day && className === CLASS_15H.name;
+        if (is15hClass) {
+            if (plan === 'ビジター（会員）') plan = 'ビジター1.5h（会員）';
+            else if (plan === 'ビジター（非会員）') plan = 'ビジター1.5h（非会員）';
+        }
         // Location normalization: match with or without '校' suffix, and handle venue vs location
         const normLoc = (loc) => (loc || '').replace(/校$/, '');
         const classIndex = this.scheduleData[day].findIndex(c => {
