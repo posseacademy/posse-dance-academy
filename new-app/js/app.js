@@ -86,8 +86,9 @@ class DanceStudioApp {
             console.error('初期化エラー:', error);
         }
 
-        // schedule に紛れ込んだビジター/重複を掃除
-        try { await this.cleanupVisitorsFromSchedule(); } catch(e) { console.error('cleanupVisitorsFromScheduleエラー:', e); }
+        // 【緊急無効化】cleanupVisitorsFromSchedule は破壊的書き込みの疑いがあるため起動時実行を停止
+        // 詳細: 非レギュラー扱いの生徒（plan未設定含む）を schedule から除去していた
+        // try { await this.cleanupVisitorsFromSchedule(); } catch(e) { console.error('cleanupVisitorsFromScheduleエラー:', e); }
 
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
