@@ -211,12 +211,38 @@ export function renderAttendanceRecord(app) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${(cls.students || []).filter(student => {
-                    if (isRegularPlan(student.plan)) return true;
-                    const sid = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
-                    return app.attendanceData[sid] !== undefined;
-                  }).map(student => {
-                    const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
+                  ${(() => {
+                    const clsLoc = cls.location || cls.venue || '';
+                    // A. レギュラーは schedule.students から
+                    const regulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
+                    // B. ビジター/初回は attendance_YYYYMM から仮想生徒として再構成
+                    const prefix = `${currentDay}_${clsLoc}_${cls.name}_`;
+                    const existingNames = new Set(regulars.map(s => `${s.lastName}${s.firstName}`));
+                    const visitors = [];
+                    for (const [key, data] of Object.entries(app.attendanceData || {})) {
+                      if (key.startsWith('練習会_')) continue;
+                      if (!key.startsWith(prefix)) continue;
+                      const fullName = key.slice(prefix.length);
+                      if (!fullName || existingNames.has(fullName)) continue;
+                      // schedule に同名レギュラーが居なければ、attendance 側の _plan を使う
+                      const snapPlan = data?._plan || '';
+                      if (snapPlan && isRegularPlan(snapPlan)) continue; // レギュラーは schedule 側で処理済み
+                      // 姓名分割: schedule の既存エントリがあれば流用、無ければ 1文字目を姓扱い
+                      const schedMatch = (cls.students || []).find(s => `${s.lastName}${s.firstName}` === fullName);
+                      let lastName, firstName;
+                      if (schedMatch) {
+                        lastName = schedMatch.lastName;
+                        firstName = schedMatch.firstName;
+                      } else {
+                        lastName = fullName.slice(0, 1);
+                        firstName = fullName.slice(1);
+                      }
+                      visitors.push({ lastName, firstName, plan: snapPlan || 'ビジター（会員）' });
+                      existingNames.add(fullName);
+                    }
+                    const mergedStudents = [...regulars, ...visitors];
+                    return mergedStudents.map(student => {
+                    const classId = `${currentDay}_${clsLoc}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
                     const rate = getAttendanceRate(app.attendanceData, classId);
                     // Short plan label for mobile
@@ -267,7 +293,8 @@ export function renderAttendanceRecord(app) {
                         </td>
                       </tr>
                     `;
-                  }).join('')}
+                    }).join('');
+                  })()}
                 </tbody>
               </table>
             </div>

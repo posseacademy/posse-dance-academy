@@ -4,7 +4,7 @@ import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=12';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=11';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=32';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=33';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=4';
@@ -86,6 +86,9 @@ class DanceStudioApp {
             console.error('初期化エラー:', error);
         }
 
+        // schedule に紛れ込んだビジター/重複を掃除
+        try { await this.cleanupVisitorsFromSchedule(); } catch(e) { console.error('cleanupVisitorsFromScheduleエラー:', e); }
+
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
@@ -126,6 +129,52 @@ class DanceStudioApp {
     // No cleanup needed — visitors only show for months where they have attendance records
     cleanupNonRegularStudents() {
         // No-op: display filtering replaces destructive cleanup
+    }
+
+    // schedule.students に紛れ込んだビジター/初回および同姓同名の重複を安全に除去
+    // 不変条件: ビジター/初回は attendance_YYYYMM のみで管理する
+    async cleanupVisitorsFromSchedule() {
+        let changed = false;
+        const removedLog = [];
+        for (const day of Object.keys(this.scheduleData || {})) {
+            const classes = this.scheduleData[day];
+            if (!Array.isArray(classes)) continue;
+            for (const cls of classes) {
+                if (!Array.isArray(cls.students)) continue;
+                const seen = new Set();
+                const kept = [];
+                for (const s of cls.students) {
+                    const name = `${(s.lastName||'').trim()}${(s.firstName||'').trim()}`;
+                    if (!name) continue;
+                    // ビジター/初回は schedule から除去（attendance は触らない）
+                    if (!isRegularPlan(s.plan)) {
+                        removedLog.push(`${day}/${cls.name}/${name}(${s.plan})`);
+                        changed = true;
+                        continue;
+                    }
+                    // 同姓同名の重複除去
+                    if (seen.has(name)) {
+                        removedLog.push(`${day}/${cls.name}/${name}(重複)`);
+                        changed = true;
+                        continue;
+                    }
+                    seen.add(name);
+                    kept.push(s);
+                }
+                if (kept.length !== cls.students.length) {
+                    cls.students = kept;
+                }
+            }
+        }
+        if (changed) {
+            console.log('[cleanupVisitorsFromSchedule] 除去:', removedLog);
+            try {
+                await db.saveScheduleData(this.scheduleData);
+                console.log('[cleanupVisitorsFromSchedule] schedule 保存完了');
+            } catch (e) {
+                console.error('[cleanupVisitorsFromSchedule] 保存失敗:', e);
+            }
+        }
     }
 
     // ===== PLAN MANAGEMENT =====
@@ -710,59 +759,87 @@ class DanceStudioApp {
     }
 
     async saveNewStudent() {
-        let lastName, firstName, plan;
-        if (this.selectedCustomerForStudent) {
-            lastName = this.selectedCustomerForStudent.lastName;
-            firstName = this.selectedCustomerForStudent.firstName;
-            plan = document.getElementById('new_student_plan')?.value || '';
-        } else {
-            lastName = document.getElementById('new_student_lastName')?.value || '';
-            firstName = document.getElementById('new_student_firstName')?.value || '';
-            plan = document.getElementById('new_student_plan')?.value || '';
-        }
-        if (!lastName || !firstName || !plan) {
-            alert('姓名とプランを入力してください'); return;
-        }
-        const { day, location, className } = this.selectedClassForAdd;
-        // Auto-detect 1.5h class and upgrade visitor plan pricing
-        const is15hClass = CLASS_15H && day === CLASS_15H.day && className === CLASS_15H.name;
-        if (is15hClass) {
-            if (plan === 'ビジター（会員）') plan = 'ビジター1.5h（会員）';
-            else if (plan === 'ビジター（非会員）') plan = 'ビジター1.5h（非会員）';
-        }
-        // Location normalization: match with or without '校' suffix, and handle venue vs location
-        const normLoc = (loc) => (loc || '').replace(/校$/, '');
-        const classIndex = this.scheduleData[day].findIndex(c => {
-            const cLoc = normLoc(c.location || c.venue || '');
-            return cLoc === normLoc(location) && c.name === className;
-        });
-        if (classIndex !== -1) {
-            const cls = this.scheduleData[day][classIndex];
-            const exists = cls.students.some(s => s.lastName === lastName && s.firstName === firstName);
-            if (!exists) {
-                cls.students.push({ lastName, firstName, plan });
-                await db.saveScheduleData(this.scheduleData);
+        // 二連打・非同期競合ガード
+        if (this._savingNewStudent) return;
+        this._savingNewStudent = true;
+        try {
+            let lastName, firstName, plan;
+            if (this.selectedCustomerForStudent) {
+                lastName = this.selectedCustomerForStudent.lastName;
+                firstName = this.selectedCustomerForStudent.firstName;
+                plan = document.getElementById('new_student_plan')?.value || '';
+            } else {
+                lastName = document.getElementById('new_student_lastName')?.value || '';
+                firstName = document.getElementById('new_student_firstName')?.value || '';
+                plan = document.getElementById('new_student_plan')?.value || '';
             }
-            // Save _plan to attendance data for revenue calculations
+            // 姓名の正規化: 前後空白・全角空白・ゼロ幅文字を除去
+            const normName = (s) => (s || '').replace(/[\s\u3000\u200B-\u200D\uFEFF]/g, '');
+            lastName = normName(lastName);
+            firstName = normName(firstName);
+            if (!lastName || !firstName || !plan) {
+                alert('姓名とプランを入力してください'); return;
+            }
+            const { day, location, className } = this.selectedClassForAdd;
+            // Auto-detect 1.5h class and upgrade visitor plan pricing
+            const is15hClass = CLASS_15H && day === CLASS_15H.day && className === CLASS_15H.name;
+            if (is15hClass) {
+                if (plan === 'ビジター（会員）') plan = 'ビジター1.5h（会員）';
+                else if (plan === 'ビジター（非会員）') plan = 'ビジター1.5h（非会員）';
+            }
+            // Location normalization: match with or without '校' suffix, and handle venue vs location
+            const normLoc = (loc) => (loc || '').replace(/校$/, '');
+            const classIndex = this.scheduleData[day].findIndex(c => {
+                const cLoc = normLoc(c.location || c.venue || '');
+                return cLoc === normLoc(location) && c.name === className;
+            });
+            if (classIndex === -1) {
+                console.error('クラスが見つかりません:', day, location, className);
+                alert('エラー: クラスが見つかりません。ページを再読み込みしてください。');
+                this.showAddStudentForm = false;
+                this.selectedClassForAdd = null;
+                return;
+            }
+            const cls = this.scheduleData[day][classIndex];
             const classLoc = cls.location || cls.venue || location;
             const studentKey = `${day}_${classLoc}_${className}_${lastName}${firstName}`;
+
+            if (isRegularPlan(plan)) {
+                // レギュラー: schedule.students に追加（既存なら更新）
+                const exists = cls.students.some(s =>
+                    (s.lastName || '').trim() === lastName && (s.firstName || '').trim() === firstName
+                );
+                if (!exists) {
+                    cls.students.push({ lastName, firstName, plan });
+                    await db.saveScheduleData(this.scheduleData);
+                }
+            } else {
+                // ビジター/初回: schedule には入れない (firestore-safety.md の不変条件)
+                // 万一 schedule に残留があれば、このクラスの該当姓名をこの瞬間だけ除去
+                const before = cls.students.length;
+                cls.students = (cls.students || []).filter(s =>
+                    !(((s.lastName || '').trim() === lastName) && ((s.firstName || '').trim() === firstName) && !isRegularPlan(s.plan))
+                );
+                if (cls.students.length !== before) {
+                    await db.saveScheduleData(this.scheduleData);
+                }
+            }
+
+            // attendance_YYYYMM に _plan を保存（全プラン共通）
             if (!this.attendanceData[studentKey]) this.attendanceData[studentKey] = {};
             this.attendanceData[studentKey]._plan = plan;
             await db.saveAttendance(this.selectedMonth, studentKey, this.attendanceData[studentKey]);
-        } else {
-            console.error('クラスが見つかりません:', day, location, className);
-            alert('エラー: クラスが見つかりません。ページを再読み込みしてください。');
+
             this.showAddStudentForm = false;
             this.selectedClassForAdd = null;
-            return;
+            this.selectedCustomerForStudent = null;
+            this.studentSearchTerm = '';
+            this.studentSearchResults = [];
+            alert('生徒を追加しました');
+            this.render();
+        } finally {
+            this._savingNewStudent = false;
         }
-        this.showAddStudentForm = false;
-        this.selectedClassForAdd = null;
-        this.selectedCustomerForStudent = null;
-        this.studentSearchTerm = '';
-        this.studentSearchResults = [];
-        alert('生徒を追加しました');
-        this.render();
     }
 
     startEditStudent(day, location, className, lastName, firstName) {

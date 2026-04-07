@@ -21,6 +21,7 @@ new-app/
     ├── app.js            # SPA本体（ルーティング、状態管理）
     ├── config.js         # 設定（料金、タイムスケジュール、デフォルトデータ）
     ├── utils.js          # 売上計算ユーティリティ
+    ├── csv-export.js     # CSV書き出し機能
     ├── firebase-service.js # Firestore接続
     └── views/            # 各ページのビューモジュール
         ├── home.js       # HOMEダッシュボード
@@ -33,10 +34,11 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-03-25):**
-- `app.html`: `style.css?v=23`, `app.js?v=62`
-- `app.js`: `config.js?v=9`, `utils.js?v=5`, `firebase-service.js?v=8`
-- `app.js`: `home.js?v=12`, `customers.js?v=10`, `attendance.js?v=31`, `schedule.js?v=24`, `revenue.js?v=10`
+**現在のバージョン (2026-04-07):**
+- `app.html`: `style.css?v=23`, `app.js?v=67`
+- `app.js`: `config.js?v=10`, `utils.js?v=5`, `firebase-service.js?v=8`
+- `app.js`: `home.js?v=12`, `customers.js?v=11`, `attendance.js?v=33`, `schedule.js?v=24`, `revenue.js?v=11`
+- `app.js`: `csv-export.js?v=4`
 
 **手順:** ファイル修正 → 親ファイルの `?v=N+1` 更新 → コミット → push
 
