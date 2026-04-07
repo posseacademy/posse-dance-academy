@@ -211,11 +211,37 @@ export function renderAttendanceRecord(app) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${(cls.students || []).filter(student => {
-                    if (isRegularPlan(student.plan)) return true;
-                    const sid = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
-                    return app.attendanceData[sid] !== undefined;
-                  }).map(student => {
+                  ${(() => {
+                    // 1) レギュラー: schedule.students からレギュラープランのみ
+                    const regulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
+                    const seen = new Set(regulars.map(s => s.lastName + s.firstName));
+                    // 2) ビジター: 当月 attendanceData から _plan が明示的に非レギュラーのエントリのみを追加
+                    //    （_plan 未設定のエントリは絶対に含めない。履歴や残留データから幽霊生徒が出るのを防ぐ）
+                    const prefix = `${currentDay}_${cls.location || cls.venue}_${cls.name}_`;
+                    const visitors = [];
+                    for (const key of Object.keys(app.attendanceData || {})) {
+                      if (!key.startsWith(prefix)) continue;
+                      if (key.startsWith('練習会_')) continue;
+                      const rec = app.attendanceData[key];
+                      if (!rec || typeof rec !== 'object') continue;
+                      const p = rec._plan;
+                      if (!p) continue; // _plan 未設定は除外
+                      if (isRegularPlan(p)) continue; // レギュラーは対象外
+                      const nameCombined = key.slice(prefix.length);
+                      if (seen.has(nameCombined)) continue;
+                      seen.add(nameCombined);
+                      // lastName/firstName を分割: まず schedule 内の同名から流用、なければ customers から
+                      let ln = '', fn = nameCombined;
+                      const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
+                      if (fromSchedule) { ln = fromSchedule.lastName; fn = fromSchedule.firstName; }
+                      else if (app.customers) {
+                        const c = app.customers.find(c => (c.lastName + c.firstName) === nameCombined);
+                        if (c) { ln = c.lastName; fn = c.firstName; }
+                      }
+                      visitors.push({ lastName: ln, firstName: fn, plan: p });
+                    }
+                    return [...regulars, ...visitors];
+                  })().map(student => {
                     const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
                     const rate = getAttendanceRate(app.attendanceData, classId);

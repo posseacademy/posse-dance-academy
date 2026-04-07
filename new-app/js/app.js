@@ -4,7 +4,7 @@ import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
 import { renderDashboard } from './views/home.js?v=12';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=11';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=34';
+import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=35';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=4';
@@ -86,9 +86,8 @@ class DanceStudioApp {
             console.error('初期化エラー:', error);
         }
 
-        // 【緊急無効化】cleanupVisitorsFromSchedule は破壊的書き込みの疑いがあるため起動時実行を停止
-        // 詳細: 非レギュラー扱いの生徒（plan未設定含む）を schedule から除去していた
-        // try { await this.cleanupVisitorsFromSchedule(); } catch(e) { console.error('cleanupVisitorsFromScheduleエラー:', e); }
+        // cleanupVisitorsFromSchedule は破壊的書き込みでデータ消失を引き起こしたため削除済み
+        // ビジター/初回プランは renderAttendanceRecord() が attendance から表示マージする
 
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
@@ -132,51 +131,6 @@ class DanceStudioApp {
         // No-op: display filtering replaces destructive cleanup
     }
 
-    // schedule.students に紛れ込んだビジター/初回および同姓同名の重複を安全に除去
-    // 不変条件: ビジター/初回は attendance_YYYYMM のみで管理する
-    async cleanupVisitorsFromSchedule() {
-        let changed = false;
-        const removedLog = [];
-        for (const day of Object.keys(this.scheduleData || {})) {
-            const classes = this.scheduleData[day];
-            if (!Array.isArray(classes)) continue;
-            for (const cls of classes) {
-                if (!Array.isArray(cls.students)) continue;
-                const seen = new Set();
-                const kept = [];
-                for (const s of cls.students) {
-                    const name = `${(s.lastName||'').trim()}${(s.firstName||'').trim()}`;
-                    if (!name) continue;
-                    // ビジター/初回は schedule から除去（attendance は触らない）
-                    if (!isRegularPlan(s.plan)) {
-                        removedLog.push(`${day}/${cls.name}/${name}(${s.plan})`);
-                        changed = true;
-                        continue;
-                    }
-                    // 同姓同名の重複除去
-                    if (seen.has(name)) {
-                        removedLog.push(`${day}/${cls.name}/${name}(重複)`);
-                        changed = true;
-                        continue;
-                    }
-                    seen.add(name);
-                    kept.push(s);
-                }
-                if (kept.length !== cls.students.length) {
-                    cls.students = kept;
-                }
-            }
-        }
-        if (changed) {
-            console.log('[cleanupVisitorsFromSchedule] 除去:', removedLog);
-            try {
-                await db.saveScheduleData(this.scheduleData);
-                console.log('[cleanupVisitorsFromSchedule] schedule 保存完了');
-            } catch (e) {
-                console.error('[cleanupVisitorsFromSchedule] 保存失敗:', e);
-            }
-        }
-    }
 
     // ===== PLAN MANAGEMENT =====
     // 顧客のプラン変更を当月のattendance + scheduleに同期
