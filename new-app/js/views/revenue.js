@@ -105,7 +105,7 @@ export function renderRevenue(app) {
             <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border-color);">
               <div style="display:flex;align-items:center;gap:0.5rem;">
                 <span style="width:8px;height:8px;border-radius:50%;background:${item.color};flex-shrink:0;"></span>
-                <span>コース${item.course}</span>
+                <span>プラン${item.course}</span>
                 ${item.count15h > 0 ? `<span style="font-size:0.65rem;background:#f3e8ff;color:#7c3aed;padding:1px 6px;border-radius:9999px;">1.5h込${item.count15h}名</span>` : ''}
               </div>
               <div style="text-align:right;">

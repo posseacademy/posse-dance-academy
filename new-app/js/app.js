@@ -2,11 +2,11 @@
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=10';
 import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue, getCustomerCourseKey } from './utils.js?v=6';
-import { renderDashboard } from './views/home.js?v=12';
+import { renderDashboard } from './views/home.js?v=13';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=12';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=35';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
-import { renderRevenue } from './views/revenue.js?v=11';
+import { renderRevenue } from './views/revenue.js?v=12';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=4';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====

@@ -110,14 +110,14 @@ export function renderDashboard(app) {
       <!-- Left: Course Breakdown -->
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
-          <h3 class="card-title" style="color:white;">コース別内訳（入会中）</h3>
+          <h3 class="card-title" style="color:white;">プラン別内訳（入会中）</h3>
         </div>
         <div class="card-content">
           ${courseCounts.map(item => `
             <div class="revenue-row">
               <div class="rev-label">
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
-                コース${item.course}
+                プラン${item.course}
               </div>
               <div class="rev-amount">¥${item.price.toLocaleString('ja-JP')}</div>
               <div class="rev-detail">${item.count}名</div>
