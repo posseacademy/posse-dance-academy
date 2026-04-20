@@ -1,13 +1,42 @@
 // Imports
 import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=10';
 import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue } from './utils.js?v=5';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue, getCustomerCourseKey } from './utils.js?v=6';
 import { renderDashboard } from './views/home.js?v=12';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=11';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=12';
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=35';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=11';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=4';
+
+// ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
+const PLAN_TO_COURSE = {
+    '１クラス':'１','1クラス':'１',
+    '２クラス':'２','2クラス':'２',
+    '３クラス':'３','3クラス':'３',
+    '４クラス':'４','4クラス':'４',
+    '1.5hクラス':'１'
+};
+const COURSE_TO_PLAN = {
+    '１':'１クラス','1':'１クラス',
+    '２':'２クラス','2':'２クラス',
+    '３':'３クラス','3':'３クラス',
+    '４':'４クラス','4':'４クラス'
+};
+/**
+ * 顧客フォームの plan と course を相互同期（保存直前に呼ぶ）
+ * - plan 入力あり → course を上書き同期
+ * - course 入力あり & plan 未入力 → plan を補完
+ * 既存データ破壊を避けるため、片方が明示的に入力されている場合のみ他方を更新。
+ */
+function syncPlanCourse(form) {
+    if (!form) return;
+    if (form.plan && PLAN_TO_COURSE[form.plan]) {
+        form.course = PLAN_TO_COURSE[form.plan];
+    } else if (form.course && COURSE_TO_PLAN[form.course] && !form.plan) {
+        form.plan = COURSE_TO_PLAN[form.course];
+    }
+}
 
 class DanceStudioApp {
     constructor() {
@@ -393,6 +422,8 @@ class DanceStudioApp {
             alert('会員番号を入力してください'); return;
         }
         try {
+            // プラン⇔コース 双方向同期（保存直前）
+            syncPlanCourse(this.newCustomer);
             if (this.newCustomer.plan) {
                 this.newCustomer.planUpdatedAt = this.selectedMonth;
             }
@@ -430,6 +461,8 @@ class DanceStudioApp {
     async saveEdit() {
         if (!this.editForm.id) { alert('保存エラー: IDが見つかりません'); return; }
         try {
+            // プラン⇔コース 双方向同期（保存直前）
+            syncPlanCourse(this.editForm);
             // プラン変更検出
             const oldCustomer = this.customers.find(c => c.id === this.editForm.id);
             const planChanged = oldCustomer && this.editForm.plan && this.editForm.plan !== oldCustomer.plan;
@@ -883,7 +916,7 @@ class DanceStudioApp {
                     ${this.studentSearchResults.map(customer => `
                         <div data-select-customer-id="${customer.id}" class="select-customer-btn p-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0 text-sm transition">
                             <div class="font-medium text-blue-600">${customer.lastName} ${customer.firstName}${customer.memberNumber ? ` <span class="text-xs text-gray-500 ml-2">[${customer.memberNumber}]</span>` : ''}</div>
-                            <div class="text-xs text-gray-600 mt-1">${customer.reading ? `読み: ${customer.reading}` : ''}${customer.reading && customer.course ? ' | ' : ''}${customer.course ? `コース: ${customer.course}` : ''}</div>
+                            <div class="text-xs text-gray-600 mt-1">${customer.reading ? `読み: ${customer.reading}` : ''}${customer.reading && (customer.plan || customer.course) ? ' | ' : ''}${(customer.plan || customer.course) ? `プラン: ${customer.plan || (COURSE_TO_PLAN[customer.course] || customer.course)}` : ''}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -915,7 +948,7 @@ class DanceStudioApp {
                     <div class="flex items-center justify-between">
                         <div>
                             <div class="font-bold text-green-800">チェック: 選択中: ${this.selectedCustomerForStudent.lastName} ${this.selectedCustomerForStudent.firstName}</div>
-                            <div class="text-xs text-gray-700 mt-1">${this.selectedCustomerForStudent.memberNumber ? `会員番号: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}${this.selectedCustomerForStudent.reading ? `読み: ${this.selectedCustomerForStudent.reading} | ` : ''}コース: ${this.selectedCustomerForStudent.course || 'なし'}</div>
+                            <div class="text-xs text-gray-700 mt-1">${this.selectedCustomerForStudent.memberNumber ? `会員番号: ${this.selectedCustomerForStudent.memberNumber} | ` : ''}${this.selectedCustomerForStudent.reading ? `読み: ${this.selectedCustomerForStudent.reading} | ` : ''}プラン: ${this.selectedCustomerForStudent.plan || (this.selectedCustomerForStudent.course ? (COURSE_TO_PLAN[this.selectedCustomerForStudent.course] || this.selectedCustomerForStudent.course) : 'なし')}</div>
                         </div>
                         <button id="clearSelectedCustomer" class="text-red-600 hover:text-red-800 text-xs underline">選択解除</button>
                     </div>
@@ -933,9 +966,9 @@ class DanceStudioApp {
                 this.updateSearchResults();
                 if (planSelect) planSelect.value = '';
             });
-            if (planSelect && this.selectedCustomerForStudent.course) {
-                const courseMap = {'１': '１クラス', '２': '２クラス', '３': '３クラス', '４': '４クラス'};
-                const planValue = courseMap[this.selectedCustomerForStudent.course] || '';
+            if (planSelect) {
+                // plan 優先、未設定なら course から導出（COURSE_TO_PLAN を再利用）
+                const planValue = this.selectedCustomerForStudent.plan || COURSE_TO_PLAN[this.selectedCustomerForStudent.course] || '';
                 if (planValue) planSelect.value = planValue;
             }
         } else {

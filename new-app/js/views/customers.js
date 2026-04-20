@@ -98,8 +98,7 @@ export function renderCustomers(app) {
             <tr style="background:#1d1d1f;">
               <th class="sortable-header" data-field="memberNumber" style="color:white;">会員番号${sortIcon('memberNumber')}</th>
               <th class="sortable-header" data-field="lastName" style="color:white;">氏名${sortIcon('lastName')}</th>
-              <th class="sortable-header" data-field="course" style="color:white;">コース${sortIcon('course')}</th>
-              <th class="sortable-header" data-field="plan" style="color:white;">プラン${sortIcon('plan')}</th>
+              <th class="sortable-header" data-field="course" style="color:white;">プラン${sortIcon('course')}</th>
               <th class="sortable-header" data-field="phone1" style="color:white;">電話番号${sortIcon('phone1')}</th>
               <th class="sortable-header" data-field="email" style="color:white;">メール${sortIcon('email')}</th>
               <th class="sortable-header" data-field="joinDate" style="color:white;">入会日${sortIcon('joinDate')}</th>
@@ -147,10 +146,6 @@ export function renderAddForm(app) {
             </select>
           </div>
           <div>
-            <label class="form-label">コース</label>
-            <input type="text" class="form-input" id="new_course" placeholder="例: ４" value="${form.course || ''}">
-          </div>
-          <div>
             <label class="form-label">プラン</label>
             <select class="form-input" id="new_plan">
               <option value="">未設定</option>
@@ -159,6 +154,10 @@ export function renderAddForm(app) {
               <option value="３クラス" ${form.plan === '３クラス' ? 'selected' : ''}>３クラス</option>
               <option value="４クラス" ${form.plan === '４クラス' ? 'selected' : ''}>４クラス</option>
               <option value="1.5hクラス" ${form.plan === '1.5hクラス' ? 'selected' : ''}>1.5hクラス</option>
+              <option value="ビジター（会員）" ${form.plan === 'ビジター（会員）' ? 'selected' : ''}>ビジター（会員）</option>
+              <option value="ビジター（非会員）" ${form.plan === 'ビジター（非会員）' ? 'selected' : ''}>ビジター（非会員）</option>
+              <option value="初回体験" ${form.plan === '初回体験' ? 'selected' : ''}>初回体験</option>
+              <option value="ハーフ" ${form.plan === 'ハーフ' ? 'selected' : ''}>ハーフ</option>
             </select>
           </div>
           <div>
@@ -267,7 +266,9 @@ export function renderAddForm(app) {
  */
 export function renderCustomerRow(app, customer) {
   const age = calculateAge(customer.birthDate);
-  const courseLabel = customer.course ? `コース${customer.course}` : '';
+  // プラン優先表示（plan 未設定時は course から導出 or course 値をそのまま表示）
+  const COURSE_TO_PLAN_LABEL = {'１':'１クラス','1':'１クラス','２':'２クラス','2':'２クラス','３':'３クラス','3':'３クラス','４':'４クラス','4':'４クラス'};
+  const planLabel = customer.plan || COURSE_TO_PLAN_LABEL[customer.course] || customer.course || '—';
 
   return `
     <tr>
@@ -276,8 +277,7 @@ export function renderCustomerRow(app, customer) {
         ${customer.lastName || ''} ${customer.firstName || ''}
         ${customer.reading ? `<span class="reading">${customer.reading}</span>` : ''}
       </td>
-      <td>${courseLabel}</td>
-      <td>${customer.plan || '—'}</td>
+      <td>${planLabel}</td>
       <td>${customer.phone1 || ''}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${customer.email || ''}</td>
       <td>${customer.joinDate || ''}</td>
@@ -340,12 +340,11 @@ function renderCustomerDetailModal(app) {
                 <div class="detail-value">${val(customer.reading)}</div>
               </div>
               <div class="detail-item">
-                <label>コース</label>
-                <div class="detail-value">${customer.course ? 'コース' + customer.course : '—'}</div>
-              </div>
-              <div class="detail-item">
                 <label>プラン</label>
-                <div class="detail-value">${customer.plan || '—'}</div>
+                <div class="detail-value">${(() => {
+                  const M = {'１':'１クラス','1':'１クラス','２':'２クラス','2':'２クラス','３':'３クラス','3':'３クラス','４':'４クラス','4':'４クラス'};
+                  return customer.plan || M[customer.course] || customer.course || '—';
+                })()}</div>
               </div>
               <div class="detail-item">
                 <label>性別</label>
@@ -519,19 +518,26 @@ function renderEditModal(app) {
                 <input type="text" class="form-input" id="edit_reading" value="${ef.reading || ''}">
               </div>
               <div class="detail-item">
-                <label>コース</label>
-                <input type="text" class="form-input" id="edit_course" placeholder="例: ４" value="${ef.course || ''}">
-              </div>
-              <div class="detail-item">
                 <label>プラン</label>
+                ${(() => {
+                  // plan 未設定時は course から表示用プランを導出してプルダウンに反映
+                  const M = {'１':'１クラス','1':'１クラス','２':'２クラス','2':'２クラス','３':'３クラス','3':'３クラス','４':'４クラス','4':'４クラス','ビジター':'ビジター（会員）','ハーフ':'ハーフ'};
+                  const currentPlan = ef.plan || M[ef.course] || '';
+                  const isSel = (v) => currentPlan === v ? 'selected' : '';
+                  return `
                 <select class="form-input" id="edit_plan">
                   <option value="">未設定</option>
-                  <option value="１クラス" ${ef.plan === '１クラス' ? 'selected' : ''}>１クラス</option>
-                  <option value="２クラス" ${ef.plan === '２クラス' ? 'selected' : ''}>２クラス</option>
-                  <option value="３クラス" ${ef.plan === '３クラス' ? 'selected' : ''}>３クラス</option>
-                  <option value="４クラス" ${ef.plan === '４クラス' ? 'selected' : ''}>４クラス</option>
-                  <option value="1.5hクラス" ${ef.plan === '1.5hクラス' ? 'selected' : ''}>1.5hクラス</option>
-                </select>
+                  <option value="１クラス" ${isSel('１クラス')}>１クラス</option>
+                  <option value="２クラス" ${isSel('２クラス')}>２クラス</option>
+                  <option value="３クラス" ${isSel('３クラス')}>３クラス</option>
+                  <option value="４クラス" ${isSel('４クラス')}>４クラス</option>
+                  <option value="1.5hクラス" ${isSel('1.5hクラス')}>1.5hクラス</option>
+                  <option value="ビジター（会員）" ${isSel('ビジター（会員）')}>ビジター（会員）</option>
+                  <option value="ビジター（非会員）" ${isSel('ビジター（非会員）')}>ビジター（非会員）</option>
+                  <option value="初回体験" ${isSel('初回体験')}>初回体験</option>
+                  <option value="ハーフ" ${isSel('ハーフ')}>ハーフ</option>
+                </select>`;
+                })()}
               </div>
               <div class="detail-item">
                 <label>性別</label>

@@ -334,7 +334,7 @@ export function calculateMonthlyTuition(customers, scheduleData, coursePricesWit
     // Count by course, separating 1.5h combined students
     const counts = {}; // { course: { normal: n, combined15h: n } }
     activeCustomers.forEach(customer => {
-        const course = customer.course || '１';
+        const course = getCustomerCourseKey(customer);
         const fullName = `${customer.lastName}${customer.firstName}`;
         const is15h = customer.has15hClass || students15h.has(fullName);
 
@@ -413,4 +413,23 @@ export function calculateFeeRevenue(customers, selectedMonth) {
         enrollment: { total: enrollmentTotal, list: enrollmentList },
         annualFee: { total: annualFeeTotal, list: annualFeeList }
     };
+}
+
+/**
+ * 顧客のコースキー取得（plan / course 両対応の互換レイヤー）
+ * 既存の course フィールドを優先してベースラインを完全保全。
+ * plan しか設定されていない顧客は plan から導出。
+ * @param {Object} customer
+ * @returns {string} コースキー ('１'/'２'/'３'/'４' 等)
+ */
+export function getCustomerCourseKey(customer) {
+    const PLAN_TO_COURSE = {
+        '１クラス':'１','1クラス':'１',
+        '２クラス':'２','2クラス':'２',
+        '３クラス':'３','3クラス':'３',
+        '４クラス':'４','4クラス':'４',
+        '1.5hクラス':'１'
+    };
+    // course 優先（既存挙動完全保全）→ plan フォールバック → デフォルト
+    return customer.course || PLAN_TO_COURSE[customer.plan] || '１';
 }
