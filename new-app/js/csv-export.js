@@ -30,25 +30,66 @@ export function downloadCSV(filename, rows) {
 
 /**
  * 顧客一覧CSV書き出し
+ * getEmptyCustomer() の全フィールド＋計算年齢を出力。
+ * 列の追加・順序変更時は header と rows の対応を必ず合わせること。
  */
 export function exportCustomersCSV(customers) {
-    const header = ['会員番号', '姓', '名', '読み', '性別', '生年月日', '電話番号', 'メール', 'コース', 'プラン', 'ステータス', '入会日', '備考'];
+    // 年齢計算（utils.js::calculateAge と同等、依存回避のためインライン実装）
+    const calcAge = (birthDate) => {
+        if (!birthDate) return '';
+        const t = new Date();
+        const b = new Date(birthDate);
+        let age = t.getFullYear() - b.getFullYear();
+        const m = t.getMonth() - b.getMonth();
+        if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--;
+        return isNaN(age) ? '' : String(age);
+    };
+    const yn = (v) => v === true ? '○' : v === false ? '' : (v || '');
+
+    const header = [
+        '会員番号', '会員ステータス', '家族会員', 'コース', 'プラン', 'プラン更新月', '1.5h受講',
+        '姓', '名', '読み', '保護者名', 'ハコモノ登録名', 'ハコモノ登録',
+        '性別', '生年月日', '年齢',
+        '電話番号1', '電話番号2', 'メール',
+        '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号',
+        '入会日', '入会金支払済', '入会金支払日',
+        '年会費更新日', '年会費支払済', '年会費支払月',
+        '備考'
+    ];
     const rows = [header];
     customers.forEach(c => {
         rows.push([
             c.memberNumber || '',
+            c.status || '',
+            yn(c.isFamilyMember),
+            c.course || '',
+            c.plan || '',
+            c.planUpdatedAt || '',
+            yn(c.has15hClass),
             c.lastName || '',
             c.firstName || '',
             c.reading || '',
+            c.guardianName || '',
+            c.hakomonoName || '',
+            c.hakomonoRegistration || '',
             c.gender || '',
             c.birthDate || '',
-            c.phone || '',
+            calcAge(c.birthDate),
+            c.phone1 || '',
+            c.phone2 || '',
             c.email || '',
-            c.course || '',
-            c.plan || '',
-            c.status || '',
+            c.postalCode || '',
+            c.prefecture || '',
+            c.city || '',
+            c.address || '',
+            c.building || '',
             c.joinDate || '',
-            c.notes || ''
+            yn(c.enrollmentFeePaid),
+            c.enrollmentFeeDate || '',
+            c.annualFee || '',
+            yn(c.annualFeePaid),
+            c.annualFeeMonth || '',
+            c.memo || ''
         ]);
     });
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
