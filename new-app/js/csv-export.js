@@ -47,7 +47,7 @@ export function exportCustomersCSV(customers) {
     const yn = (v) => v === true ? '○' : v === false ? '' : (v || '');
 
     const header = [
-        '会員番号', '会員ステータス', '家族会員', 'コース', 'プラン', 'プラン更新月', '1.5h受講',
+        '会員番号', '会員ステータス', '家族会員', 'プラン', 'プラン更新月',
         '姓', '名', '読み', '保護者名', 'ハコモノ登録名', 'ハコモノ登録',
         '性別', '生年月日', '年齢',
         '電話番号1', '電話番号2', 'メール',
@@ -63,9 +63,7 @@ export function exportCustomersCSV(customers) {
             c.status || '',
             yn(c.isFamilyMember),
             c.course || '',
-            c.plan || '',
             c.planUpdatedAt || '',
-            yn(c.has15hClass),
             c.lastName || '',
             c.firstName || '',
             c.reading || '',
