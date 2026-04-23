@@ -58,20 +58,20 @@ export function exportCustomersCSV(customers, scheduleData) {
         '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号',
         '入会日', '入会金支払済', '入会金支払日',
         '年会費更新日', '年会費支払済', '年会費支払月',
-        'プラン1', 'プラン2', 'プラン3', 'プラン4',
+        'プラン1', 'プラン2', 'プラン3', 'プラン4', 'プラン5',
         '備考'
     ];
     const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
-    // 受講クラスを4列に分割（4クラス超過分は4列目にパイプ連結）
+    // 受講クラスを5列に分割（5クラス超過分は5列目にパイプ連結）
     const formatClass = (x) => `${dayShort[x.day]||x.day[0]}/${x.location}/${x.name}`;
     const rows = [header];
     customers.forEach(c => {
         const classes = scheduleData ? getCustomerClasses(c, scheduleData) : [];
-        const classSlots = ['', '', '', ''];
+        const classSlots = ['', '', '', '', ''];
         classes.forEach((x, i) => {
             const s = formatClass(x);
-            if (i < 3) classSlots[i] = s;
-            else classSlots[3] = classSlots[3] ? `${classSlots[3]} | ${s}` : s;
+            if (i < 4) classSlots[i] = s;
+            else classSlots[4] = classSlots[4] ? `${classSlots[4]} | ${s}` : s;
         });
         rows.push([
             c.memberNumber || '',
@@ -106,6 +106,7 @@ export function exportCustomersCSV(customers, scheduleData) {
             classSlots[1],
             classSlots[2],
             classSlots[3],
+            classSlots[4],
             c.memo || ''
         ]);
     });
