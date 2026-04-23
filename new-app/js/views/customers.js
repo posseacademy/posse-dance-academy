@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Customers View Module
 // ES module for customer management page rendering
 
-import { calculateAge } from '../utils.js?v=5';
+import { calculateAge, getCustomerClasses } from '../utils.js?v=7';
 
 /**
  * Main customer list page
@@ -436,6 +436,32 @@ function renderCustomerDetailModal(app) {
                 <div class="detail-value">${val(customer.building)}</div>
               </div>
             </div>
+          </div>
+
+          <!-- 受講クラス -->
+          <div class="detail-section">
+            <div class="detail-section-title">受講クラス</div>
+            ${(() => {
+              const classes = getCustomerClasses(customer, app.scheduleData);
+              if (classes.length === 0) {
+                return '<div class="detail-value" style="color:var(--text-secondary);padding:0.5rem 0;">受講中のクラスなし</div>';
+              }
+              const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
+              return `
+                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                  ${classes.map(c => `
+                    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;background:#f5f5f7;border-radius:8px;">
+                      <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#1d1d1f;color:white;font-size:0.75rem;font-weight:600;flex-shrink:0;">${dayShort[c.day] || c.day[0]}</span>
+                      <div style="flex:1;min-width:0;">
+                        <div style="font-weight:500;font-size:0.9rem;">${c.name.replace(/\s+[A-Z]+$/, '')}</div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);">${c.location}${c.teacher ? ` ・ ${c.teacher}先生` : ''}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-secondary);">計 ${classes.length} クラス</div>
+              `;
+            })()}
           </div>
 
           <!-- Other -->

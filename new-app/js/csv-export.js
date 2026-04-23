@@ -1,6 +1,8 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
+import { getCustomerClasses } from './utils.js?v=7';
+
 /**
  * CSVファイルをダウンロード
  * @param {string} filename - ファイル名
@@ -30,10 +32,12 @@ export function downloadCSV(filename, rows) {
 
 /**
  * 顧客一覧CSV書き出し
- * getEmptyCustomer() の全フィールド＋計算年齢を出力。
+ * getEmptyCustomer() の全フィールド＋計算年齢＋受講クラスを出力。
  * 列の追加・順序変更時は header と rows の対応を必ず合わせること。
+ * @param {Array} customers - 顧客配列
+ * @param {Object} [scheduleData] - 受講クラス列を出力する場合に必須。未指定時は空欄
  */
-export function exportCustomersCSV(customers) {
+export function exportCustomersCSV(customers, scheduleData) {
     // 年齢計算（utils.js::calculateAge と同等、依存回避のためインライン実装）
     const calcAge = (birthDate) => {
         if (!birthDate) return '';
@@ -54,8 +58,10 @@ export function exportCustomersCSV(customers) {
         '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号',
         '入会日', '入会金支払済', '入会金支払日',
         '年会費更新日', '年会費支払済', '年会費支払月',
+        '受講クラス',
         '備考'
     ];
+    const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
     const rows = [header];
     customers.forEach(c => {
         rows.push([
@@ -87,6 +93,11 @@ export function exportCustomersCSV(customers) {
             c.annualFee || '',
             yn(c.annualFeePaid),
             c.annualFeeMonth || '',
+            (() => {
+                if (!scheduleData) return '';
+                const classes = getCustomerClasses(c, scheduleData);
+                return classes.map(x => `${dayShort[x.day]||x.day[0]}/${x.location}/${x.name}`).join(' | ');
+            })(),
             c.memo || ''
         ]);
     });

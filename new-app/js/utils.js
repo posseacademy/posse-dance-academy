@@ -433,3 +433,35 @@ export function getCustomerCourseKey(customer) {
     // course 優先（既存挙動完全保全）→ plan フォールバック → デフォルト
     return customer.course || PLAN_TO_COURSE[customer.plan] || '１';
 }
+
+/**
+ * 顧客が受講中のクラス一覧を scheduleData から抽出
+ * @param {Object} customer - { lastName, firstName }
+ * @param {Object} scheduleData - { 曜日: [{name, location, venue, students, color}] }
+ * @returns {Array<{day, location, name, teacher, color}>}
+ */
+export function getCustomerClasses(customer, scheduleData) {
+    if (!customer || !scheduleData) return [];
+    const fullName = (customer.lastName || '') + (customer.firstName || '');
+    if (!fullName) return [];
+    const days = ['月曜日','火曜日','水曜日','木曜日','金曜日'];
+    const out = [];
+    days.forEach(day => {
+        const classes = scheduleData[day] || [];
+        classes.forEach(cls => {
+            const hit = (cls.students || []).some(s => ((s.lastName||'') + (s.firstName||'')) === fullName);
+            if (hit) {
+                const m = (cls.name || '').match(/[A-Z]+$/);
+                const teacher = m ? m[0] : '';
+                out.push({
+                    day,
+                    location: cls.location || cls.venue || '',
+                    name: cls.name || '',
+                    teacher,
+                    color: cls.color || ''
+                });
+            }
+        });
+    });
+    return out;
+}
