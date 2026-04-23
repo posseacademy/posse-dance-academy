@@ -58,32 +58,30 @@ export function exportCustomersCSV(customers, scheduleData) {
         '郵便番号', '都道府県', '市区町村', '番地', '建物・部屋番号',
         '入会日', '入会金支払済', '入会金支払日',
         '年会費更新日', '年会費支払済', '年会費支払月',
-        'プラン1', 'プラン2', 'プラン3', 'プラン4', 'プラン5',
+        'プラン1', '講師', 'プラン2', '講師', 'プラン3', '講師', 'プラン4', '講師', 'プラン5', '講師',
         '備考'
     ];
     const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
-    // 受講クラスを5列に分割（5クラス超過分は5列目にパイプ連結）
-    // 1セル内で2行表示: 上段「曜日/場所/クラス名（先生名なし）」、下段「先生名」
-    // Excelではセル内改行で表示され、視認性が向上する
-    const formatClass = (x) => {
-        const nameWithoutTeacher = x.name.replace(/\s+[A-Z]+$/, '').trim();
-        const header = `${dayShort[x.day]||x.day[0]}/${x.location}/${nameWithoutTeacher}`;
-        return x.teacher ? `${header}\n${x.teacher}` : header;
+    // クラスを2列表記に分割: クラス列「曜日/場所/クラス名(先生除去)」、講師列「先生名」
+    const formatClassName = (x) => {
+        const nameWithoutTeacher = (x.name || '').replace(/\s+[A-Z]+$/, '').trim();
+        return `${dayShort[x.day]||x.day[0]}/${x.location}/${nameWithoutTeacher}`;
     };
     // 6クラス以上のオーバーフロー用（コンパクト・1行表記、クラス間はパイプ）
     const formatClassCompact = (x) => `${dayShort[x.day]||x.day[0]}/${x.location}/${x.name}`;
     const rows = [header];
     customers.forEach(c => {
         const classes = scheduleData ? getCustomerClasses(c, scheduleData) : [];
-        const classSlots = ['', '', '', '', ''];
+        // 5スロット × (クラス, 講師) の10要素
+        const planCells = ['', '', '', '', '', '', '', '', '', ''];
         classes.forEach((x, i) => {
-            if (i < 4) {
-                classSlots[i] = formatClass(x);
-            } else if (i === 4) {
-                classSlots[4] = formatClass(x);
+            if (i < 5) {
+                planCells[i * 2] = formatClassName(x);       // プラン列
+                planCells[i * 2 + 1] = x.teacher || '';     // 講師列
             } else {
-                // 6クラス目以降は5列目にコンパクト1行で連結
-                classSlots[4] = `${classSlots[4]} | ${formatClassCompact(x)}`;
+                // 6クラス目以降は5列目(プラン5)にコンパクト1行で連結、講師列も | で連結
+                planCells[8] = `${planCells[8]} | ${formatClassCompact(x)}`;
+                planCells[9] = planCells[9] ? `${planCells[9]} | ${x.teacher || ''}` : (x.teacher || '');
             }
         });
         rows.push([
@@ -115,11 +113,7 @@ export function exportCustomersCSV(customers, scheduleData) {
             c.annualFee || '',
             yn(c.annualFeePaid),
             c.annualFeeMonth || '',
-            classSlots[0],
-            classSlots[1],
-            classSlots[2],
-            classSlots[3],
-            classSlots[4],
+            ...planCells,
             c.memo || ''
         ]);
     });
