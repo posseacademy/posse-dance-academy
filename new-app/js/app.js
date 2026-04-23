@@ -7,7 +7,7 @@ import { renderCustomers, renderAddForm, renderCustomerRow } from './views/custo
 import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=35';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
 import { renderRevenue } from './views/revenue.js?v=12';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=7';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=8';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
