@@ -63,15 +63,28 @@ export function exportCustomersCSV(customers, scheduleData) {
     ];
     const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
     // 受講クラスを5列に分割（5クラス超過分は5列目にパイプ連結）
-    const formatClass = (x) => `${dayShort[x.day]||x.day[0]}/${x.location}/${x.name}`;
+    // 1セル内で2行表示: 上段「曜日/場所/クラス名（先生名なし）」、下段「先生名」
+    // Excelではセル内改行で表示され、視認性が向上する
+    const formatClass = (x) => {
+        const nameWithoutTeacher = x.name.replace(/\s+[A-Z]+$/, '').trim();
+        const header = `${dayShort[x.day]||x.day[0]}/${x.location}/${nameWithoutTeacher}`;
+        return x.teacher ? `${header}\n${x.teacher}` : header;
+    };
+    // 6クラス以上のオーバーフロー用（コンパクト・1行表記、クラス間はパイプ）
+    const formatClassCompact = (x) => `${dayShort[x.day]||x.day[0]}/${x.location}/${x.name}`;
     const rows = [header];
     customers.forEach(c => {
         const classes = scheduleData ? getCustomerClasses(c, scheduleData) : [];
         const classSlots = ['', '', '', '', ''];
         classes.forEach((x, i) => {
-            const s = formatClass(x);
-            if (i < 4) classSlots[i] = s;
-            else classSlots[4] = classSlots[4] ? `${classSlots[4]} | ${s}` : s;
+            if (i < 4) {
+                classSlots[i] = formatClass(x);
+            } else if (i === 4) {
+                classSlots[4] = formatClass(x);
+            } else {
+                // 6クラス目以降は5列目にコンパクト1行で連結
+                classSlots[4] = `${classSlots[4]} | ${formatClassCompact(x)}`;
+            }
         });
         rows.push([
             c.memberNumber || '',
