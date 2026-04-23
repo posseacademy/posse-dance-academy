@@ -149,7 +149,7 @@ export const defaultSchedule = {
             { lastName: 'わたなべ', firstName: 'いとし', plan: '1クラス' },
             { lastName: '富井', firstName: '藍', plan: '1クラス' }
         ]},
-        { location: '大橋', name: 'Bgirlクラス AYANO HARUHIKO', color: 'orange', students: [
+        { location: '大橋', name: 'ブレイキン入門 AYANO HARUHIKO', color: 'orange', students: [
             { lastName: '愛甲', firstName: '大輪', plan: '1クラス' }
         ]},
         { location: '照葉', name: 'ブレイキン入門 SOYA', color: 'blue', students: [
@@ -275,7 +275,7 @@ export const timeSchedule = {
         { time: '17:30-18:30', venue: '大橋校', name: 'ブレイキンキッズダンス AYANO', color: '#EA580C' },
         { time: '17:30-18:30', venue: '大橋校', name: 'キッズダンス AYANO', color: '#EA580C', alias: true },
         { time: '18:40-19:40', venue: '大橋校', name: 'ブレイキン入門 AYANO / HARUHIKO', color: '#DC2626' },
-        { time: '18:40-19:40', venue: '大橋校', name: 'Bgirlクラス AYANO HARUHIKO', color: '#DC2626', alias: true },
+        { time: '18:40-19:40', venue: '大橋校', name: 'ブレイキン入門 AYANO HARUHIKO', color: '#DC2626', alias: true },
         { time: '19:30-20:30', venue: '千早クラス', name: 'ブレイキン入門 SOYA', color: '#2563EB' },
         { time: '20:30-21:30', venue: '千早クラス', name: 'ブレイキン パワームーブ・アクロバット SOYA', color: '#16A34A' },
         { time: '20:30-21:30', venue: '照葉校', name: 'アクロ＆パワー SOYA', color: '#16A34A', alias: true }

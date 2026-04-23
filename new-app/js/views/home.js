@@ -1,4 +1,4 @@
-import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE, timeSchedule } from '../config.js?v=9';
+import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE, timeSchedule } from '../config.js?v=11';
 import { calculateVisitorRevenue, calculatePracticeRevenue, calculateMonthlyTuition, calculateFeeRevenue, isRegularPlan } from '../utils.js?v=5';
 
 export function renderDashboard(app) {

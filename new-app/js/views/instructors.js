@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Instructors View Module
 // ES module for instructor profile display
 
-import { instructors } from '../config.js?v=9';
+import { instructors } from '../config.js?v=11';
 
 /**
  * Instructor profile cards

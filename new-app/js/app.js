@@ -1,5 +1,5 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=10';
+import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=11';
 import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue, getCustomerCourseKey } from './utils.js?v=7';
 import { renderDashboard } from './views/home.js?v=13';
