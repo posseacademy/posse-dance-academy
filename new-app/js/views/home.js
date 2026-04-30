@@ -67,8 +67,9 @@ export function renderDashboard(app) {
       </div>
     </div>
 
-    <!-- プラン別内訳（人数のみ） -->
+    <!-- プラン別内訳 + レッスン一覧（2列レイアウト） -->
     <div class="content-grid" style="margin-top:1.5rem;">
+      <!-- 左: プラン別内訳 -->
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
           <h3 class="card-title" style="color:white;">プラン別内訳（入会中）</h3>
@@ -85,10 +86,8 @@ export function renderDashboard(app) {
           `).join('')}
         </div>
       </div>
-    </div>
 
-    <!-- レッスン一覧 -->
-    <div class="content-grid" style="margin-top:1.5rem;">
+      <!-- 右: レッスン一覧 -->
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
           <h3 class="card-title" style="color:white;">レッスン一覧</h3>
