@@ -139,13 +139,17 @@ export function getCustomerCourseKey(customer) {
  * 入会中顧客をプラン別（コース1-4）に集計
  * @param {Array} customers - 全顧客配列
  * @param {Object} courseColors - コースキー → 色のマップ
- * @returns {Array<{course, count, color}>} 人数0のコースは含めない（４→１の降順）
+ * @returns {Array<{course, count, count15h, color}>} 人数0のコースは含めない（４→１の降順）
  */
 export function getCustomerCountByCourse(customers, courseColors) {
     const counts = {};
+    const counts15h = {};
     customers.filter(c => c.status === '入会中').forEach(c => {
         const k = getCustomerCourseKey(c);
         counts[k] = (counts[k] || 0) + 1;
+        if (c.has15hClass) {
+            counts15h[k] = (counts15h[k] || 0) + 1;
+        }
     });
     const order = ['４','３','２','１'];
     return order
@@ -153,6 +157,7 @@ export function getCustomerCountByCourse(customers, courseColors) {
         .map(course => ({
             course,
             count: counts[course],
+            count15h: counts15h[course] || 0,
             color: (courseColors && courseColors[course]) || '#6b7280'
         }));
 }

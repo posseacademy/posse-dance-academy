@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=13';
-import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=8';
+import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=9';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -81,7 +81,7 @@ export function renderDashboard(app) {
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
                 プラン${item.course}
               </div>
-              <div class="rev-detail">${item.count}名</div>
+              <div class="rev-detail">${item.count}名${item.count15h > 0 ? `<span style="color:var(--color-gray-400);margin-left:0.5rem;font-size:var(--font-size-xs);">(1.5h: ${item.count15h}名)</span>` : ''}</div>
             </div>
           `).join('')}
         </div>
