@@ -78,10 +78,6 @@ export function renderAttendanceRecord(app) {
   const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
   const currentDay = app.selectedDay || '月曜日';
   const schedule = app.scheduleData[currentDay] || [];
-  // 過去月判定（YYYY-MM 比較）
-  const _now = new Date();
-  const _currentYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
-  const isPastMonth = (app.selectedMonth || '') < _currentYM;
 
   return `
     <!-- Day Tabs with Month Navigation -->
@@ -155,21 +151,23 @@ export function renderAttendanceRecord(app) {
                 </thead>
                 <tbody>
                   ${(() => {
-                    // 表示ルール:
-                    // - 当月/未来月: schedule.students を全員表示（記録なくても）+ attendance のビジター
-                    // - 過去月: schedule.students は出席記録(○/×/休講)があるもののみ表示
-                    //          + attendance に記録があるが schedule にない過去在籍生徒
-                    //          + ビジター
+                    // 表示ルール（在籍期間ベース）:
+                    // - schedule.students の各生徒について enrolledFrom / leftAt で在籍期間判定
+                    //   - enrolledFrom が選択月より後 → 非表示（追加前の月）
+                    //   - leftAt が選択月より前 → 非表示（退会後の月）
+                    //   - どちらも未設定 → 全月表示（既存データの後方互換）
+                    // - + attendance に記録があるが schedule にない過去在籍生徒（孤立データ）
+                    // - + attendance のビジター
                     const _hasMarkRec = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
-                    const _markCheck = (lastName, firstName) => {
-                      const key = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${lastName}${firstName}`;
-                      return _hasMarkRec(app.attendanceData?.[key]);
+                    const _selectedM = app.selectedMonth || '';
+                    const _inEnrollmentRange = (s) => {
+                      if (s.enrolledFrom && s.enrolledFrom > _selectedM) return false;
+                      if (s.leftAt && _selectedM > s.leftAt) return false;
+                      return true;
                     };
-                    const allRegulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
-                    // 過去月は出席記録ありのみ
-                    const regulars = isPastMonth
-                      ? allRegulars.filter(s => _markCheck(s.lastName, s.firstName))
-                      : allRegulars;
+                    const regulars = (cls.students || [])
+                      .filter(s => isRegularPlan(s.plan))
+                      .filter(_inEnrollmentRange);
                     const seen = new Set(regulars.map(s => s.lastName + s.firstName));
                     const prefix = `${currentDay}_${cls.location || cls.venue}_${cls.name}_`;
                     const pastRegulars = [];

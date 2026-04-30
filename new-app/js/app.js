@@ -4,7 +4,7 @@ import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=13';
 import { renderDashboard } from './views/home.js?v=22';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=18';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=44';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=45';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=17';
 
@@ -650,6 +650,7 @@ class DanceStudioApp {
             if (newMonth > 12) { newMonth = 1; newYear++; }
             else if (newMonth < 1) { newMonth = 12; newYear--; }
             this.selectedMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+            this.scheduleData = await db.loadScheduleData(defaultSchedule);
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
             this.calendarData = await db.loadCalendarData(this.selectedMonth);
@@ -670,6 +671,7 @@ class DanceStudioApp {
         this.selectedMonth = monthValue;
         this.render();
         try {
+            this.scheduleData = await db.loadScheduleData(defaultSchedule);
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
             await this.ensureMonthlyPlanSnapshot();
@@ -733,11 +735,18 @@ class DanceStudioApp {
 
             if (isRegularPlan(plan)) {
                 // レギュラー: schedule.students に追加（既存なら更新）
-                const exists = cls.students.some(s =>
+                const existing = cls.students.find(s =>
                     (s.lastName || '').trim() === lastName && (s.firstName || '').trim() === firstName
                 );
-                if (!exists) {
-                    cls.students.push({ lastName, firstName, plan });
+                if (existing) {
+                    // 既存生徒の再追加: 退会扱い(leftAt)があれば解除し再入会扱い
+                    if (existing.leftAt) {
+                        delete existing.leftAt;
+                        existing.enrolledFrom = this.selectedMonth;
+                        await db.saveScheduleData(this.scheduleData);
+                    }
+                } else {
+                    cls.students.push({ lastName, firstName, plan, enrolledFrom: this.selectedMonth });
                     await db.saveScheduleData(this.scheduleData);
                 }
             } else {
@@ -817,11 +826,20 @@ class DanceStudioApp {
         const isRegular = student ? isRegularPlan(student.plan) : false;
 
         if (isRegular) {
-            // Regular students: remove from schedule (affects all months)
+            // レギュラー: schedule から削除せず leftAt を設定（退会扱い）
+            // 過去月の出席記録を保護するため scheduleData も attendance も破壊しない
             if (classIndex !== -1) {
-                this.scheduleData[day][classIndex].students = this.scheduleData[day][classIndex].students.filter(s => !(s.lastName === lastName && s.firstName === firstName));
-                await db.saveScheduleData(this.scheduleData);
+                const target = this.scheduleData[day][classIndex].students.find(
+                    s => s.lastName === lastName && s.firstName === firstName
+                );
+                if (target) {
+                    target.leftAt = this.selectedMonth;
+                    await db.saveScheduleData(this.scheduleData);
+                }
             }
+            alert('生徒を退会扱いにしました（過去の記録は保持されます）');
+            this.render();
+            return;
         }
         // Non-regular (visitor/trial): only delete attendance for current month
         // Schedule entry preserved so other months are unaffected
