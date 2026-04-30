@@ -78,6 +78,10 @@ export function renderAttendanceRecord(app) {
   const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
   const currentDay = app.selectedDay || '月曜日';
   const schedule = app.scheduleData[currentDay] || [];
+  // 過去月判定（YYYY-MM 比較）
+  const _now = new Date();
+  const _currentYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+  const isPastMonth = (app.selectedMonth || '') < _currentYM;
 
   return `
     <!-- Day Tabs with Month Navigation -->
@@ -151,10 +155,21 @@ export function renderAttendanceRecord(app) {
                 </thead>
                 <tbody>
                   ${(() => {
-                    // 表示対象 = 現在のschedule.students + 当月attendanceに記録があるが
-                    // schedule からは消えているレギュラー（過去在籍）+ ビジター
-                    // 過去月で生徒削除しても出席記録があれば自動表示される
-                    const regulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
+                    // 表示ルール:
+                    // - 当月/未来月: schedule.students を全員表示（記録なくても）+ attendance のビジター
+                    // - 過去月: schedule.students は出席記録(○/×/休講)があるもののみ表示
+                    //          + attendance に記録があるが schedule にない過去在籍生徒
+                    //          + ビジター
+                    const _hasMarkRec = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+                    const _markCheck = (lastName, firstName) => {
+                      const key = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${lastName}${firstName}`;
+                      return _hasMarkRec(app.attendanceData?.[key]);
+                    };
+                    const allRegulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
+                    // 過去月は出席記録ありのみ
+                    const regulars = isPastMonth
+                      ? allRegulars.filter(s => _markCheck(s.lastName, s.firstName))
+                      : allRegulars;
                     const seen = new Set(regulars.map(s => s.lastName + s.firstName));
                     const prefix = `${currentDay}_${cls.location || cls.venue}_${cls.name}_`;
                     const pastRegulars = [];
