@@ -136,64 +136,18 @@ export function getCustomerCourseKey(customer) {
 }
 
 /**
- * 当月のattendance_YYYYMMから「90分授業に出席記録がある生徒」の氏名Setを構築
- * 出席記録あり = week1〜week5のいずれかが '○' / '×' / '休講'
- * @param {Object} attendanceData - { '曜日_場所_クラス名_姓名': { _plan, week1..week5 } }
- * @param {Object} timeSchedule - { 曜日: [{ time: 'HH:MM-HH:MM', name }] }
- * @returns {Set<string>} `lastName + firstName` の集合
- */
-export function getStudentNamesIn15hClasses(attendanceData, timeSchedule) {
-    const result = new Set();
-    if (!attendanceData || !timeSchedule) return result;
-    const toMin = (s) => { const [h, m] = s.split(':').map(Number); return h * 60 + (m || 0); };
-    const namesByDay = {};
-    Object.entries(timeSchedule).forEach(([day, classes]) => {
-        const set = new Set();
-        (classes || []).forEach(cls => {
-            if (!cls.time || !cls.name) return;
-            const [start, end] = cls.time.split('-');
-            if (!start || !end) return;
-            if (toMin(end) - toMin(start) === 90) set.add(cls.name);
-        });
-        namesByDay[day] = set;
-    });
-    const hasMark = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
-    Object.entries(attendanceData).forEach(([key, record]) => {
-        if (!hasMark(record)) return;
-        const firstUs = key.indexOf('_');
-        if (firstUs < 0) return;
-        const day = key.slice(0, firstUs);
-        const dayNames = namesByDay[day];
-        if (!dayNames || dayNames.size === 0) return;
-        for (const cn of dayNames) {
-            const sep = `_${cn}_`;
-            const idx = key.indexOf(sep, firstUs + 1);
-            if (idx > 0) {
-                const name = key.slice(idx + sep.length);
-                if (name) result.add(name);
-                break;
-            }
-        }
-    });
-    return result;
-}
-
-/**
  * 入会中顧客をプラン別（コース1-4）に集計
  * @param {Array} customers - 全顧客配列
  * @param {Object} courseColors - コースキー → 色のマップ
- * @param {Set<string>} students15hSet - 1.5h授業在籍生徒の氏名Set（getStudentNamesIn15hClassesの戻り値）
  * @returns {Array<{course, count, count15h, color}>} 人数0のコースは含めない（４→１の降順）
  */
-export function getCustomerCountByCourse(customers, courseColors, students15hSet) {
+export function getCustomerCountByCourse(customers, courseColors) {
     const counts = {};
     const counts15h = {};
-    const set15h = students15hSet || new Set();
     customers.filter(c => c.status === '入会中').forEach(c => {
         const k = getCustomerCourseKey(c);
         counts[k] = (counts[k] || 0) + 1;
-        const fullName = (c.lastName || '') + (c.firstName || '');
-        if (set15h.has(fullName)) {
+        if (c.has15hClass) {
             counts15h[k] = (counts15h[k] || 0) + 1;
         }
     });
