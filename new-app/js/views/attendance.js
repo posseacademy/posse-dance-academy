@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Attendance View Module
 // ES module for attendance recording and tracking
 
-import { timeSchedule, planOrder } from '../config.js?v=12';
+import { timeSchedule, planOrder } from '../config.js?v=13';
 import { getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=8';
 
 /**
@@ -225,6 +225,7 @@ export function renderAttendanceRecord(app) {
                       'ビジター（会員）': 'V会',
                       'ビジター（非会員）': 'V非',
                       'ビジター（振替）': 'V振',
+                      'ビジター（講師）': 'V講',
                       'ビジター1.5h（会員）': 'V1.5',
                       'ビジター1.5h（非会員）': 'V1.5',
                       '初回体験': '体験',
@@ -373,7 +374,7 @@ export function renderAddStudentForm(app, day, location, className) {
   }
 
   const plans = ['１クラス', '２クラス', '３クラス', '４クラス', '1.5hクラス',
-    'ビジター（会員）', 'ビジター（非会員）', 'ビジター（振替）', '初回体験', '初回無料'];
+    'ビジター（会員）', 'ビジター（非会員）', 'ビジター（振替）', 'ビジター（講師）', '初回体験', '初回無料'];
 
   return `
     <div class="add-student-form">

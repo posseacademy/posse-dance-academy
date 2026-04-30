@@ -1,4 +1,4 @@
-import { courseColors, timeSchedule } from '../config.js?v=12';
+import { courseColors, timeSchedule } from '../config.js?v=13';
 import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=8';
 
 export function renderDashboard(app) {
