@@ -151,35 +151,56 @@ export function renderAttendanceRecord(app) {
                 </thead>
                 <tbody>
                   ${(() => {
-                    // 1) レギュラー: schedule.students からレギュラープランのみ
+                    // 表示対象 = 現在のschedule.students + 当月attendanceに記録があるが
+                    // schedule からは消えているレギュラー（過去在籍）+ ビジター
+                    // 過去月で生徒削除しても出席記録があれば自動表示される
                     const regulars = (cls.students || []).filter(s => isRegularPlan(s.plan));
                     const seen = new Set(regulars.map(s => s.lastName + s.firstName));
-                    // 2) ビジター: 当月 attendanceData から _plan が明示的に非レギュラーのエントリのみを追加
-                    //    （_plan 未設定のエントリは絶対に含めない。履歴や残留データから幽霊生徒が出るのを防ぐ）
                     const prefix = `${currentDay}_${cls.location || cls.venue}_${cls.name}_`;
+                    const pastRegulars = [];
                     const visitors = [];
+
+                    const splitName = (nameCombined) => {
+                      // schedule内の同名から先取り
+                      const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
+                      if (fromSchedule) return { ln: fromSchedule.lastName, fn: fromSchedule.firstName };
+                      // customers から
+                      const c = (app.customers || []).find(c => (c.lastName + c.firstName) === nameCombined);
+                      if (c) return { ln: c.lastName, fn: c.firstName };
+                      return { ln: '', fn: nameCombined };
+                    };
+
                     for (const key of Object.keys(app.attendanceData || {})) {
                       if (!key.startsWith(prefix)) continue;
                       if (key.startsWith('練習会_')) continue;
                       const rec = app.attendanceData[key];
                       if (!rec || typeof rec !== 'object') continue;
-                      const p = rec._plan;
-                      if (!p) continue; // _plan 未設定は除外
-                      if (isRegularPlan(p)) continue; // レギュラーは対象外
                       const nameCombined = key.slice(prefix.length);
                       if (seen.has(nameCombined)) continue;
-                      seen.add(nameCombined);
-                      // lastName/firstName を分割: まず schedule 内の同名から流用、なければ customers から
-                      let ln = '', fn = nameCombined;
-                      const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
-                      if (fromSchedule) { ln = fromSchedule.lastName; fn = fromSchedule.firstName; }
-                      else if (app.customers) {
-                        const c = app.customers.find(c => (c.lastName + c.firstName) === nameCombined);
-                        if (c) { ln = c.lastName; fn = c.firstName; }
+
+                      const p = rec._plan;
+                      const hasMark = ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+
+                      if (p && !isRegularPlan(p)) {
+                        // 明示的なビジター/体験プラン
+                        seen.add(nameCombined);
+                        const { ln, fn } = splitName(nameCombined);
+                        visitors.push({ lastName: ln, firstName: fn, plan: p });
+                      } else if (hasMark) {
+                        // 出席記録あり (○/×/休講) で schedule から消えているレギュラー
+                        // → 過去在籍として表示
+                        seen.add(nameCombined);
+                        const { ln, fn } = splitName(nameCombined);
+                        // プラン: _plan が regular なら採用、無ければ customers.plan or デフォルト
+                        let planLabel = (p && isRegularPlan(p)) ? p : null;
+                        if (!planLabel) {
+                          const c = (app.customers || []).find(c => (c.lastName + c.firstName) === nameCombined);
+                          planLabel = c?.plan || '１クラス';
+                        }
+                        pastRegulars.push({ lastName: ln, firstName: fn, plan: planLabel });
                       }
-                      visitors.push({ lastName: ln, firstName: fn, plan: p });
                     }
-                    return [...regulars, ...visitors];
+                    return [...regulars, ...pastRegulars, ...visitors];
                   })().map(student => {
                     const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
