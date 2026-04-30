@@ -78,11 +78,11 @@ export function renderDashboard(app) {
         <div class="card-content">
           ${courseCounts.map(item => `
             <div class="revenue-row">
-              <div class="rev-label">
+              <div class="rev-label" style="color:#000;font-weight:700;">
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
                 プラン${item.course}
               </div>
-              <div class="rev-detail">${item.count}名${item.count15h > 0 ? `<span style="color:#000;margin-left:0.5rem;font-size:var(--font-size-xs);font-weight:600;">(1.5h: ${item.count15h}名)</span>` : ''}</div>
+              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${item.count}名${item.count15h > 0 ? `<span style="color:#000;margin-left:0.5rem;font-weight:700;">(1.5h: ${item.count15h}名)</span>` : ''}</div>
             </div>
           `).join('')}
         </div>
