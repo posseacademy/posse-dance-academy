@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Customers View Module
 // ES module for customer management page rendering
 
-import { calculateAge, getCustomerClasses } from '../utils.js?v=9';
+import { calculateAge, getCustomerClasses } from '../utils.js?v=10';
 
 /**
  * Main customer list page
@@ -245,10 +245,6 @@ export function renderAddForm(app) {
                 <label class="form-label">年会費支払月</label>
                 <input type="month" class="form-input" id="new_annualFeeMonth" value="${form.annualFeeMonth || ''}">
               </div>
-              <div style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
-                <input type="checkbox" id="new_has15hClass" ${form.has15hClass ? 'checked' : ''}>
-                <label for="new_has15hClass" style="font-size:0.875rem;">1.5hクラス受講</label>
-              </div>
             </div>
           </div>
         </div>
@@ -382,12 +378,6 @@ function renderCustomerDetailModal(app) {
                 <div class="detail-value">${customer.annualFeeMonth
                   ? '<span class="status-badge status-badge-active">支払済 ' + customer.annualFeeMonth + '</span>'
                   : '<span class="status-badge status-badge-withdrawn">未払い</span>'}</div>
-              </div>
-              <div class="detail-item">
-                <label>1.5hクラス</label>
-                <div class="detail-value">${customer.has15hClass
-                  ? '<span class="status-badge status-badge-active">受講中</span>'
-                  : '—'}</div>
               </div>
             </div>
           </div>
@@ -599,10 +589,6 @@ function renderEditModal(app) {
               <div class="detail-item">
                 <label>年会費支払月</label>
                 <input type="month" class="form-input" id="edit_annualFeeMonth" value="${ef.annualFeeMonth || ''}">
-              </div>
-              <div class="detail-item" style="display:flex;align-items:center;gap:0.5rem;padding-top:1.5rem;">
-                <input type="checkbox" id="edit_has15hClass" ${ef.has15hClass ? 'checked' : ''}>
-                <label for="edit_has15hClass" style="margin:0;">1.5hクラス受講</label>
               </div>
             </div>
           </div>

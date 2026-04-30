@@ -136,18 +136,56 @@ export function getCustomerCourseKey(customer) {
 }
 
 /**
+ * timeSchedule と scheduleData から「90分授業」に在籍している生徒の氏名Setを構築
+ * @param {Object} scheduleData - { 曜日: [{ name, students: [{lastName, firstName}] }] }
+ * @param {Object} timeSchedule - { 曜日: [{ time: 'HH:MM-HH:MM', name }] }
+ * @returns {Set<string>} `lastName + firstName` の集合
+ */
+export function getStudentNamesIn15hClasses(scheduleData, timeSchedule) {
+    const result = new Set();
+    if (!scheduleData || !timeSchedule) return result;
+    const toMin = (s) => { const [h, m] = s.split(':').map(Number); return h * 60 + (m || 0); };
+    const namesByDay = {};
+    Object.entries(timeSchedule).forEach(([day, classes]) => {
+        const set = new Set();
+        (classes || []).forEach(cls => {
+            if (!cls.time) return;
+            const [start, end] = cls.time.split('-');
+            if (!start || !end) return;
+            if (toMin(end) - toMin(start) === 90) set.add(cls.name);
+        });
+        namesByDay[day] = set;
+    });
+    Object.entries(scheduleData).forEach(([day, classes]) => {
+        const dayNames = namesByDay[day];
+        if (!dayNames || dayNames.size === 0) return;
+        (classes || []).forEach(cls => {
+            if (!dayNames.has(cls.name)) return;
+            (cls.students || []).forEach(s => {
+                const fullName = (s.lastName || '') + (s.firstName || '');
+                if (fullName) result.add(fullName);
+            });
+        });
+    });
+    return result;
+}
+
+/**
  * 入会中顧客をプラン別（コース1-4）に集計
  * @param {Array} customers - 全顧客配列
  * @param {Object} courseColors - コースキー → 色のマップ
+ * @param {Set<string>} students15hSet - 1.5h授業在籍生徒の氏名Set（getStudentNamesIn15hClassesの戻り値）
  * @returns {Array<{course, count, count15h, color}>} 人数0のコースは含めない（４→１の降順）
  */
-export function getCustomerCountByCourse(customers, courseColors) {
+export function getCustomerCountByCourse(customers, courseColors, students15hSet) {
     const counts = {};
     const counts15h = {};
+    const set15h = students15hSet || new Set();
     customers.filter(c => c.status === '入会中').forEach(c => {
         const k = getCustomerCourseKey(c);
         counts[k] = (counts[k] || 0) + 1;
-        if (c.has15hClass) {
+        const fullName = (c.lastName || '') + (c.firstName || '');
+        if (set15h.has(fullName)) {
             counts15h[k] = (counts15h[k] || 0) + 1;
         }
     });

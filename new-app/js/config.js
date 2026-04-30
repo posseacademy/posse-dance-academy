@@ -384,7 +384,6 @@ export function getEmptyCustomer() {
         isFamilyMember: false,
         annualFeePaid: false,
         annualFeeMonth: '',
-        has15hClass: false,
         plan: '',
         planUpdatedAt: ''
     };

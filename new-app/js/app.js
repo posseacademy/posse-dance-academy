@@ -1,12 +1,12 @@
 // Imports
-import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=13';
+import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=14';
 import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=9';
-import { renderDashboard } from './views/home.js?v=16';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=14';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=40';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=13';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=10';
+import { renderDashboard } from './views/home.js?v=17';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=15';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=41';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=25';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=14';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -1193,7 +1193,7 @@ class DanceStudioApp {
             }
         });
         // Checkbox fields for add form
-        ['isFamilyMember', 'has15hClass'].forEach(field => {
+        ['isFamilyMember'].forEach(field => {
             const el = document.getElementById(`new_${field}`);
             if (el) el.addEventListener('change', (e) => { this.newCustomer[field] = e.target.checked; });
         });
@@ -1232,7 +1232,7 @@ class DanceStudioApp {
             }
         });
         // Checkbox fields for edit form
-        ['isFamilyMember', 'has15hClass'].forEach(field => {
+        ['isFamilyMember'].forEach(field => {
             const el = document.getElementById(`edit_${field}`);
             if (el) el.addEventListener('change', (e) => { this.updateEditField(field, e.target.checked); });
         });
