@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=14';
-import { getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=10';
+import { getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=11';
 
 /**
  * Main attendance wrapper with subtabs

@@ -136,36 +136,44 @@ export function getCustomerCourseKey(customer) {
 }
 
 /**
- * timeSchedule と scheduleData から「90分授業」に在籍している生徒の氏名Setを構築
- * @param {Object} scheduleData - { 曜日: [{ name, students: [{lastName, firstName}] }] }
+ * 当月のattendance_YYYYMMから「90分授業に出席記録がある生徒」の氏名Setを構築
+ * 出席記録あり = week1〜week5のいずれかが '○' / '×' / '休講'
+ * @param {Object} attendanceData - { '曜日_場所_クラス名_姓名': { _plan, week1..week5 } }
  * @param {Object} timeSchedule - { 曜日: [{ time: 'HH:MM-HH:MM', name }] }
  * @returns {Set<string>} `lastName + firstName` の集合
  */
-export function getStudentNamesIn15hClasses(scheduleData, timeSchedule) {
+export function getStudentNamesIn15hClasses(attendanceData, timeSchedule) {
     const result = new Set();
-    if (!scheduleData || !timeSchedule) return result;
+    if (!attendanceData || !timeSchedule) return result;
     const toMin = (s) => { const [h, m] = s.split(':').map(Number); return h * 60 + (m || 0); };
     const namesByDay = {};
     Object.entries(timeSchedule).forEach(([day, classes]) => {
         const set = new Set();
         (classes || []).forEach(cls => {
-            if (!cls.time) return;
+            if (!cls.time || !cls.name) return;
             const [start, end] = cls.time.split('-');
             if (!start || !end) return;
             if (toMin(end) - toMin(start) === 90) set.add(cls.name);
         });
         namesByDay[day] = set;
     });
-    Object.entries(scheduleData).forEach(([day, classes]) => {
+    const hasMark = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+    Object.entries(attendanceData).forEach(([key, record]) => {
+        if (!hasMark(record)) return;
+        const firstUs = key.indexOf('_');
+        if (firstUs < 0) return;
+        const day = key.slice(0, firstUs);
         const dayNames = namesByDay[day];
         if (!dayNames || dayNames.size === 0) return;
-        (classes || []).forEach(cls => {
-            if (!dayNames.has(cls.name)) return;
-            (cls.students || []).forEach(s => {
-                const fullName = (s.lastName || '') + (s.firstName || '');
-                if (fullName) result.add(fullName);
-            });
-        });
+        for (const cn of dayNames) {
+            const sep = `_${cn}_`;
+            const idx = key.indexOf(sep, firstUs + 1);
+            if (idx > 0) {
+                const name = key.slice(idx + sep.length);
+                if (name) result.add(name);
+                break;
+            }
+        }
     });
     return result;
 }

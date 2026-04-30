@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=14';
-import { isRegularPlan, getCustomerCountByCourse, getStudentNamesIn15hClasses } from '../utils.js?v=10';
+import { isRegularPlan, getCustomerCountByCourse, getStudentNamesIn15hClasses } from '../utils.js?v=11';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -9,7 +9,7 @@ export function renderDashboard(app) {
   const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
 
   // プラン別人数集計（売上計算は廃止、人数のみ）
-  const students15hSet = getStudentNamesIn15hClasses(app.scheduleData, app.timeScheduleData || timeSchedule);
+  const students15hSet = getStudentNamesIn15hClasses(app.attendanceData, app.timeScheduleData || timeSchedule);
   const courseCounts = getCustomerCountByCourse(app.customers, courseColors, students15hSet);
 
   // Parse selected month for display
