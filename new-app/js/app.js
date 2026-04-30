@@ -114,6 +114,9 @@ class DanceStudioApp {
         // cleanupVisitorsFromSchedule は破壊的書き込みでデータ消失を引き起こしたため削除済み
         // ビジター/初回プランは renderAttendanceRecord() が attendance から表示マージする
 
+        // 前月の出席記録から、scheduleData にいない過去在籍レギュラーを補完
+        try { await this.migrateOrphanRegulars(this.selectedMonth); } catch(e) { console.error('migrateOrphanRegulars error:', e); }
+
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
@@ -154,6 +157,69 @@ class DanceStudioApp {
     // No cleanup needed — visitors only show for months where they have attendance records
     cleanupNonRegularStudents() {
         // No-op: display filtering replaces destructive cleanup
+    }
+
+    // 前月の出席記録から、scheduleData にいないレギュラー生徒（出席記録あり）を補完
+    // 過去のコード/操作で scheduleData から消えた孤立データを回復する
+    async migrateOrphanRegulars(targetMonth) {
+        if (!targetMonth) return 0;
+        const [y, m] = targetMonth.split('-').map(Number);
+        let py = y, pm = m - 1;
+        if (pm < 1) { pm = 12; py--; }
+        const prevYM = `${py}-${String(pm).padStart(2, '0')}`;
+
+        let prev;
+        try { prev = await db.loadAttendance(prevYM); } catch (e) { return 0; }
+        if (!prev || Object.keys(prev).length === 0) return 0;
+
+        const normLoc = (loc) => (loc || '').replace(/校$/, '');
+        let added = 0;
+
+        Object.entries(prev).forEach(([key, rec]) => {
+            if (!rec || typeof rec !== 'object') return;
+            const p = rec._plan;
+            if (!p || !isRegularPlan(p)) return;
+            const hasMark = ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+            if (!hasMark) return;
+
+            const firstUs = key.indexOf('_');
+            if (firstUs < 0) return;
+            const day = key.slice(0, firstUs);
+            if (!this.scheduleData[day]) return;
+
+            const remainder = key.slice(firstUs + 1);
+            let matched = null;
+            for (const cls of this.scheduleData[day]) {
+                const loc = cls.location || cls.venue || '';
+                const prefix = `${loc}_${cls.name}_`;
+                if (remainder.startsWith(prefix)) {
+                    matched = { cls, fullName: remainder.slice(prefix.length) };
+                    break;
+                }
+            }
+            if (!matched) return;
+
+            const exists = (matched.cls.students || []).some(s =>
+                ((s.lastName || '') + (s.firstName || '')) === matched.fullName
+            );
+            if (exists) return;
+
+            const customer = (this.customers || []).find(c =>
+                ((c.lastName || '') + (c.firstName || '')) === matched.fullName
+            );
+            const lastName = customer?.lastName || '';
+            const firstName = customer?.firstName || matched.fullName;
+
+            matched.cls.students = matched.cls.students || [];
+            matched.cls.students.push({ lastName, firstName, plan: p, enrolledFrom: prevYM });
+            added++;
+        });
+
+        if (added > 0) {
+            await db.saveScheduleData(this.scheduleData);
+            console.log(`migrateOrphanRegulars: ${added}名を ${prevYM} の記録から名簿に補完`);
+        }
+        return added;
     }
 
 
@@ -655,6 +721,7 @@ class DanceStudioApp {
             this.eventsData = await db.loadEvents(this.selectedMonth);
             this.calendarData = await db.loadCalendarData(this.selectedMonth);
             this.selectedCalendarDate = null;
+            await this.migrateOrphanRegulars(this.selectedMonth);
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月切り替えエラー:', error);
@@ -674,6 +741,7 @@ class DanceStudioApp {
             this.scheduleData = await db.loadScheduleData(defaultSchedule);
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
+            await this.migrateOrphanRegulars(this.selectedMonth);
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月選択エラー:', error);
