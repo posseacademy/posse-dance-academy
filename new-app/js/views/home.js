@@ -1,5 +1,5 @@
-import { pricing, coursePrices, courseColors, visitorRevenueOverrides, coursePricesWithTransfer, combinedPrices15h, CLASS_15H, TRANSFER_FEE, timeSchedule } from '../config.js?v=11';
-import { calculateVisitorRevenue, calculatePracticeRevenue, calculateMonthlyTuition, calculateFeeRevenue, isRegularPlan } from '../utils.js?v=5';
+import { courseColors, timeSchedule } from '../config.js?v=12';
+import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=8';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -8,46 +8,8 @@ export function renderDashboard(app) {
   const pausedCustomers = app.customers.filter(c => c.status === '休会中').length;
   const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
 
-  // Calculate course breakdown with transfer fee + 1.5h combined plan support
-  const tuitionResult = calculateMonthlyTuition(
-    app.customers, app.scheduleData,
-    coursePricesWithTransfer, combinedPrices15h, CLASS_15H
-  );
-  const courseCounts = tuitionResult.courseCounts;
-  const monthlyTuitionTotal = tuitionResult.total;
-
-  // Calculate schedule statistics
-  let totalClasses = 0;
-  let totalStudents = 0;
-  Object.entries(app.scheduleData || {}).forEach(([day, dayClasses]) => {
-    if (day === 'イベント' || !Array.isArray(dayClasses)) return;
-    dayClasses.forEach(cls => {
-      totalClasses++;
-      totalStudents += (cls.students || []).length;
-    });
-  });
-
-  // Calculate visitor revenue
-  const visitorRevenue = calculateVisitorRevenue(app.attendanceData, app.scheduleData, app.pricing, visitorRevenueOverrides, app.selectedMonth);
-
-  // Calculate practice revenue
-  const practiceData = calculatePracticeRevenue(app.attendanceData);
-  const practiceRevenue = practiceData.revenue;
-
-  // Calculate event revenue
-  let eventRevenue = 0;
-  Object.values(app.eventsData || {}).forEach(ev => {
-    eventRevenue += (ev.participants || []).reduce((sum, p) => sum + (parseInt(p.amount) || 0), 0);
-  });
-
-  // Calculate fee revenue
-  const feeData = calculateFeeRevenue(app.customers, app.selectedMonth);
-  const feeTotal = feeData.enrollment.total + feeData.annualFee.total;
-
-  // Total revenue & goal
-  const totalRevenue = monthlyTuitionTotal + visitorRevenue + practiceRevenue + eventRevenue + feeTotal;
-  const revenueGoal = 1000000;
-  const progressPct = Math.min(Math.round((totalRevenue / revenueGoal) * 100), 100);
+  // プラン別人数集計（売上計算は廃止、人数のみ）
+  const courseCounts = getCustomerCountByCourse(app.customers, courseColors);
 
   // Parse selected month for display
   const [year, month] = app.selectedMonth.split('-');
@@ -105,9 +67,8 @@ export function renderDashboard(app) {
       </div>
     </div>
 
-    <!-- Content Grid -->
-    <div class="content-grid">
-      <!-- Left: Course Breakdown -->
+    <!-- プラン別内訳（人数のみ） -->
+    <div class="content-grid" style="margin-top:1.5rem;">
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
           <h3 class="card-title" style="color:white;">プラン別内訳（入会中）</h3>
@@ -119,71 +80,14 @@ export function renderDashboard(app) {
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
                 プラン${item.course}
               </div>
-              <div class="rev-amount">¥${item.price.toLocaleString('ja-JP')}</div>
               <div class="rev-detail">${item.count}名</div>
             </div>
           `).join('')}
-          <div class="revenue-total">
-            <div class="rev-label" style="font-weight: 600;">月謝合計</div>
-            <div class="rev-amount" style="font-weight: 600;">¥${monthlyTuitionTotal.toLocaleString('ja-JP')}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Revenue Goal & Summary -->
-      <div>
-        <!-- Revenue Goal Card -->
-        <div class="content-card revenue-goal-card">
-          <div class="rg-header">
-            <span class="rg-month">${monthDisplay}</span>
-            <span class="rg-pct">${progressPct}%</span>
-          </div>
-          <div class="rg-amount">¥${totalRevenue.toLocaleString('ja-JP')}</div>
-          <div class="rg-bar-track">
-            <div class="rg-bar-fill" style="width:${progressPct}%;"></div>
-          </div>
-          <div class="rg-goal">目標 ¥${revenueGoal.toLocaleString('ja-JP')}</div>
-          <div class="rg-remaining">${totalRevenue >= revenueGoal
-            ? '目標達成!'
-            : `あと ¥${(revenueGoal - totalRevenue).toLocaleString('ja-JP')}`}</div>
-        </div>
-
-        <!-- Breakdown Card -->
-        <div class="content-card" style="margin-top: 1rem;">
-          <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
-            <h3 class="card-title" style="color:white;">売上内訳</h3>
-          </div>
-          <div class="card-content">
-            <div class="revenue-row">
-              <div class="rev-label">月謝</div>
-              <div class="rev-amount">¥${monthlyTuitionTotal.toLocaleString('ja-JP')}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">ビジター</div>
-              <div class="rev-amount">¥${visitorRevenue.toLocaleString('ja-JP')}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">イベント</div>
-              <div class="rev-amount">¥${eventRevenue.toLocaleString('ja-JP')}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">練習会</div>
-              <div class="rev-amount">¥${practiceRevenue.toLocaleString('ja-JP')}</div>
-            </div>
-            <div class="revenue-row" style="margin-top:0.5rem;">
-              <div class="rev-label">レッスン数</div>
-              <div class="rev-amount">${totalClasses}</div>
-            </div>
-            <div class="revenue-row">
-              <div class="rev-label">受講生数</div>
-              <div class="rev-amount">${totalStudents}</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
 
-    <!-- Lesson Overview (same width as コース別内訳) -->
+    <!-- レッスン一覧 -->
     <div class="content-grid" style="margin-top:1.5rem;">
       <div class="content-card">
         <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">

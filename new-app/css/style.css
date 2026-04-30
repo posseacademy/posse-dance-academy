@@ -710,62 +710,6 @@ pre {
   border-top: 2px solid var(--color-gray-200);
 }
 
-/* Revenue Goal Card */
-.revenue-goal-card {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
-  border: none !important;
-  color: white;
-  padding: var(--spacing-6) !important;
-}
-.rg-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-3);
-}
-.rg-month {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  opacity: 0.9;
-}
-.rg-pct {
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.rg-amount {
-  font-size: 38px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  margin-bottom: var(--spacing-4);
-}
-.rg-bar-track {
-  width: 100%;
-  height: 10px;
-  background: rgba(255,255,255,0.25);
-  border-radius: 5px;
-  overflow: hidden;
-  margin-bottom: var(--spacing-3);
-}
-.rg-bar-fill {
-  height: 100%;
-  background: white;
-  border-radius: 5px;
-  transition: width 0.6s ease;
-}
-.rg-goal {
-  font-size: var(--font-size-xs);
-  opacity: 0.75;
-  text-align: right;
-}
-.rg-remaining {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  margin-top: var(--spacing-2);
-  opacity: 0.9;
-}
-
 @media (max-width: 1024px) {
   .content-grid { grid-template-columns: 1fr; }
 }
@@ -1917,55 +1861,6 @@ textarea {
 }
 
 /* ============================================================================
-   19. REVENUE SECTION
-   ============================================================================ */
-
-.revenue-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-6);
-  margin-top: var(--spacing-6);
-}
-
-.revenue-item {
-  background-color: var(--color-white);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-5);
-  border: 1px solid var(--color-gray-200);
-}
-
-.revenue-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-500);
-  font-weight: var(--font-weight-medium);
-  margin-bottom: var(--spacing-3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.revenue-amount {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-2);
-}
-
-.revenue-trend {
-  font-size: var(--font-size-sm);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-}
-
-.revenue-trend.up {
-  color: var(--color-success);
-}
-
-.revenue-trend.down {
-  color: var(--color-danger);
-}
-
-/* ============================================================================
    20. MODAL & DIALOG
    ============================================================================ */
 
@@ -2667,11 +2562,6 @@ textarea {
     grid-template-columns: 1fr !important;
   }
 
-  /* Revenue grid */
-  .revenue-grid {
-    grid-template-columns: 1fr !important;
-  }
-
   /* Tables scroll */
   .data-table {
     font-size: var(--font-size-sm);
@@ -2892,12 +2782,6 @@ textarea {
   /* Content grid (home page two-column layout) */
   .content-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  /* Revenue grand total grid */
-  .revenue-grand-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem;
   }
 
   /* Table containers horizontal scroll */

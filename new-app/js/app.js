@@ -1,13 +1,12 @@
 // Imports
-import { pricing, planOrder, visitorRevenueOverrides, defaultSchedule, timeSchedule, getEmptyCustomer, coursePrices, courseColors, coursePricesWithTransfer, combinedPrices15h, CLASS_15H } from './config.js?v=11';
+import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=12';
 import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, calculateVisitorRevenue, calculateMonthlyTuition, calculateFeeRevenue, calculatePracticeRevenue, getCustomerCourseKey } from './utils.js?v=7';
-import { renderDashboard } from './views/home.js?v=13';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=8';
+import { renderDashboard } from './views/home.js?v=14';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=13';
-import { renderAttendance, renderAttendanceOverview, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=35';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=36';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=24';
-import { renderRevenue } from './views/revenue.js?v=12';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV, exportRevenueMonthlyCSV, exportRevenueYearlyCSV } from './csv-export.js?v=11';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=12';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -72,10 +71,7 @@ class DanceStudioApp {
         this.selectedCustomerForStudent = null;
 
         // Config references
-        this.pricing = pricing;
         this.planOrder = planOrder;
-        this.visitorRevenueOverrides = visitorRevenueOverrides;
-        this.coursePrices = coursePrices;
         this.courseColors = courseColors;
         this.scheduleData = JSON.parse(JSON.stringify(defaultSchedule));
         this.timeScheduleData = JSON.parse(JSON.stringify(timeSchedule));
@@ -144,7 +140,7 @@ class DanceStudioApp {
         const hash = decodeURIComponent(window.location.hash.slice(1));
         if (!hash) return;
         const parts = hash.split('/');
-        const validTabs = ['home', 'customers', 'attendance', 'revenue', 'timeSchedule', 'monthlySchedule'];
+        const validTabs = ['home', 'customers', 'attendance', 'timeSchedule', 'monthlySchedule'];
         if (validTabs.includes(parts[0])) {
             this.currentTab = parts[0];
         }
@@ -530,53 +526,6 @@ class DanceStudioApp {
         await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, isRegularPlan, db.loadAttendance);
     }
 
-    handleExportRevenueMonthly() {
-        const data = this.buildRevenueData();
-        exportRevenueMonthlyCSV(data, this.selectedMonth);
-    }
-
-    async handleExportRevenueYearly() {
-        const year = this.selectedMonth.slice(0, 4);
-        const yearlyData = [];
-        for (let m = 1; m <= 12; m++) {
-            const monthStr = `${year}-${String(m).padStart(2, '0')}`;
-            try {
-                const att = await db.loadAttendance(monthStr);
-                const events = await db.loadEvents(monthStr);
-                const tuition = calculateMonthlyTuition(this.customers, this.scheduleData, coursePricesWithTransfer, combinedPrices15h, CLASS_15H);
-                const visitor = calculateVisitorRevenue(att, this.scheduleData, this.pricing, visitorRevenueOverrides, monthStr);
-                let eventTotal = 0;
-                Object.values(events || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
-                const practice = calculatePracticeRevenue(att);
-                const feeData = calculateFeeRevenue(this.customers, monthStr);
-                const enrollment = feeData?.enrollment?.total || 0;
-                const annualFee = feeData?.annualFee?.total || 0;
-                yearlyData.push({ month: `${m}月`, tuition: tuition.total || 0, visitor: visitor || 0, event: eventTotal, practice: practice.revenue || 0, enrollment, annualFee });
-            } catch { yearlyData.push({ month: `${m}月`, tuition: 0, visitor: 0, event: 0, practice: 0, enrollment: 0, annualFee: 0 }); }
-        }
-        exportRevenueYearlyCSV(yearlyData, year);
-    }
-
-    buildRevenueData() {
-        const tuition = calculateMonthlyTuition(this.customers, this.scheduleData, coursePricesWithTransfer, combinedPrices15h, CLASS_15H);
-        const visitor = calculateVisitorRevenue(this.attendanceData, this.scheduleData, this.pricing, visitorRevenueOverrides, this.selectedMonth);
-        let eventTotal = 0;
-        Object.values(this.eventsData || {}).forEach(ev => { eventTotal += (ev.participants || []).reduce((s, p) => s + (parseInt(p.amount) || 0), 0); });
-        const practice = calculatePracticeRevenue(this.attendanceData);
-        const feeData = calculateFeeRevenue(this.customers, this.selectedMonth);
-        const enrollment = feeData?.enrollment?.total || 0;
-        const annualFee = feeData?.annualFee?.total || 0;
-        return {
-            tuition: { total: tuition.total || 0, details: tuition.details || [] },
-            visitor: { total: visitor || 0, details: [] },
-            event: { total: eventTotal },
-            practice: { total: practice.revenue || 0 },
-            enrollment: { total: enrollment },
-            annualFee: { total: annualFee },
-            grandTotal: (tuition.total || 0) + (visitor || 0) + eventTotal + (practice.revenue || 0) + enrollment + annualFee
-        };
-    }
-
     // ===== CALENDAR =====
     selectCalendarDate(dateStr) {
         this.selectedCalendarDate = dateStr;
@@ -645,10 +594,6 @@ class DanceStudioApp {
     // ===== ATTENDANCE =====
     calculateAge(birthDate) {
         return calculateAge(birthDate);
-    }
-
-    calculateVisitorRevenue() {
-        return calculateVisitorRevenue(this.attendanceData, this.scheduleData, this.pricing, this.visitorRevenueOverrides, this.selectedMonth);
     }
 
     // Note: these methods are accessed by views and events
@@ -769,12 +714,6 @@ class DanceStudioApp {
                 alert('姓名とプランを入力してください'); return;
             }
             const { day, location, className } = this.selectedClassForAdd;
-            // Auto-detect 1.5h class and upgrade visitor plan pricing
-            const is15hClass = CLASS_15H && day === CLASS_15H.day && className === CLASS_15H.name;
-            if (is15hClass) {
-                if (plan === 'ビジター（会員）') plan = 'ビジター1.5h（会員）';
-                else if (plan === 'ビジター（非会員）') plan = 'ビジター1.5h（非会員）';
-            }
             // Location normalization: match with or without '校' suffix, and handle venue vs location
             const normLoc = (loc) => (loc || '').replace(/校$/, '');
             const classIndex = this.scheduleData[day].findIndex(c => {
@@ -1123,10 +1062,6 @@ class DanceStudioApp {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l2 2 4-4"/></svg>
                             <span>出席名簿</span>
                         </button>
-                        <button id="revenueTab" class="nav-item ${this.currentTab === 'revenue' ? 'active' : ''}">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                            <span>売上</span>
-                        </button>
                         <div class="nav-section-label">スケジュール</div>
                         <button id="timeScheduleTab" class="nav-item ${this.currentTab === 'timeSchedule' ? 'active' : ''}">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1142,7 +1077,6 @@ class DanceStudioApp {
                     ${this.currentTab === 'home' ? renderDashboard(this) :
                       this.currentTab === 'customers' ? renderCustomers(this) :
                       this.currentTab === 'attendance' ? renderAttendance(this) :
-                      this.currentTab === 'revenue' ? renderRevenue(this) :
                       this.currentTab === 'timeSchedule' ? renderTimeSchedule(this) :
                       this.currentTab === 'monthlySchedule' ? renderMonthlySchedule(this) :
                       renderDashboard(this)}
@@ -1173,10 +1107,6 @@ class DanceStudioApp {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l2 2 4-4"/></svg>
                     出席
                 </button>
-                <button id="mobileRevenueTab" class="mobile-nav-item ${this.currentTab === 'revenue' ? 'active' : ''}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                    売上
-                </button>
                 <button id="mobileMoreTab" class="mobile-nav-item ${isMoreTab ? 'active' : ''}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                     その他
@@ -1188,7 +1118,6 @@ class DanceStudioApp {
         document.getElementById('homeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
         document.getElementById('customersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
         document.getElementById('attendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
-        document.getElementById('revenueTab')?.addEventListener('click', () => { this.currentTab = 'revenue'; this.render(); });
         document.getElementById('timeScheduleTab')?.addEventListener('click', () => { this.currentTab = 'timeSchedule'; this.render(); });
         document.getElementById('monthlyScheduleTab')?.addEventListener('click', () => { this.currentTab = 'monthlySchedule'; this.render(); });
 
@@ -1196,8 +1125,6 @@ class DanceStudioApp {
         document.getElementById('mobileHomeTab')?.addEventListener('click', () => { this.currentTab = 'home'; this.render(); });
         document.getElementById('mobileCustomersTab')?.addEventListener('click', () => { this.currentTab = 'customers'; this.render(); });
         document.getElementById('mobileAttendanceTab')?.addEventListener('click', () => { this.currentTab = 'attendance'; this.render(); });
-        document.getElementById('mobileRevenueTab')?.addEventListener('click', () => { this.currentTab = 'revenue'; this.render(); });
-
         // Mobile "More" menu toggle
         const moreTab = document.getElementById('mobileMoreTab');
         const moreMenu = document.getElementById('mobileMoreMenu');
@@ -1221,9 +1148,6 @@ class DanceStudioApp {
             this.setupCustomerPageEvents();
         } else if (this.currentTab === 'attendance') {
             this.setupAttendanceEvents();
-        } else if (this.currentTab === 'revenue') {
-            document.getElementById('exportRevenueMonthlyBtn')?.addEventListener('click', () => this.handleExportRevenueMonthly());
-            document.getElementById('exportRevenueYearlyBtn')?.addEventListener('click', () => this.handleExportRevenueYearly());
         } else if (this.currentTab === 'monthlySchedule') {
             const sel = this.selectedCalendarDate;
             if (sel) {

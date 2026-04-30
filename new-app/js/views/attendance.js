@@ -1,9 +1,8 @@
 // POSSE Dance Academy - Attendance View Module
 // ES module for attendance recording and tracking
 
-import { pricing, visitorRevenueOverrides, timeSchedule } from '../config.js?v=11';
-import { calculateVisitorRevenue, calculateDetailedRevenue, getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=5';
-import { planOrder } from '../config.js?v=11';
+import { timeSchedule, planOrder } from '../config.js?v=12';
+import { getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=8';
 
 /**
  * Main attendance wrapper with subtabs
@@ -16,9 +15,6 @@ export function renderAttendance(app) {
 
   let content = '';
   switch (currentSubtab) {
-    case '概要':
-      content = renderAttendanceOverview(app);
-      break;
     case '出席記録':
       content = renderAttendanceRecord(app);
       break;
@@ -35,7 +31,7 @@ export function renderAttendance(app) {
     <div class="page-header">
       <div>
         <h2>出席管理</h2>
-        <p class="subtitle">レッスン出席とレベニュー管理</p>
+        <p class="subtitle">レッスン出席管理</p>
       </div>
       <div class="header-actions" style="gap:0.5rem;display:flex;align-items:center;flex-wrap:wrap;">
         <input type="month" class="form-input" value="${app.selectedMonth || ''}"
@@ -70,63 +66,6 @@ export function renderAttendance(app) {
     </div>
 
     ${content}
-  `;
-}
-
-/**
- * Overview with stats, revenue breakdown, instructor stats
- * @param {Object} app - Application state
- * @returns {string} HTML string for overview
- */
-export function renderAttendanceOverview(app) {
-  const revenueData = calculateDetailedRevenue(app.attendanceData, app.scheduleData, pricing, visitorRevenueOverrides, app.selectedMonth);
-
-  let totalRevenue = 0;
-  let totalCount = 0;
-  Object.values(revenueData).forEach(item => {
-    totalRevenue += item.revenue;
-    totalCount += item.count;
-  });
-
-  return `
-    <div class="content-card">
-      <div class="card-header" style="background:#1d1d1f;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;">
-        <h3 class="card-title" style="color:white;">今月の売上概要</h3>
-      </div>
-      <div class="card-content">
-        <div class="grid-4col" style="margin-bottom: 2rem;">
-          <div style="border-left: 4px solid #10b981; padding-left: 1rem;">
-            <div style="font-size: 0.875rem; color: var(--text-secondary);">総売上</div>
-            <div style="font-size: 1.875rem; font-weight: 600;">¥${totalRevenue.toLocaleString('ja-JP')}</div>
-          </div>
-          <div style="border-left: 4px solid #3b82f6; padding-left: 1rem;">
-            <div style="font-size: 0.875rem; color: var(--text-secondary);">参加者数</div>
-            <div style="font-size: 1.875rem; font-weight: 600;">${totalCount}</div>
-          </div>
-          <div style="border-left: 4px solid #f59e0b; padding-left: 1rem;">
-            <div style="font-size: 0.875rem; color: var(--text-secondary);">平均単価</div>
-            <div style="font-size: 1.875rem; font-weight: 600;">¥${totalCount > 0 ? Math.round(totalRevenue / totalCount).toLocaleString('ja-JP') : '0'}</div>
-          </div>
-          <div style="border-left: 4px solid #8b5cf6; padding-left: 1rem;">
-            <div style="font-size: 0.875rem; color: var(--text-secondary);">記録件数</div>
-            <div style="font-size: 1.875rem; font-weight: 600;">${Object.keys(app.attendanceData).length}</div>
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; font-weight: 600;">売上内訳</h4>
-          <div class="grid-2col" style="gap: 1rem;">
-            ${Object.entries(revenueData).map(([category, data]) => `
-              <div style="padding: 1rem; background-color: var(--bg-secondary); border-radius: 0.5rem;">
-                <div style="font-size: 0.875rem; color: var(--text-secondary);">${category}</div>
-                <div style="font-weight: 600;">¥${data.revenue.toLocaleString('ja-JP')}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${data.count}人</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-    </div>
   `;
 }
 
