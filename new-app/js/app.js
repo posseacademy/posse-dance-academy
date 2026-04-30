@@ -867,9 +867,20 @@ class DanceStudioApp {
             }
         }
         if (classIndex !== -1) {
-            const studentIndex = this.scheduleData[day][classIndex].students.findIndex(s => s.lastName === lastName && s.firstName === firstName);
+            const cls = this.scheduleData[day][classIndex];
+            const studentIndex = cls.students.findIndex(s => s.lastName === lastName && s.firstName === firstName);
             if (studentIndex !== -1) {
-                this.scheduleData[day][classIndex].students[studentIndex].plan = newPlan;
+                cls.students[studentIndex].plan = newPlan;
+                // ビジター→レギュラー昇格時、退会扱い(leftAt)があれば解除
+                if (isRegularPlan(newPlan) && cls.students[studentIndex].leftAt) {
+                    delete cls.students[studentIndex].leftAt;
+                    cls.students[studentIndex].enrolledFrom = this.selectedMonth;
+                }
+                await db.saveScheduleData(this.scheduleData);
+            } else if (isRegularPlan(newPlan)) {
+                // ビジター→レギュラー昇格: scheduleDataに新規追加（プラン1〜5は必ずレギュラー名簿に保存）
+                cls.students = cls.students || [];
+                cls.students.push({ lastName, firstName, plan: newPlan, enrolledFrom: this.selectedMonth });
                 await db.saveScheduleData(this.scheduleData);
             }
         }
