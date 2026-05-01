@@ -123,6 +123,9 @@ class DanceStudioApp {
         // 一回限り正規化: 過去スキーマ移行残骸 (plan=null + course=数字) の顧客 plan を補完
         try { await this.syncPlanFromCourseOnce(); } catch(e) { console.error('syncPlanFromCourseOnce error:', e); }
 
+        // 一回限り同期: schedule/attendance の plan スナップショットを customer.plan に揃える
+        try { await this.syncSnapshotsToCustomerPlanOnce(); } catch(e) { console.error('syncSnapshotsToCustomerPlanOnce error:', e); }
+
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
@@ -356,6 +359,72 @@ class DanceStudioApp {
             console.log(`✓ syncPlanFromCourseOnce: 補完対象なし`);
         }
         return updated;
+    }
+
+    // 一回限り同期: schedule.students[].plan と 当月 attendance._plan を customer.plan に揃える
+    // 過去にプラン変更が行われた際にスナップショットが更新されなかったことで生じた
+    // 表示プランの不一致（例: 中島竜吾 customer=４クラス なのに出席記録=３クラス）を修正する。
+    // 自然な idempotency: s.plan === cust.plan の行はスキップ。
+    // 安全策: レギュラー↔レギュラーの同期のみ。ビジター/ハーフは触らない。
+    //         attendance は当月のみ更新（過去月の履歴は保全）。
+    async syncSnapshotsToCustomerPlanOnce() {
+        const custByName = new Map();
+        for (const c of (this.customers || [])) {
+            const fn = (c.lastName || '') + (c.firstName || '');
+            custByName.set(fn, c);
+        }
+
+        let scheduleChanged = false;
+        let attChanged = 0;
+        const log = [];
+
+        // 1. scheduleData[day][cls].students[].plan を customer.plan に同期
+        for (const day of Object.keys(this.scheduleData)) {
+            const classes = this.scheduleData[day];
+            if (!Array.isArray(classes)) continue;
+            for (const cls of classes) {
+                for (const s of (cls.students || [])) {
+                    const fn = (s.lastName || '') + (s.firstName || '');
+                    const cust = custByName.get(fn);
+                    if (!cust || !cust.plan) continue;
+                    if (!isRegularPlan(s.plan) || !isRegularPlan(cust.plan)) continue;
+                    if (s.plan === cust.plan) continue;
+                    log.push(`schedule ${day}/${cls.name} ${fn}: ${s.plan} → ${cust.plan}`);
+                    s.plan = cust.plan;
+                    scheduleChanged = true;
+                }
+            }
+        }
+        if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
+
+        // 2. 当月 attendance._plan を customer.plan に同期（過去月は履歴保全のため触らない）
+        for (const [key, data] of Object.entries(this.attendanceData || {})) {
+            if (!data || typeof data !== 'object') continue;
+            const att_plan = data._plan;
+            if (!att_plan || !isRegularPlan(att_plan)) continue;
+            const parts = key.split('_');
+            if (parts.length < 4) continue;
+            const fn = parts[parts.length - 1];
+            const cust = custByName.get(fn);
+            if (!cust || !cust.plan) continue;
+            if (!isRegularPlan(cust.plan)) continue;
+            if (att_plan === cust.plan) continue;
+            log.push(`attendance ${key}: ${att_plan} → ${cust.plan}`);
+            data._plan = cust.plan;
+            try {
+                await db.saveAttendance(this.selectedMonth, key, data);
+                attChanged++;
+            } catch (e) {
+                console.error(`syncSnapshotsToCustomerPlanOnce: ${key} 更新失敗`, e);
+            }
+        }
+
+        if (log.length > 0) {
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: schedule=${scheduleChanged ? '更新' : '-'} attendance=${attChanged}件`, log);
+        } else {
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: 同期対象なし`);
+        }
+        return { scheduleChanged, attChanged };
     }
 
 
