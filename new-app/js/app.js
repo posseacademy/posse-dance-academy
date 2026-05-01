@@ -120,6 +120,9 @@ class DanceStudioApp {
         // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒（enrolledFrom < '2026-04'）を schedule から除去
         try { await this.cleanupAutoAddedStudents(); } catch(e) { console.error('cleanupAutoAddedStudents error:', e); }
 
+        // 一回限り正規化: 過去スキーマ移行残骸 (plan=null + course=数字) の顧客 plan を補完
+        try { await this.syncPlanFromCourseOnce(); } catch(e) { console.error('syncPlanFromCourseOnce error:', e); }
+
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
@@ -316,6 +319,39 @@ class DanceStudioApp {
             console.log(`✓ cleanupAutoAddedStudents: 削除対象なし (refMonth=${referenceMonth})`);
         }
         return removedCount;
+    }
+
+    // 一回限り正規化: plan=null + course=数字 のレガシー顧客に対して plan を course から補完
+    // 既存スキーマで customer.plan と customer.course は常に同じ意味を表すべきだが、
+    // 過去の入力で plan が空のまま course だけ設定された顧客が大量に存在し、
+    // HOME プラン別内訳の集計から漏れていた。これを一括補完する。
+    // 自然な idempotency: c.plan が既に設定済みなら次回以降スキップ
+    async syncPlanFromCourseOnce() {
+        const COURSE_TO_PLAN = {
+            '1':'１クラス','2':'２クラス','3':'３クラス','4':'４クラス',
+            '１':'１クラス','２':'２クラス','３':'３クラス','４':'４クラス',
+        };
+        let updated = 0;
+        const updatedList = [];
+        for (const c of (this.customers || [])) {
+            if (c.plan) continue;                          // plan 既設定はスキップ
+            const planFromCourse = COURSE_TO_PLAN[c.course];
+            if (!planFromCourse) continue;                 // ビジター/ハーフ/未設定はスキップ
+            c.plan = planFromCourse;
+            try {
+                await db.updateCustomer(c.id, { plan: planFromCourse });
+                updated++;
+                updatedList.push(`${c.lastName}${c.firstName}: course=${c.course} → plan=${planFromCourse}`);
+            } catch (e) {
+                console.error(`syncPlanFromCourseOnce: ${c.lastName}${c.firstName} 更新失敗`, e);
+            }
+        }
+        if (updated > 0) {
+            console.log(`✓ syncPlanFromCourseOnce: ${updated}名 の plan を course から補完`, updatedList);
+        } else {
+            console.log(`✓ syncPlanFromCourseOnce: 補完対象なし`);
+        }
+        return updated;
     }
 
 
