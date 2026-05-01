@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=15';
-import { getAttendanceRate, sortStudentsByPlan, isRegularPlan } from '../utils.js?v=13';
+import { getAttendanceRate, sortStudentsByPlan, isRegularPlan, effectiveLocation } from '../utils.js?v=14';
 
 /**
  * Main attendance wrapper with subtabs
@@ -111,8 +111,8 @@ export function renderAttendanceRecord(app) {
     <!-- Classes for Selected Day (2-column grid) -->
     <div class="grid-2col attendance-grid">
       ${[...schedule].sort((a, b) => {
-        const locA = a.location || a.venue || '';
-        const locB = b.location || b.venue || '';
+        const locA = effectiveLocation(a, app.selectedMonth);
+        const locB = effectiveLocation(b, app.selectedMonth);
         const tsData = app.timeScheduleData || timeSchedule;
         const tA = (tsData[currentDay] || []).find(t => t.name === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
           || (tsData[currentDay] || []).find(t => t.name === a.name);
@@ -122,15 +122,16 @@ export function renderAttendanceRecord(app) {
         const timeB = tB ? tB.time.split('-')[0].replace(':', '') : '9999';
         return timeA.localeCompare(timeB);
       }).map((cls, idx) => {
-        const loc = cls.location || cls.venue || '';
+        // 場所変更履歴を考慮した実効場所（過去月は旧場所、現/未来月は新場所）
+        const effLoc = effectiveLocation(cls, app.selectedMonth);
         const tsData2 = app.timeScheduleData || timeSchedule;
-        const timeEntry = (tsData2[currentDay] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+        const timeEntry = (tsData2[currentDay] || []).find(t => t.name === cls.name && (t.venue === effLoc || t.venue === effLoc + '校' || t.venue?.replace('校','') === effLoc))
           || (tsData2[currentDay] || []).find(t => t.name === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
         <div class="content-card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;">
           <div class="card-header" style="background-color: #1d1d1f; color: white; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: space-between;">
-            <h3 class="card-title" style="color: white; margin: 0; font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cls.name} - ${cls.location || cls.venue}</h3>
+            <h3 class="card-title" style="color: white; margin: 0; font-size: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cls.name} - ${effLoc}</h3>
             ${timeStr ? `<span style="font-size: 0.875rem; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.2); padding: 0.2rem 0.6rem; border-radius: 0.25rem; white-space: nowrap;">${timeStr}</span>` : ''}
           </div>
           <div class="card-content" style="flex:1;">
@@ -169,7 +170,7 @@ export function renderAttendanceRecord(app) {
                       .filter(s => isRegularPlan(s.plan))
                       .filter(_inEnrollmentRange);
                     const seen = new Set(regulars.map(s => s.lastName + s.firstName));
-                    const prefix = `${currentDay}_${cls.location || cls.venue}_${cls.name}_`;
+                    const prefix = `${currentDay}_${effLoc}_${cls.name}_`;
                     const pastRegulars = [];
                     const visitors = [];
 
@@ -215,7 +216,7 @@ export function renderAttendanceRecord(app) {
                     }
                     return [...regulars, ...pastRegulars, ...visitors];
                   })().map(student => {
-                    const classId = `${currentDay}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
+                    const classId = `${currentDay}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};
                     const rate = getAttendanceRate(app.attendanceData, classId);
                     // Short plan label for mobile
@@ -256,7 +257,7 @@ export function renderAttendanceRecord(app) {
                           <div class="student-actions">
                             <button class="student-action-btn student-menu-btn"
                                     data-menu-day="${currentDay}"
-                                    data-menu-location="${cls.location || cls.venue}"
+                                    data-menu-location="${effLoc}"
                                     data-menu-class="${cls.name}"
                                     data-menu-lastname="${student.lastName}"
                                     data-menu-firstname="${student.firstName}"
@@ -274,7 +275,7 @@ export function renderAttendanceRecord(app) {
 
             <!-- Add Student Form -->
             <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-              ${renderAddStudentForm(app, currentDay, cls.location || cls.venue, cls.name)}
+              ${renderAddStudentForm(app, currentDay, effLoc, cls.name)}
             </div>
           </div>
         </div>

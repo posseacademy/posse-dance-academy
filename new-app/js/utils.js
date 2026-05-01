@@ -55,6 +55,22 @@ export function isRegularPlan(plan) {
 }
 
 /**
+ * クラスの「実効場所」を月別に解決する
+ * 場所変更の履歴を持つクラス (prevLocation + locationFrom) は、選択月によって旧/新を返す
+ * @param {Object} cls - schedule のクラスエントリ
+ * @param {string} month - 'YYYY-MM' 形式の選択月
+ * @returns {string} その月における場所
+ */
+export function effectiveLocation(cls, month) {
+    if (!cls) return '';
+    const baseLoc = cls.location || cls.venue || '';
+    if (cls.locationFrom && cls.prevLocation && month && month < cls.locationFrom) {
+        return cls.prevLocation;
+    }
+    return baseLoc;
+}
+
+/**
  * Get attendance rate for a class
  */
 export function getAttendanceRate(attendanceData, classId) {

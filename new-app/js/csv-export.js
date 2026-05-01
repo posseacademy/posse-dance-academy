@@ -1,7 +1,7 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
-import { getCustomerClasses } from './utils.js?v=13';
+import { getCustomerClasses, effectiveLocation } from './utils.js?v=14';
 
 /**
  * CSVファイルをダウンロード
@@ -131,9 +131,10 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
     days.forEach(day => {
         const classes = scheduleData[day] || [];
         classes.forEach(cls => {
+            const effLoc = effectiveLocation(cls, selectedMonth);
             const students = cls.students || [];
             students.forEach(student => {
-                const classId = `${day}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
+                const classId = `${day}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
                 const att = attendanceData[classId];
                 // Non-regular: only include if they have attendance data
                 if (!isRegularPlan(student.plan) && !att) return;
@@ -143,7 +144,7 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
                 const total = weeks.filter(w => w === '○' || w === '×').length;
                 const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                 rows.push([
-                    day, cls.location || cls.venue || '', cls.name,
+                    day, effLoc, cls.name,
                     `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
                     ...weeks, rate
                 ]);
@@ -171,8 +172,9 @@ export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, isR
         days.forEach(day => {
             const classes = scheduleData[day] || [];
             classes.forEach(cls => {
+                const effLoc = effectiveLocation(cls, monthStr);
                 (cls.students || []).forEach(student => {
-                    const classId = `${day}_${cls.location || cls.venue}_${cls.name}_${student.lastName}${student.firstName}`;
+                    const classId = `${day}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
                     const att = attData[classId];
                     if (!isRegularPlan(student.plan) && !att) return;
                     const ad = att || {};
@@ -181,7 +183,7 @@ export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, isR
                     const total = weeks.filter(w => w === '○' || w === '×').length;
                     const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                     rows.push([
-                        `${year}年${m}月`, day, cls.location || cls.venue || '', cls.name,
+                        `${year}年${m}月`, day, effLoc, cls.name,
                         `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
                         ...weeks, rate
                     ]);

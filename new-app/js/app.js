@@ -1,12 +1,12 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=15';
 import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=13';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=14';
 import { renderDashboard } from './views/home.js?v=24';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=18';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=45';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=46';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=17';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=18';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -263,6 +263,9 @@ class DanceStudioApp {
 
         // 一回限り復元: cleanup 過剰削除で消えた入会中レギュラー生徒を schedule に戻す
         try { await this.restoreRegularStudentsOnce(); } catch(e) { console.error('restoreRegularStudentsOnce error:', e); }
+
+        // 一回限り場所移行: 5月以降の場所変更を schedule + timeSchedule に適用（過去月キーは保全）
+        try { await this.applyLocationMigrationOnce(); } catch(e) { console.error('applyLocationMigrationOnce error:', e); }
 
         // 一回限り同期: schedule/attendance の plan スナップショットを customer.plan に揃える
         try { await this.syncSnapshotsToCustomerPlanOnce(); } catch(e) { console.error('syncSnapshotsToCustomerPlanOnce error:', e); }
@@ -566,6 +569,66 @@ class DanceStudioApp {
             console.log(`✓ restoreRegularStudentsOnce: 復元対象なし`);
         }
         return added;
+    }
+
+    // 一回限り場所移行: 5月以降の場所変更を schedule + timeSchedule に適用
+    // 過去月の attendance キー (_照葉_) は保全。effectiveLocation() ヘルパーが
+    // selectedMonth に応じて旧/新場所を切り替えて表示・キー検索する。
+    // idempotent: cls.location が既に新場所なら skip
+    async applyLocationMigrationOnce() {
+        const MIGRATIONS = [
+            { day: '火曜日', name: 'ブレイキン入門 SOYA',   oldLoc: '照葉', newLoc: '千早',   from: '2026-05' },
+            { day: '火曜日', name: 'アクロ＆パワー SOYA',   oldLoc: '照葉', newLoc: '千早',   from: '2026-05' },
+            { day: '木曜日', name: 'ブレイキン入門 RYUSEI', oldLoc: '照葉', newLoc: '九産大前', from: '2026-05' },
+            { day: '木曜日', name: 'アクロ＆パワー RYUSEI', oldLoc: '照葉', newLoc: '九産大前', from: '2026-05' },
+        ];
+        let scheduleChanged = false;
+        const tsChangedDays = new Set();
+        const log = [];
+
+        for (const mig of MIGRATIONS) {
+            // 1. scheduleData 更新
+            const dayClasses = this.scheduleData[mig.day];
+            if (Array.isArray(dayClasses)) {
+                const cls = dayClasses.find(c => c.name === mig.name);
+                if (cls && cls.location !== mig.newLoc) {
+                    cls.prevLocation = mig.oldLoc;
+                    cls.locationFrom = mig.from;
+                    cls.location = mig.newLoc;
+                    log.push(`schedule ${mig.day}/${mig.name}: ${mig.oldLoc} → ${mig.newLoc} (from ${mig.from})`);
+                    scheduleChanged = true;
+                }
+            }
+            // 2. timeSchedule 更新（lessons 配列内の該当 lesson の venue 書き換え）
+            const tsLessons = this.timeScheduleData[mig.day];
+            if (Array.isArray(tsLessons)) {
+                for (const lesson of tsLessons) {
+                    if (lesson.name === mig.name) {
+                        const v = (lesson.venue || '').replace(/校$/, '');
+                        if (v === mig.oldLoc) {
+                            lesson.venue = mig.newLoc;
+                            log.push(`timeSchedule ${mig.day}/${mig.name}: venue ${mig.oldLoc} → ${mig.newLoc}`);
+                            tsChangedDays.add(mig.day);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
+        for (const day of tsChangedDays) {
+            try {
+                await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
+            } catch (e) {
+                console.error(`applyLocationMigrationOnce: timeSchedule ${day} 保存失敗`, e);
+            }
+        }
+
+        if (log.length > 0) {
+            console.log(`✓ applyLocationMigrationOnce: ${log.length}件適用`, log);
+        } else {
+            console.log(`✓ applyLocationMigrationOnce: 適用済み（変更なし）`);
+        }
     }
 
     // 同期: schedule.students[].plan と 当月以降の attendance._plan を customer.plan に揃える
