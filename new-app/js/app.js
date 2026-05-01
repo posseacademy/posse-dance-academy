@@ -574,7 +574,8 @@ class DanceStudioApp {
     // 一回限り場所移行: 5月以降の場所変更を schedule + timeSchedule に適用
     // 過去月の attendance キー (_照葉_) は保全。effectiveLocation() ヘルパーが
     // selectedMonth に応じて旧/新場所を切り替えて表示・キー検索する。
-    // idempotent: cls.location が既に新場所なら skip
+    // 堅牢: location/prevLocation/locationFrom の3フィールドが常に整合するよう毎回チェック
+    // （部分的に不整合な状態を自動修復）
     async applyLocationMigrationOnce() {
         const MIGRATIONS = [
             { day: '火曜日', name: 'ブレイキン入門 SOYA',   oldLoc: '照葉', newLoc: '千早',   from: '2026-05' },
@@ -587,19 +588,31 @@ class DanceStudioApp {
         const log = [];
 
         for (const mig of MIGRATIONS) {
-            // 1. scheduleData 更新
+            // 1. scheduleData の3フィールド整合チェック
             const dayClasses = this.scheduleData[mig.day];
             if (Array.isArray(dayClasses)) {
                 const cls = dayClasses.find(c => c.name === mig.name);
-                if (cls && cls.location !== mig.newLoc) {
-                    cls.prevLocation = mig.oldLoc;
-                    cls.locationFrom = mig.from;
-                    cls.location = mig.newLoc;
-                    log.push(`schedule ${mig.day}/${mig.name}: ${mig.oldLoc} → ${mig.newLoc} (from ${mig.from})`);
-                    scheduleChanged = true;
+                if (cls) {
+                    let fieldsChanged = false;
+                    if (cls.location !== mig.newLoc) {
+                        cls.location = mig.newLoc;
+                        fieldsChanged = true;
+                    }
+                    if (cls.prevLocation !== mig.oldLoc) {
+                        cls.prevLocation = mig.oldLoc;
+                        fieldsChanged = true;
+                    }
+                    if (cls.locationFrom !== mig.from) {
+                        cls.locationFrom = mig.from;
+                        fieldsChanged = true;
+                    }
+                    if (fieldsChanged) {
+                        log.push(`schedule ${mig.day}/${mig.name}: location=${mig.newLoc} prevLocation=${mig.oldLoc} locationFrom=${mig.from}`);
+                        scheduleChanged = true;
+                    }
                 }
             }
-            // 2. timeSchedule 更新（lessons 配列内の該当 lesson の venue 書き換え）
+            // 2. timeSchedule 更新（venue が old のまま残っていれば new に書き換え）
             const tsLessons = this.timeScheduleData[mig.day];
             if (Array.isArray(tsLessons)) {
                 for (const lesson of tsLessons) {
@@ -627,7 +640,17 @@ class DanceStudioApp {
         if (log.length > 0) {
             console.log(`✓ applyLocationMigrationOnce: ${log.length}件適用`, log);
         } else {
-            console.log(`✓ applyLocationMigrationOnce: 適用済み（変更なし）`);
+            console.log(`✓ applyLocationMigrationOnce: 適用済み（全フィールド整合）`);
+        }
+
+        // 診断ログ: 移行対象クラスの実際の状態を出力
+        for (const mig of MIGRATIONS) {
+            const cls = (this.scheduleData[mig.day] || []).find(c => c.name === mig.name);
+            if (cls) {
+                console.log(`  [${mig.day}/${mig.name}] location=${cls.location} prevLocation=${cls.prevLocation} locationFrom=${cls.locationFrom}`);
+            } else {
+                console.warn(`  [${mig.day}/${mig.name}] schedule に存在しません`);
+            }
         }
     }
 
