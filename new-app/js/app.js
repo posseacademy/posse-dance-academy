@@ -37,6 +37,144 @@ function syncPlanCourse(form) {
     }
 }
 
+// 22:25バックアップ（2026-04-30）の schedule から、入会中レギュラー生徒のみ抽出した復元データ
+// cleanupAutoAddedStudents の過剰削除で消えた生徒を init() 時に復元する
+const RESTORE_SCHEDULE = {
+    '月曜日': [
+        { name: 'アクロバット SOYA', loc: '天神', students: [
+            { lastName: '中島', firstName: '竜吾', plan: '４クラス' },
+            { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
+            { lastName: '四井', firstName: '陽音', plan: '３クラス' },
+            { lastName: '津留', firstName: '創真', plan: '２クラス' },
+            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+            { lastName: '嶋川', firstName: '陽大', plan: '３クラス' },
+            { lastName: '堤', firstName: '勇仁', plan: '４クラス' },
+            { lastName: '森山', firstName: '晴太', plan: 'ハーフ' },
+            { lastName: '森田', firstName: '翔真', plan: '２クラス' },
+            { lastName: '樋渡', firstName: '皓太', plan: '２クラス' },
+            { lastName: '首藤', firstName: '壱咲', plan: '２クラス' },
+        ]},
+        { name: 'ブレイキン入門 SOYA', loc: '天神', students: [
+            { lastName: '津留', firstName: '創真', plan: '２クラス' },
+            { lastName: '樋渡', firstName: '皓太', plan: '２クラス' },
+            { lastName: '榊', firstName: '花梨', plan: '２クラス' },
+        ]},
+        { name: 'トップロック フットワーク DAZ', loc: '天神', students: [
+            { lastName: '中島', firstName: '竜吾', plan: '４クラス' },
+            { lastName: '四井', firstName: '陽音', plan: '３クラス' },
+            { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
+            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+            { lastName: '戸田', firstName: '唯斗', plan: '1クラス' },
+            { lastName: '森脇', firstName: '鳳仁', plan: '1クラス' },
+            { lastName: '嶋川', firstName: '陽大', plan: '２クラス' },
+            { lastName: '上田', firstName: '大空', plan: '２クラス' },
+            { lastName: '堤', firstName: '勇仁', plan: '４クラス' },
+            { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
+            { lastName: '首藤', firstName: '壱咲', plan: '２クラス' },
+        ]},
+        { name: 'K-POP AI', loc: '天神', students: [
+            { lastName: '平嶋', firstName: '彩佳', plan: '1クラス' },
+            { lastName: '杉村', firstName: '早紀', plan: '1クラス' },
+            { lastName: '石原', firstName: '美黎', plan: '１クラス' },
+        ]},
+        { name: 'hiphop HIMEKA', loc: '大橋', students: [
+            { lastName: '清水', firstName: 'くるみ', plan: '1クラス' },
+        ]},
+    ],
+    '火曜日': [
+        { name: 'キッズダンス AYANO', loc: '大橋', students: [
+            { lastName: '古賀', firstName: '文人', plan: '1クラス' },
+            { lastName: '古賀', firstName: '卯月妃', plan: '1クラス' },
+            { lastName: '富井', firstName: '藍', plan: '1クラス' },
+            { lastName: '小山', firstName: '泰成', plan: '１クラス' },
+        ]},
+        { name: 'ブレイキン入門 AYANO HARUHIKO', loc: '大橋', students: [
+            { lastName: '一色', firstName: '六花', plan: '１クラス' },
+            { lastName: '渡邉', firstName: '創太', plan: '３クラス' },
+            { lastName: '榊', firstName: '花梨', plan: '２クラス' },
+            { lastName: '渡邉', firstName: '絃志', plan: '１クラス' },
+            { lastName: '一色', firstName: '湊', plan: '１クラス' },
+        ]},
+        { name: 'ブレイキン入門 SOYA', loc: '照葉', students: [
+            { lastName: '西園', firstName: '千晃', plan: '1クラス' },
+            { lastName: '上井', firstName: '凰資', plan: '１クラス' },
+        ]},
+        { name: 'アクロ＆パワー SOYA', loc: '照葉', students: [
+            { lastName: '堤', firstName: '勇仁', plan: '４クラス' },
+            { lastName: '工藤', firstName: '大地', plan: '１クラス' },
+        ]},
+    ],
+    '水曜日': [
+        { name: 'ブレイキン初級 HARUHIKO', loc: '天神', students: [
+            { lastName: '吉田', firstName: '智幸', plan: '1クラス' },
+            { lastName: '本橋', firstName: '廉士', plan: '1クラス' },
+            { lastName: '新藤', firstName: '大希', plan: '1クラス' },
+            { lastName: '荒巻', firstName: '大和', plan: '1クラス' },
+        ]},
+        { name: 'ブレイキン中上級 HARUHIKO', loc: '天神', students: [
+            { lastName: '中山', firstName: '結愛', plan: '1クラス' },
+            { lastName: '上田', firstName: '大空', plan: '２クラス' },
+            { lastName: '中島', firstName: '竜吾', plan: '４クラス' },
+        ]},
+    ],
+    '木曜日': [
+        { name: 'ブレイキン入門 SOYA', loc: '大橋', students: [
+            { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
+            { lastName: '池田', firstName: '全', plan: '1クラス' },
+            { lastName: '澤江', firstName: '悠', plan: '1クラス' },
+            { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
+            { lastName: '藤田', firstName: '将舞', plan: '２クラス' },
+            { lastName: '藤田', firstName: '凌羽', plan: '２クラス' },
+            { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
+            { lastName: '山下', firstName: '幸四郎', plan: '1クラス' },
+        ]},
+        { name: 'アクロ＆パワー SOYA', loc: '大橋', students: [
+            { lastName: '中山', firstName: '結愛', plan: '２クラス' },
+            { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
+            { lastName: '吉村', firstName: '太壱', plan: '２クラス' },
+            { lastName: '四井', firstName: '陽音', plan: '２クラス' },
+            { lastName: '渡邉', firstName: '創太', plan: '２クラス' },
+            { lastName: '萩原', firstName: '聖香', plan: '1クラス' },
+            { lastName: '小柳', firstName: '友陽', plan: '２クラス' },
+            { lastName: '澤江', firstName: '悠', plan: '1クラス' },
+        ]},
+        { name: 'ブレイキン入門 RYUSEI', loc: '照葉', students: [
+            { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
+            { lastName: '執行', firstName: '堂真', plan: '１クラス' },
+            { lastName: '執行', firstName: '悠真', plan: '１クラス' },
+        ]},
+        { name: 'アクロ＆パワー RYUSEI', loc: '照葉', students: [
+            { lastName: '梅野', firstName: '絢音', plan: '２クラス' },
+        ]},
+    ],
+    '金曜日': [
+        { name: 'アクロ＆パワー SOYA', loc: '天神', students: [
+            { lastName: '中島', firstName: '竜吾', plan: '４クラス' },
+            { lastName: '伊藤', firstName: '和馬', plan: '３クラス' },
+            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+            { lastName: '横山', firstName: '悠芽', plan: '２クラス' },
+            { lastName: '豊福', firstName: '悠成', plan: '４クラス' },
+        ]},
+        { name: 'ブレイキン初中級 HARUHIKO', loc: '天神', students: [
+            { lastName: '三重野', firstName: '琉生', plan: '３クラス' },
+            { lastName: '横山', firstName: '悠芽', plan: '２クラス' },
+        ]},
+        { name: 'ブレイキン入門 HARUHIKO', loc: '大橋', students: [
+            { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
+            { lastName: '矢野', firstName: '新', plan: '1クラス' },
+            { lastName: '伊豆永', firstName: '晄逢', plan: '２クラス' },
+            { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
+            { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
+            { lastName: '久保田', firstName: '朱里', plan: '２クラス' },
+        ]},
+        { name: 'アクロ＆パワー RYUSEI', loc: '大橋', students: [
+            { lastName: '萩尾', firstName: '郁海', plan: '２クラス' },
+            { lastName: '藤川', firstName: '悠利', plan: '２クラス' },
+            { lastName: '藤川', firstName: '柊利', plan: '２クラス' },
+        ]},
+    ],
+};
+
 class DanceStudioApp {
     constructor() {
         // Navigation & UI State
@@ -122,6 +260,9 @@ class DanceStudioApp {
 
         // 一回限り正規化: 過去スキーマ移行残骸 (plan=null + course=数字) の顧客 plan を補完
         try { await this.syncPlanFromCourseOnce(); } catch(e) { console.error('syncPlanFromCourseOnce error:', e); }
+
+        // 一回限り復元: cleanup 過剰削除で消えた入会中レギュラー生徒を schedule に戻す
+        try { await this.restoreRegularStudentsOnce(); } catch(e) { console.error('restoreRegularStudentsOnce error:', e); }
 
         // 一回限り同期: schedule/attendance の plan スナップショットを customer.plan に揃える
         try { await this.syncSnapshotsToCustomerPlanOnce(); } catch(e) { console.error('syncSnapshotsToCustomerPlanOnce error:', e); }
@@ -303,9 +444,10 @@ class DanceStudioApp {
                         removedCount++;
                         return false;
                     }
-                    // D: 参照月マーク無し + 参照月より後に登録されたわけではない
-                    if (!hasMarks && !isRecentlyAdded) {
-                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=D:no_${referenceMonth}_marks`);
+                    // D: 参照月マーク無し + 参照月より後に登録されていない + 顧客が休会中/退会済み
+                    //    入会中の顧客は出席マークが無くても保持（5月以降の登録を保護）
+                    if (!hasMarks && !isRecentlyAdded && cust && (cust.status === '休会中' || cust.status === '退会済み')) {
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=D:${cust.status}+no_${referenceMonth}_marks`);
                         removedCount++;
                         return false;
                     }
@@ -361,13 +503,81 @@ class DanceStudioApp {
         return updated;
     }
 
-    // 一回限り同期: schedule.students[].plan と 全月 attendance._plan を customer.plan に揃える
-    // 過去にプラン変更が行われた際にスナップショットが更新されなかったことで生じた
-    // 表示プランの不一致（例: 中島竜吾 customer=４クラス なのに出席記録=３クラス）を修正する。
-    // 自然な idempotency: s.plan === cust.plan の行はスキップ。
+    // 一回限り復元: cleanupAutoAddedStudents の過剰削除で消えたレギュラー生徒を schedule に戻す
+    // RESTORE_SCHEDULE 定数 (22:25バックアップ抽出) と現 scheduleData を照合し、
+    // 復元データに居て scheduleData に居ない 入会中レギュラー のみ追加する。
+    // 自然な idempotency: 既に居れば skip → 二回目以降は no-op
+    // 安全策:
+    //   - 入会中 顧客のみ復元（退会済み/休会中/customer 未登録は対象外）
+    //   - 既存生徒には触らない
+    //   - location 比較は normLoc で末尾「校」除去
+    async restoreRegularStudentsOnce() {
+        const custByName = new Map();
+        for (const c of (this.customers || [])) {
+            const fn = (c.lastName || '') + (c.firstName || '');
+            custByName.set(fn, c);
+        }
+        const normLoc = (loc) => (loc || '').replace(/校$/, '');
+
+        let added = 0;
+        let scheduleChanged = false;
+        const log = [];
+
+        for (const [day, restoreClasses] of Object.entries(RESTORE_SCHEDULE)) {
+            const dayClasses = this.scheduleData[day];
+            if (!Array.isArray(dayClasses)) continue;
+            for (const restoreCls of restoreClasses) {
+                // schedule から該当クラスを探す（name + location 一致）
+                const targetCls = dayClasses.find(c =>
+                    c.name === restoreCls.name &&
+                    normLoc(c.location || c.venue || '') === normLoc(restoreCls.loc)
+                );
+                if (!targetCls) continue;
+                targetCls.students = targetCls.students || [];
+
+                for (const s of restoreCls.students) {
+                    const fn = (s.lastName || '') + (s.firstName || '');
+                    // 既に居れば skip
+                    const exists = targetCls.students.some(x =>
+                        ((x.lastName || '') + (x.firstName || '')) === fn
+                    );
+                    if (exists) continue;
+                    // 顧客マスター存在 + 入会中 のみ復元
+                    const cust = custByName.get(fn);
+                    if (!cust || cust.status !== '入会中') continue;
+                    // customer.plan を優先（一貫性確保）、無ければ復元データの plan
+                    const plan = cust.plan || s.plan;
+                    targetCls.students.push({
+                        lastName: s.lastName,
+                        firstName: s.firstName,
+                        plan,
+                    });
+                    log.push(`${day}/${targetCls.name} ${fn} (${plan})`);
+                    added++;
+                    scheduleChanged = true;
+                }
+            }
+        }
+
+        if (scheduleChanged) {
+            await db.saveScheduleData(this.scheduleData);
+            console.log(`✓ restoreRegularStudentsOnce: ${added}名を schedule に復元`, log);
+        } else {
+            console.log(`✓ restoreRegularStudentsOnce: 復元対象なし`);
+        }
+        return added;
+    }
+
+    // 同期: schedule.students[].plan と 当月以降の attendance._plan を customer.plan に揃える
+    //
+    // 設計方針 (2026-05-01 改定):
+    //   - 過去月の attendance._plan は絶対に変更しない（履歴保全）
+    //   - 当月（今日が属する月）以降のみ customer.plan に同期
+    //   - schedule は全月共通の現在の名簿として常に最新化（個別月の履歴とは独立）
+    //   - 顧客プラン変更時 (syncPlanToCurrentMonth) も同様に過去月は触らない
+    //
+    // 自然な idempotency: 値が一致する行はスキップ。
     // 安全策: レギュラー↔レギュラーの同期のみ。ビジター/ハーフは触らない。
-    // 注: 過去月の attendance も同期するため、プラン変更前の月の表示も最新プランに上書きされる
-    //     （履歴精度よりも表示の一貫性を優先するというユーザー要件）
     async syncSnapshotsToCustomerPlanOnce() {
         const custByName = new Map();
         for (const c of (this.customers || [])) {
@@ -379,7 +589,7 @@ class DanceStudioApp {
         let attChanged = 0;
         const log = [];
 
-        // 1. scheduleData[day][cls].students[].plan を customer.plan に同期
+        // 1. scheduleData[day][cls].students[].plan を customer.plan に同期（全月共通の現在状態）
         for (const day of Object.keys(this.scheduleData)) {
             const classes = this.scheduleData[day];
             if (!Array.isArray(classes)) continue;
@@ -398,18 +608,17 @@ class DanceStudioApp {
         }
         if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
 
-        // 2. 全月 attendance._plan を customer.plan に同期
-        //    対象月: 2025-07 〜 今日+6ヶ月（既知の attendance_YYYYMM 範囲を網羅）
+        // 2. 当月以降 attendance._plan を customer.plan に同期（過去月は触らない）
+        //    対象月: 今日が属する月 〜 今日+6ヶ月
         const months = [];
         const today = new Date();
-        const endY = today.getFullYear();
-        const endM = today.getMonth() + 1 + 6;
-        let y = 2025, m = 7;
-        while (y < endY || (y === endY && m <= endM)) {
-            months.push(`${y}-${String(((m - 1) % 12) + 1).padStart(2, '0')}`);
-            // 月加算（オーバーフロー対応）
+        const startY = today.getFullYear();
+        const startM = today.getMonth() + 1;
+        let y = startY, m = startM;
+        for (let i = 0; i < 7; i++) {
+            months.push(`${y}-${String(m).padStart(2, '0')}`);
             m++;
-            if (m > 12) { m -= 12; y++; }
+            if (m > 12) { m = 1; y++; }
         }
 
         for (const month of months) {
@@ -443,24 +652,27 @@ class DanceStudioApp {
             }
         }
 
-        // 3. 当月 this.attendanceData も画面再描画用に in-memory で同期
-        for (const [key, data] of Object.entries(this.attendanceData || {})) {
-            if (!data || typeof data !== 'object') continue;
-            const att_plan = data._plan;
-            if (!att_plan || !isRegularPlan(att_plan)) continue;
-            const parts = key.split('_');
-            if (parts.length < 4) continue;
-            const fn = parts[parts.length - 1];
-            const cust = custByName.get(fn);
-            if (!cust || !cust.plan) continue;
-            if (!isRegularPlan(cust.plan)) continue;
-            if (att_plan !== cust.plan) data._plan = cust.plan;
+        // 3. 当月 this.attendanceData が現在月であれば in-memory も同期して画面再描画に反映
+        const currentRealMonth = months[0];
+        if (this.selectedMonth >= currentRealMonth) {
+            for (const [key, data] of Object.entries(this.attendanceData || {})) {
+                if (!data || typeof data !== 'object') continue;
+                const att_plan = data._plan;
+                if (!att_plan || !isRegularPlan(att_plan)) continue;
+                const parts = key.split('_');
+                if (parts.length < 4) continue;
+                const fn = parts[parts.length - 1];
+                const cust = custByName.get(fn);
+                if (!cust || !cust.plan) continue;
+                if (!isRegularPlan(cust.plan)) continue;
+                if (att_plan !== cust.plan) data._plan = cust.plan;
+            }
         }
 
         if (log.length > 0) {
-            console.log(`✓ syncSnapshotsToCustomerPlanOnce: schedule=${scheduleChanged ? '更新' : '-'} attendance=${attChanged}件 (${months.length}ヶ月走査)`, log);
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: schedule=${scheduleChanged ? '更新' : '-'} attendance=${attChanged}件 (当月以降${months.length}ヶ月)`, log);
         } else {
-            console.log(`✓ syncSnapshotsToCustomerPlanOnce: 同期対象なし (${months.length}ヶ月走査)`);
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: 同期対象なし (当月以降${months.length}ヶ月)`);
         }
         return { scheduleChanged, attChanged };
     }
@@ -491,12 +703,18 @@ class DanceStudioApp {
             await db.saveScheduleData(this.scheduleData);
         }
 
-        // 2. 当月のattendance_YYYYMMで該当生徒の_planを更新
-        for (const [key, data] of Object.entries(this.attendanceData)) {
-            if (key.endsWith(`_${fullName}`)) {
-                data._plan = newPlan;
-                await db.saveAttendance(this.selectedMonth, key, data);
+        // 2. attendance は selectedMonth が今日の月以降のときのみ更新（過去月の履歴保全）
+        const today = new Date();
+        const currentRealMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        if (this.selectedMonth >= currentRealMonth) {
+            for (const [key, data] of Object.entries(this.attendanceData)) {
+                if (key.endsWith(`_${fullName}`)) {
+                    data._plan = newPlan;
+                    await db.saveAttendance(this.selectedMonth, key, data);
+                }
             }
+        } else {
+            console.log(`syncPlanToCurrentMonth: 過去月 (${this.selectedMonth}) のため attendance は更新しない`);
         }
     }
 
