@@ -230,6 +230,8 @@ class DanceStudioApp {
     //   A. enrolledFrom < '2026-04' → migrateOrphanRegulars 由来（enrolledFrom 機能は 2026-05-01 追加）
     //   B. customer.status === '退会済み' → 退会済みなのに schedule に残留
     //   C. customers にレコード無し AND 当月出席マーク無し → 真の phantom（ひらがな重複登録など）
+    //   D. 当月出席マーク全0件 AND 当月以降に登録された生徒ではない（過去レッスン受講者だが現在は受けていない）
+    //      ※ 当月が「過去の月」のときのみ適用（現在月だと「まだ未受講」を誤削除する）
     // saveNewStudent/saveEditStudent 経由の正規追加（customer から選択）は customer に必ず存在するため保持
     async cleanupAutoAddedStudents() {
         let removedCount = 0;
@@ -251,6 +253,12 @@ class DanceStudioApp {
             if (hasMark) markedKeys.add(key);
         }
 
+        // 条件D 適用ガード: 当月が「今より過去の月」のときのみ true
+        const selectedM = this.selectedMonth || '';
+        const today = new Date();
+        const currentRealMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+        const applyConditionD = selectedM && selectedM < currentRealMonth;
+
         for (const day of Object.keys(this.scheduleData)) {
             const classes = this.scheduleData[day];
             if (!Array.isArray(classes)) continue;
@@ -263,6 +271,7 @@ class DanceStudioApp {
                     const cust = custByName.get(fn);
                     const studentKey = `${day}_${loc}_${cls.name}_${fn}`;
                     const hasMarks = markedKeys.has(studentKey);
+                    const isRecentlyAdded = s.enrolledFrom && s.enrolledFrom >= selectedM;
 
                     // A: enrolledFrom < 2026-04 (migrateOrphanRegulars 由来)
                     if (s.enrolledFrom && s.enrolledFrom < '2026-04') {
@@ -282,6 +291,12 @@ class DanceStudioApp {
                         removedCount++;
                         return false;
                     }
+                    // D: 過去月での0%出席 + 当月以降に登録されていない（過去受講者で現在は不参加）
+                    if (applyConditionD && !hasMarks && !isRecentlyAdded) {
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=D:no_${selectedM}_marks`);
+                        removedCount++;
+                        return false;
+                    }
                     return true;
                 });
                 if (cls.students.length !== before) scheduleChanged = true;
@@ -290,7 +305,7 @@ class DanceStudioApp {
 
         if (scheduleChanged) {
             await db.saveScheduleData(this.scheduleData);
-            console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除`, removed);
+            console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除 (selectedM=${selectedM}, applyD=${applyConditionD})`, removed);
         }
         return removedCount;
     }
