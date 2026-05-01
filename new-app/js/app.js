@@ -229,9 +229,9 @@ class DanceStudioApp {
     // 削除条件（OR）:
     //   A. enrolledFrom < '2026-04' → migrateOrphanRegulars 由来（enrolledFrom 機能は 2026-05-01 追加）
     //   B. customer.status === '退会済み' → 退会済みなのに schedule に残留
-    //   C. customers にレコード無し AND 当月出席マーク無し → 真の phantom（ひらがな重複登録など）
-    //   D. 当月出席マーク全0件 AND 当月以降に登録された生徒ではない（過去レッスン受講者だが現在は受けていない）
-    //      ※ 当月が「過去の月」のときのみ適用（現在月だと「まだ未受講」を誤削除する）
+    //   C. customers にレコード無し AND 参照月マーク無し → 真の phantom（ひらがな重複登録など）
+    //   D. 参照月マーク全0件 AND 参照月以降に登録された生徒ではない（過去レッスン受講者で現在は受けていない）
+    //      参照月 = 直近の完了月（今日の前月）。selectedMonth に依存しない。
     // saveNewStudent/saveEditStudent 経由の正規追加（customer から選択）は customer に必ず存在するため保持
     async cleanupAutoAddedStudents() {
         let removedCount = 0;
@@ -245,19 +245,25 @@ class DanceStudioApp {
             custByName.set(fn, c);
         }
 
-        // 当月 attendance で出席マーク (○/×/休講) があるキー集合
+        // 参照月: 直近の完了月（今日の前月）。selectedMonth に依存しない。
+        const today = new Date();
+        const refDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const referenceMonth = `${refDate.getFullYear()}-${String(refDate.getMonth() + 1).padStart(2, '0')}`;
+
+        // 参照月の attendance を直接ロード（this.attendanceData は selectedMonth 依存なので使わない）
+        let refAttendance = {};
+        try {
+            refAttendance = await db.loadAttendance(referenceMonth);
+        } catch (e) {
+            console.warn('cleanupAutoAddedStudents: 参照月データ取得失敗', e);
+        }
+
         const markedKeys = new Set();
-        for (const [key, rec] of Object.entries(this.attendanceData || {})) {
+        for (const [key, rec] of Object.entries(refAttendance || {})) {
             if (!rec || typeof rec !== 'object') continue;
             const hasMark = ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
             if (hasMark) markedKeys.add(key);
         }
-
-        // 条件D 適用ガード: 当月が「今より過去の月」のときのみ true
-        const selectedM = this.selectedMonth || '';
-        const today = new Date();
-        const currentRealMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-        const applyConditionD = selectedM && selectedM < currentRealMonth;
 
         for (const day of Object.keys(this.scheduleData)) {
             const classes = this.scheduleData[day];
@@ -271,7 +277,7 @@ class DanceStudioApp {
                     const cust = custByName.get(fn);
                     const studentKey = `${day}_${loc}_${cls.name}_${fn}`;
                     const hasMarks = markedKeys.has(studentKey);
-                    const isRecentlyAdded = s.enrolledFrom && s.enrolledFrom >= selectedM;
+                    const isRecentlyAdded = s.enrolledFrom && s.enrolledFrom > referenceMonth;
 
                     // A: enrolledFrom < 2026-04 (migrateOrphanRegulars 由来)
                     if (s.enrolledFrom && s.enrolledFrom < '2026-04') {
@@ -285,15 +291,15 @@ class DanceStudioApp {
                         removedCount++;
                         return false;
                     }
-                    // C: 顧客無し + 当月出席マーク無し
+                    // C: 顧客無し + 参照月マーク無し
                     if (!cust && !hasMarks) {
                         removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=C:no_customer+no_marks`);
                         removedCount++;
                         return false;
                     }
-                    // D: 過去月での0%出席 + 当月以降に登録されていない（過去受講者で現在は不参加）
-                    if (applyConditionD && !hasMarks && !isRecentlyAdded) {
-                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=D:no_${selectedM}_marks`);
+                    // D: 参照月マーク無し + 参照月より後に登録されたわけではない
+                    if (!hasMarks && !isRecentlyAdded) {
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=D:no_${referenceMonth}_marks`);
                         removedCount++;
                         return false;
                     }
@@ -305,7 +311,9 @@ class DanceStudioApp {
 
         if (scheduleChanged) {
             await db.saveScheduleData(this.scheduleData);
-            console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除 (selectedM=${selectedM}, applyD=${applyConditionD})`, removed);
+            console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除 (refMonth=${referenceMonth})`, removed);
+        } else {
+            console.log(`✓ cleanupAutoAddedStudents: 削除対象なし (refMonth=${referenceMonth})`);
         }
         return removedCount;
     }
