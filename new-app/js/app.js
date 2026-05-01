@@ -1406,7 +1406,17 @@ class DanceStudioApp {
     setupCustomerPageEvents() {
         document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
         document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
-        document.getElementById('searchInput')?.addEventListener('input', (e) => { this.searchTerm = e.target.value; this.render(); });
+        document.getElementById('searchInput')?.addEventListener('input', (e) => {
+            this.searchTerm = e.target.value;
+            const cursorPos = e.target.selectionStart;
+            this.render();
+            // render() で DOM 再構築されフォーカスが外れるため復元
+            const newInput = document.getElementById('searchInput');
+            if (newInput) {
+                newInput.focus();
+                newInput.setSelectionRange(cursorPos, cursorPos);
+            }
+        });
         document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
         document.getElementById('cancelAddBtn')?.addEventListener('click', () => { this.showAddForm = false; this.render(); });
 

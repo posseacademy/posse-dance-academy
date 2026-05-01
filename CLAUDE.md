@@ -34,7 +34,7 @@ new-app/
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
 **現在のバージョン (2026-05-01):**
-- `app.html`: `style.css?v=24`, `app.js?v=102`
+- `app.html`: `style.css?v=24`, `app.js?v=103`
 - `app.js`: `config.js?v=15`, `utils.js?v=13`, `firebase-service.js?v=8`
 - `app.js`: `home.js?v=24`, `customers.js?v=18`, `attendance.js?v=45`, `schedule.js?v=26`
 - `app.js`: `csv-export.js?v=17`
