@@ -225,14 +225,31 @@ class DanceStudioApp {
         return added;
     }
 
-    // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒を schedule から除去
-    // enrolledFrom 機能は 2026-05-01 (commit da9ca0a) 以降に追加されたため、
-    // enrolledFrom < '2026-04' を持つ生徒は migrateOrphanRegulars 由来と確定できる
-    // saveNewStudent/saveEditStudent で 2026-04 以降に手動追加された生徒は保持
+    // 一回限りクリーンアップ: schedule に紛れ込んだ phantom 生徒を除去
+    // 削除条件（OR）:
+    //   A. enrolledFrom < '2026-04' → migrateOrphanRegulars 由来（enrolledFrom 機能は 2026-05-01 追加）
+    //   B. customer.status === '退会済み' → 退会済みなのに schedule に残留
+    //   C. customers にレコード無し AND 当月出席マーク無し → 真の phantom（ひらがな重複登録など）
+    // saveNewStudent/saveEditStudent 経由の正規追加（customer から選択）は customer に必ず存在するため保持
     async cleanupAutoAddedStudents() {
         let removedCount = 0;
         const removed = [];
         let scheduleChanged = false;
+
+        // customers インデックス
+        const custByName = new Map();
+        for (const c of (this.customers || [])) {
+            const fn = (c.lastName || '') + (c.firstName || '');
+            custByName.set(fn, c);
+        }
+
+        // 当月 attendance で出席マーク (○/×/休講) があるキー集合
+        const markedKeys = new Set();
+        for (const [key, rec] of Object.entries(this.attendanceData || {})) {
+            if (!rec || typeof rec !== 'object') continue;
+            const hasMark = ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+            if (hasMark) markedKeys.add(key);
+        }
 
         for (const day of Object.keys(this.scheduleData)) {
             const classes = this.scheduleData[day];
@@ -240,9 +257,28 @@ class DanceStudioApp {
             for (const cls of classes) {
                 if (!Array.isArray(cls.students)) continue;
                 const before = cls.students.length;
+                const loc = cls.location || cls.venue || '';
                 cls.students = cls.students.filter(s => {
+                    const fn = (s.lastName || '') + (s.firstName || '');
+                    const cust = custByName.get(fn);
+                    const studentKey = `${day}_${loc}_${cls.name}_${fn}`;
+                    const hasMarks = markedKeys.has(studentKey);
+
+                    // A: enrolledFrom < 2026-04 (migrateOrphanRegulars 由来)
                     if (s.enrolledFrom && s.enrolledFrom < '2026-04') {
-                        removed.push(`${day}/${cls.name}: ${(s.lastName||'')+(s.firstName||'')} (${s.plan}) ENR=${s.enrolledFrom}`);
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=A:enrolledFrom<2026-04(${s.enrolledFrom})`);
+                        removedCount++;
+                        return false;
+                    }
+                    // B: 退会済み顧客
+                    if (cust && cust.status === '退会済み') {
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=B:退会済み`);
+                        removedCount++;
+                        return false;
+                    }
+                    // C: 顧客無し + 当月出席マーク無し
+                    if (!cust && !hasMarks) {
+                        removed.push(`${day}/${cls.name}: ${fn} (${s.plan}) reason=C:no_customer+no_marks`);
                         removedCount++;
                         return false;
                     }
