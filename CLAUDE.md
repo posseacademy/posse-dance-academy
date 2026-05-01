@@ -33,11 +33,11 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-04-20):**
-- `app.html`: `style.css?v=24`, `app.js?v=85`
-- `app.js`: `config.js?v=13`, `utils.js?v=8`, `firebase-service.js?v=8`
-- `app.js`: `home.js?v=15`, `customers.js?v=13`, `attendance.js?v=39`, `schedule.js?v=24`
-- `app.js`: `csv-export.js?v=12`
+**現在のバージョン (2026-05-01):**
+- `app.html`: `style.css?v=24`, `app.js?v=96`
+- `app.js`: `config.js?v=15`, `utils.js?v=13`, `firebase-service.js?v=8`
+- `app.js`: `home.js?v=22`, `customers.js?v=18`, `attendance.js?v=45`, `schedule.js?v=26`
+- `app.js`: `csv-export.js?v=17`
 
 **手順:** ファイル修正 → 親ファイルの `?v=N+1` 更新 → コミット → push
 
@@ -68,3 +68,4 @@ git push origin main
 - `defaultSchedule` 上書き: Firestoreデータを上書き → `Promise.allSettled` で解決済み
 - `cleanupNonRegularStudents()`: ビジターを破壊的に削除 → 無効化済み、表示フィルターで代替
 - schedule は全月共通: ある月で生徒を削除すると全月に影響 → ビジターは attendance のみ削除に変更
+- `migrateOrphanRegulars()`: 前月attendance自動補完で退会済み顧客を復活 → 無効化済み（app.js:117,761,782）。`cleanupAutoAddedStudents()` で初期化時に enrolledFrom < '2026-04' の生徒を一括削除

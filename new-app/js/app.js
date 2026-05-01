@@ -114,8 +114,11 @@ class DanceStudioApp {
         // cleanupVisitorsFromSchedule は破壊的書き込みでデータ消失を引き起こしたため削除済み
         // ビジター/初回プランは renderAttendanceRecord() が attendance から表示マージする
 
-        // 前月の出席記録から、scheduleData にいない過去在籍レギュラーを補完
-        try { await this.migrateOrphanRegulars(this.selectedMonth); } catch(e) { console.error('migrateOrphanRegulars error:', e); }
+        // disabled (2026-05-01): migrateOrphanRegulars が退会済み顧客を含む過去生徒を復活させるバグのため停止
+        // try { await this.migrateOrphanRegulars(this.selectedMonth); } catch(e) { console.error('migrateOrphanRegulars error:', e); }
+
+        // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒（enrolledFrom < '2026-04'）を schedule から除去
+        try { await this.cleanupAutoAddedStudents(); } catch(e) { console.error('cleanupAutoAddedStudents error:', e); }
 
         // 月別プランスナップショット初期化
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
@@ -220,6 +223,40 @@ class DanceStudioApp {
             console.log(`migrateOrphanRegulars: ${added}名を ${prevYM} の記録から名簿に補完`);
         }
         return added;
+    }
+
+    // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒を schedule から除去
+    // enrolledFrom 機能は 2026-05-01 (commit da9ca0a) 以降に追加されたため、
+    // enrolledFrom < '2026-04' を持つ生徒は migrateOrphanRegulars 由来と確定できる
+    // saveNewStudent/saveEditStudent で 2026-04 以降に手動追加された生徒は保持
+    async cleanupAutoAddedStudents() {
+        let removedCount = 0;
+        const removed = [];
+        let scheduleChanged = false;
+
+        for (const day of Object.keys(this.scheduleData)) {
+            const classes = this.scheduleData[day];
+            if (!Array.isArray(classes)) continue;
+            for (const cls of classes) {
+                if (!Array.isArray(cls.students)) continue;
+                const before = cls.students.length;
+                cls.students = cls.students.filter(s => {
+                    if (s.enrolledFrom && s.enrolledFrom < '2026-04') {
+                        removed.push(`${day}/${cls.name}: ${(s.lastName||'')+(s.firstName||'')} (${s.plan}) ENR=${s.enrolledFrom}`);
+                        removedCount++;
+                        return false;
+                    }
+                    return true;
+                });
+                if (cls.students.length !== before) scheduleChanged = true;
+            }
+        }
+
+        if (scheduleChanged) {
+            await db.saveScheduleData(this.scheduleData);
+            console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除`, removed);
+        }
+        return removedCount;
     }
 
 
@@ -721,7 +758,8 @@ class DanceStudioApp {
             this.eventsData = await db.loadEvents(this.selectedMonth);
             this.calendarData = await db.loadCalendarData(this.selectedMonth);
             this.selectedCalendarDate = null;
-            await this.migrateOrphanRegulars(this.selectedMonth);
+            // disabled (2026-05-01): migrateOrphanRegulars 停止
+            // await this.migrateOrphanRegulars(this.selectedMonth);
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月切り替えエラー:', error);
@@ -741,7 +779,8 @@ class DanceStudioApp {
             this.scheduleData = await db.loadScheduleData(defaultSchedule);
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
-            await this.migrateOrphanRegulars(this.selectedMonth);
+            // disabled (2026-05-01): migrateOrphanRegulars 停止
+            // await this.migrateOrphanRegulars(this.selectedMonth);
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月選択エラー:', error);
