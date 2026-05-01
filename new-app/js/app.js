@@ -1406,17 +1406,35 @@ class DanceStudioApp {
     setupCustomerPageEvents() {
         document.getElementById('exportBtn')?.addEventListener('click', () => this.handleExport());
         document.getElementById('toggleAddFormBtn')?.addEventListener('click', () => { this.showAddForm = !this.showAddForm; this.render(); });
-        document.getElementById('searchInput')?.addEventListener('input', (e) => {
-            this.searchTerm = e.target.value;
-            const cursorPos = e.target.selectionStart;
-            this.render();
-            // render() で DOM 再構築されフォーカスが外れるため復元
-            const newInput = document.getElementById('searchInput');
-            if (newInput) {
-                newInput.focus();
-                newInput.setSelectionRange(cursorPos, cursorPos);
-            }
-        });
+        // 顧客検索の入力ハンドラ
+        // - input イベントで render() すると DOM が再構築されフォーカスが外れる
+        // - さらに IME（日本語入力）合成中に render() すると合成状態が壊れて
+        //   "なかやま" → "nあkあyあmあ" のように子音だけ生で残るバグになる
+        // 対策: compositionstart/end で合成中フラグを立て、合成中は render() をスキップ
+        const searchInputEl = document.getElementById('searchInput');
+        if (searchInputEl) {
+            this._isComposingSearch = false;
+            const applySearch = (val, cursorPos) => {
+                this.searchTerm = val;
+                this.render();
+                const newInput = document.getElementById('searchInput');
+                if (newInput) {
+                    newInput.focus();
+                    if (cursorPos != null) newInput.setSelectionRange(cursorPos, cursorPos);
+                }
+            };
+            searchInputEl.addEventListener('compositionstart', () => {
+                this._isComposingSearch = true;
+            });
+            searchInputEl.addEventListener('compositionend', (e) => {
+                this._isComposingSearch = false;
+                applySearch(e.target.value, e.target.value.length);
+            });
+            searchInputEl.addEventListener('input', (e) => {
+                if (this._isComposingSearch) return;  // IME合成中はスキップ
+                applySearch(e.target.value, e.target.selectionStart);
+            });
+        }
         document.getElementById('addCustomerBtn')?.addEventListener('click', () => this.addCustomer());
         document.getElementById('cancelAddBtn')?.addEventListener('click', () => { this.showAddForm = false; this.render(); });
 
