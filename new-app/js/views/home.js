@@ -91,7 +91,7 @@ export function renderDashboard(app) {
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
                 プラン${item.course}
               </div>
-              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${item.count}名${item.count15h > 0 ? `<span style="color:#000;margin-left:0.5rem;font-weight:700;">(1.5h: ${item.count15h}名)</span>` : ''}</div>
+              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${item.count}名<span style="color:#000;margin-left:0.5rem;font-weight:700;">(1.5h: ${item.count15h}名)</span></div>
             </div>
           `).join('')}
           ${visitorMemberCount > 0 ? `
