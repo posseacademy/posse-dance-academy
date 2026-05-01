@@ -2,7 +2,7 @@
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=15';
 import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=13';
-import { renderDashboard } from './views/home.js?v=22';
+import { renderDashboard } from './views/home.js?v=23';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=18';
 import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=45';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';
@@ -321,7 +321,7 @@ class DanceStudioApp {
         return removedCount;
     }
 
-    // 一回限り正規化: plan=null + course=数字 のレガシー顧客に対して plan を course から補完
+    // 一回限り正規化: plan=null + course のレガシー顧客に対して plan を course から補完
     // 既存スキーマで customer.plan と customer.course は常に同じ意味を表すべきだが、
     // 過去の入力で plan が空のまま course だけ設定された顧客が大量に存在し、
     // HOME プラン別内訳の集計から漏れていた。これを一括補完する。
@@ -335,8 +335,12 @@ class DanceStudioApp {
         const updatedList = [];
         for (const c of (this.customers || [])) {
             if (c.plan) continue;                          // plan 既設定はスキップ
-            const planFromCourse = COURSE_TO_PLAN[c.course];
-            if (!planFromCourse) continue;                 // ビジター/ハーフ/未設定はスキップ
+            let planFromCourse = COURSE_TO_PLAN[c.course];
+            // ビジター: status=入会中 なら ビジター（会員）として補完
+            if (!planFromCourse && c.course === 'ビジター' && c.status === '入会中') {
+                planFromCourse = 'ビジター（会員）';
+            }
+            if (!planFromCourse) continue;                 // ハーフ/未設定はスキップ
             c.plan = planFromCourse;
             try {
                 await db.updateCustomer(c.id, { plan: planFromCourse });
