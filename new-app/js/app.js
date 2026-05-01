@@ -361,12 +361,13 @@ class DanceStudioApp {
         return updated;
     }
 
-    // 一回限り同期: schedule.students[].plan と 当月 attendance._plan を customer.plan に揃える
+    // 一回限り同期: schedule.students[].plan と 全月 attendance._plan を customer.plan に揃える
     // 過去にプラン変更が行われた際にスナップショットが更新されなかったことで生じた
     // 表示プランの不一致（例: 中島竜吾 customer=４クラス なのに出席記録=３クラス）を修正する。
     // 自然な idempotency: s.plan === cust.plan の行はスキップ。
     // 安全策: レギュラー↔レギュラーの同期のみ。ビジター/ハーフは触らない。
-    //         attendance は当月のみ更新（過去月の履歴は保全）。
+    // 注: 過去月の attendance も同期するため、プラン変更前の月の表示も最新プランに上書きされる
+    //     （履歴精度よりも表示の一貫性を優先するというユーザー要件）
     async syncSnapshotsToCustomerPlanOnce() {
         const custByName = new Map();
         for (const c of (this.customers || [])) {
@@ -397,7 +398,52 @@ class DanceStudioApp {
         }
         if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
 
-        // 2. 当月 attendance._plan を customer.plan に同期（過去月は履歴保全のため触らない）
+        // 2. 全月 attendance._plan を customer.plan に同期
+        //    対象月: 2025-07 〜 今日+6ヶ月（既知の attendance_YYYYMM 範囲を網羅）
+        const months = [];
+        const today = new Date();
+        const endY = today.getFullYear();
+        const endM = today.getMonth() + 1 + 6;
+        let y = 2025, m = 7;
+        while (y < endY || (y === endY && m <= endM)) {
+            months.push(`${y}-${String(((m - 1) % 12) + 1).padStart(2, '0')}`);
+            // 月加算（オーバーフロー対応）
+            m++;
+            if (m > 12) { m -= 12; y++; }
+        }
+
+        for (const month of months) {
+            let attData = {};
+            try {
+                attData = await db.loadAttendance(month);
+            } catch (e) {
+                continue;
+            }
+            if (!attData || Object.keys(attData).length === 0) continue;
+
+            for (const [key, data] of Object.entries(attData)) {
+                if (!data || typeof data !== 'object') continue;
+                const att_plan = data._plan;
+                if (!att_plan || !isRegularPlan(att_plan)) continue;
+                const parts = key.split('_');
+                if (parts.length < 4) continue;
+                const fn = parts[parts.length - 1];
+                const cust = custByName.get(fn);
+                if (!cust || !cust.plan) continue;
+                if (!isRegularPlan(cust.plan)) continue;
+                if (att_plan === cust.plan) continue;
+                log.push(`attendance ${month} ${key}: ${att_plan} → ${cust.plan}`);
+                data._plan = cust.plan;
+                try {
+                    await db.saveAttendance(month, key, data);
+                    attChanged++;
+                } catch (e) {
+                    console.error(`syncSnapshotsToCustomerPlanOnce: ${month}/${key} 更新失敗`, e);
+                }
+            }
+        }
+
+        // 3. 当月 this.attendanceData も画面再描画用に in-memory で同期
         for (const [key, data] of Object.entries(this.attendanceData || {})) {
             if (!data || typeof data !== 'object') continue;
             const att_plan = data._plan;
@@ -408,21 +454,13 @@ class DanceStudioApp {
             const cust = custByName.get(fn);
             if (!cust || !cust.plan) continue;
             if (!isRegularPlan(cust.plan)) continue;
-            if (att_plan === cust.plan) continue;
-            log.push(`attendance ${key}: ${att_plan} → ${cust.plan}`);
-            data._plan = cust.plan;
-            try {
-                await db.saveAttendance(this.selectedMonth, key, data);
-                attChanged++;
-            } catch (e) {
-                console.error(`syncSnapshotsToCustomerPlanOnce: ${key} 更新失敗`, e);
-            }
+            if (att_plan !== cust.plan) data._plan = cust.plan;
         }
 
         if (log.length > 0) {
-            console.log(`✓ syncSnapshotsToCustomerPlanOnce: schedule=${scheduleChanged ? '更新' : '-'} attendance=${attChanged}件`, log);
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: schedule=${scheduleChanged ? '更新' : '-'} attendance=${attChanged}件 (${months.length}ヶ月走査)`, log);
         } else {
-            console.log(`✓ syncSnapshotsToCustomerPlanOnce: 同期対象なし`);
+            console.log(`✓ syncSnapshotsToCustomerPlanOnce: 同期対象なし (${months.length}ヶ月走査)`);
         }
         return { scheduleChanged, attChanged };
     }
