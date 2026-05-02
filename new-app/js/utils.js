@@ -50,7 +50,7 @@ export function sortStudentsByPlan(students, planOrder) {
  * Check if plan is regular (monthly) vs visitor/trial
  */
 export function isRegularPlan(plan) {
-    const regularPlans = ['1クラス', '１クラス', '2クラス', '２クラス', '3クラス', '３クラス', '4クラス', '４クラス', '1.5hクラス'];
+    const regularPlans = ['1クラス', '１クラス', '2クラス', '２クラス', '3クラス', '３クラス', '4クラス', '４クラス', '1.5hクラス', 'ハーフ'];
     return regularPlans.includes(plan);
 }
 
@@ -152,11 +152,13 @@ export function getCustomerCourseKey(customer) {
 }
 
 /**
- * 入会中顧客をプラン別（1〜4クラス）に集計
- * customer.plan を直接見て、1クラス〜4クラス以外（ビジター・初回体験・1.5hクラス等）は除外
+ * 入会中顧客をプラン別に集計（網羅型）
+ * 「入会中」総数と必ず一致するように、すべてのプランを以下のいずれかにマップする：
+ *   1〜4クラス / 1.5hクラス / ハーフ / ビジター（会員）/ その他
  * @param {Array} customers - 全顧客配列
  * @param {Object} courseColors - コースキー → 色のマップ
- * @returns {Array<{course, count, count15h, color}>} 人数0のコースは含めない（４→１の降順）
+ * @returns {Array<{course, label, count, count15h, color, otherStudents?}>}
+ *   人数0の行は含めない。1〜4クラス（４→１降順）→ 1.5hクラス → ハーフ → ビジター（会員）→ その他
  */
 export function getCustomerCountByCourse(customers, courseColors) {
     const PLAN_MAP = {
@@ -167,23 +169,73 @@ export function getCustomerCountByCourse(customers, courseColors) {
     };
     const counts = {};
     const counts15h = {};
+    let count15hPlan = 0;
+    let countHalf = 0;
+    let countVisitorMember = 0;
+    const others = [];
+
     customers.filter(c => c.status === '入会中').forEach(c => {
         const k = PLAN_MAP[c.plan];
-        if (!k) return;
-        counts[k] = (counts[k] || 0) + 1;
-        if (c.has15hClass) {
-            counts15h[k] = (counts15h[k] || 0) + 1;
+        if (k) {
+            counts[k] = (counts[k] || 0) + 1;
+            if (c.has15hClass) {
+                counts15h[k] = (counts15h[k] || 0) + 1;
+            }
+            return;
+        }
+        if (c.plan === '1.5hクラス') {
+            count15hPlan++;
+            return;
+        }
+        // ハーフ: 月2回（隔週）の半額プラン。plan未設定でcourse='ハーフ'のレガシーも吸収
+        if (c.plan === 'ハーフ' || (!c.plan && c.course === 'ハーフ')) {
+            countHalf++;
+            return;
+        }
+        if (c.plan === 'ビジター（会員）' || (!c.plan && c.course === 'ビジター')) {
+            countVisitorMember++;
+            return;
+        }
+        others.push(c);
+    });
+
+    const result = [];
+    ['４','３','２','１'].forEach(course => {
+        if (counts[course] > 0) {
+            result.push({
+                course,
+                label: `プラン${course}`,
+                count: counts[course],
+                count15h: counts15h[course] || 0,
+                color: (courseColors && courseColors[course]) || '#6b7280'
+            });
         }
     });
-    const order = ['４','３','２','１'];
-    return order
-        .filter(c => counts[c] > 0)
-        .map(course => ({
-            course,
-            count: counts[course],
-            count15h: counts15h[course] || 0,
-            color: (courseColors && courseColors[course]) || '#6b7280'
-        }));
+    if (count15hPlan > 0) {
+        result.push({ course: '1.5h', label: '1.5hクラス', count: count15hPlan, count15h: 0, color: '#a78bfa' });
+    }
+    if (countHalf > 0) {
+        result.push({ course: 'HALF', label: 'ハーフ（月2回）', count: countHalf, count15h: 0, color: '#f59e0b' });
+    }
+    if (countVisitorMember > 0) {
+        result.push({ course: 'V', label: 'ビジター（会員）', count: countVisitorMember, count15h: 0, color: '#9ca3af' });
+    }
+    if (others.length > 0) {
+        result.push({
+            course: 'OTHER',
+            label: 'その他',
+            count: others.length,
+            count15h: 0,
+            color: '#ef4444',
+            otherStudents: others.map(c => ({
+                name: `${c.lastName || ''}${c.firstName || ''}`.trim() || '(名前未設定)',
+                plan: c.plan || '(プラン未設定)',
+                course: c.course || '',
+                memberNumber: c.memberNumber || ''
+            }))
+        });
+    }
+    return result;
 }
 
 /**

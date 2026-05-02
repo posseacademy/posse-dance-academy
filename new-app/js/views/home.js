@@ -1,5 +1,5 @@
-import { courseColors, timeSchedule } from '../config.js?v=15';
-import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=14';
+import { courseColors, timeSchedule } from '../config.js?v=16';
+import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=15';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -8,18 +8,9 @@ export function renderDashboard(app) {
   const pausedCustomers = app.customers.filter(c => c.status === '休会中').length;
   const withdrawnCustomers = app.customers.filter(c => c.status === '退会済み').length;
 
-  // プラン別人数集計（売上計算は廃止、人数のみ）
+  // プラン別人数集計（網羅型 — 入会中合計と必ず一致）
   const courseCounts = getCustomerCountByCourse(app.customers, courseColors);
-
-  // 入会中ビジター（会員）人数
-  // - plan='ビジター（会員）' のもの
-  // - plan が空で course='ビジター' のレガシーデータ（syncPlanFromCourseOnce 補完待ち）
-  const visitorMemberCount = app.customers.filter(c =>
-    c.status === '入会中' && (
-      c.plan === 'ビジター（会員）' ||
-      (!c.plan && c.course === 'ビジター')
-    )
-  ).length;
+  const courseCountsTotal = courseCounts.reduce((sum, item) => sum + item.count, 0);
 
   // Parse selected month for display
   const [year, month] = app.selectedMonth.split('-');
@@ -89,20 +80,25 @@ export function renderDashboard(app) {
             <div class="revenue-row">
               <div class="rev-label" style="color:#000;font-weight:700;">
                 <span class="rev-dot" style="background-color: ${item.color};"></span>
-                プラン${item.course}
+                ${item.label}
               </div>
-              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${item.count}名<span style="color:#000;margin-left:0.5rem;font-weight:700;">(1.5h: ${item.count15h}名)</span></div>
+              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${item.count}名${
+                ['１','２','３','４'].includes(item.course)
+                  ? `<span style="color:#000;margin-left:0.5rem;font-weight:700;">(1.5h: ${item.count15h}名)</span>`
+                  : ''
+              }</div>
             </div>
+            ${item.course === 'OTHER' && item.otherStudents ? `
+              <div style="padding:0.4rem 1rem 0.6rem 2.2rem;font-size:0.75rem;color:#dc2626;">
+                ${item.otherStudents.map(s => `${s.memberNumber ? '#'+s.memberNumber+' ' : ''}${s.name}（plan: ${s.plan} / course: ${s.course || '-'}）`).join('<br>')}
+              </div>
+            ` : ''}
           `).join('')}
-          ${visitorMemberCount > 0 ? `
-            <div class="revenue-row">
-              <div class="rev-label" style="color:#000;font-weight:700;">
-                <span class="rev-dot" style="background-color: #9ca3af;"></span>
-                ビジター（会員）
-              </div>
-              <div class="rev-detail" style="color:#000;font-weight:700;font-size:var(--font-size-sm);">${visitorMemberCount}名</div>
-            </div>
-          ` : ''}
+          <div style="margin-top:0.5rem;padding-top:0.5rem;border-top:1px dashed #ddd;font-size:0.75rem;color:${courseCountsTotal === activeCustomers ? '#10b981' : '#ef4444'};text-align:right;">
+            ${courseCountsTotal === activeCustomers
+              ? `✓ 合計 ${courseCountsTotal}名 / 入会中 ${activeCustomers}名`
+              : `⚠ 合計 ${courseCountsTotal}名 / 入会中 ${activeCustomers}名（差 ${activeCustomers - courseCountsTotal}名）`}
+          </div>
         </div>
       </div>
 
