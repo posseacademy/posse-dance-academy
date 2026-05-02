@@ -239,6 +239,60 @@ export function getCustomerCountByCourse(customers, courseColors) {
 }
 
 /**
+ * 当月のクラス出席対象者一覧を計算（attendance ビューと同じロジック）
+ * - schedule.students のうち isRegularPlan + enrolledFrom/leftAt の在籍範囲内
+ * - + attendance_YYYYMM 由来のビジター（_plan が non-regular で記録あり）
+ * - + attendance_YYYYMM 由来の過去在籍レギュラー（schedule に居ないが記録あり）
+ * @returns {{regulars, pastRegulars, visitors, total}}
+ */
+export function getClassStudentsForMonth(cls, day, attendanceData, customers, selectedMonth) {
+    const effLoc = effectiveLocation(cls, selectedMonth);
+    const _hasMark = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
+    const _inRange = (s) => {
+        if (s.enrolledFrom && s.enrolledFrom > selectedMonth) return false;
+        if (s.leftAt && selectedMonth > s.leftAt) return false;
+        return true;
+    };
+    const regulars = (cls.students || [])
+        .filter(s => isRegularPlan(s.plan))
+        .filter(_inRange);
+    const seen = new Set(regulars.map(s => s.lastName + s.firstName));
+    const prefix = `${day}_${effLoc}_${cls.name}_`;
+    const pastRegulars = [];
+    const visitors = [];
+
+    for (const key of Object.keys(attendanceData || {})) {
+        if (!key.startsWith(prefix)) continue;
+        if (key.startsWith('練習会_')) continue;
+        const rec = attendanceData[key];
+        if (!rec || typeof rec !== 'object') continue;
+        const nameCombined = key.slice(prefix.length);
+        if (seen.has(nameCombined)) continue;
+
+        const p = rec._plan;
+        if (p && !isRegularPlan(p)) {
+            seen.add(nameCombined);
+            visitors.push({ name: nameCombined, plan: p });
+        } else if (_hasMark(rec)) {
+            seen.add(nameCombined);
+            let planLabel = (p && isRegularPlan(p)) ? p : null;
+            if (!planLabel) {
+                const c = (customers || []).find(c => (c.lastName + c.firstName) === nameCombined);
+                planLabel = c?.plan || '１クラス';
+            }
+            pastRegulars.push({ name: nameCombined, plan: planLabel });
+        }
+    }
+
+    return {
+        regulars,
+        pastRegulars,
+        visitors,
+        total: regulars.length + pastRegulars.length + visitors.length
+    };
+}
+
+/**
  * 顧客が受講中のクラス一覧を scheduleData から抽出
  * @param {Object} customer - { lastName, firstName }
  * @param {Object} scheduleData

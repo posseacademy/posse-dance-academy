@@ -1,8 +1,8 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
 import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=15';
-import { renderDashboard } from './views/home.js?v=25';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=16';
+import { renderDashboard } from './views/home.js?v=26';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=18';
 import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=47';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';

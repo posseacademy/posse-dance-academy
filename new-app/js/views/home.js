@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=16';
-import { isRegularPlan, getCustomerCountByCourse } from '../utils.js?v=15';
+import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth } from '../utils.js?v=16';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -123,13 +123,14 @@ export function renderDashboard(app) {
                 const te = (tsH[day] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
                   || (tsH[day] || []).find(t => t.name === cls.name && !t.alias);
                 const time = te ? te.time : '';
-                const regularCount = (cls.students || []).filter(s => isRegularPlan(s.plan)).length;
+                // 出席名簿と同じロジックで当月の対象者数を計算
+                const { total: studentCount } = getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth);
                 return `
                   <div style="display:flex;align-items:center;padding:0.5rem 1rem;border-bottom:1px solid var(--border-color);">
                     <div style="flex:2;font-size:0.85rem;font-weight:500;">${cls.name}</div>
                     <div style="flex:0.8;font-size:0.8rem;color:var(--text-secondary);">${loc}</div>
                     <div style="flex:1;font-size:0.8rem;color:var(--text-secondary);text-align:center;">${time}</div>
-                    <div style="flex:0.4;text-align:right;font-weight:600;font-size:0.85rem;">${regularCount}名</div>
+                    <div style="flex:0.4;text-align:right;font-weight:600;font-size:0.85rem;">${studentCount}名</div>
                   </div>`;
               }).join('')}`;
           }).join('')}
