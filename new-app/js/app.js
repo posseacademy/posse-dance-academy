@@ -421,11 +421,14 @@ class DanceStudioApp {
             for (const cls of classes) {
                 if (!Array.isArray(cls.students)) continue;
                 const before = cls.students.length;
-                const loc = cls.location || cls.venue || '';
+                // 参照月時点での実効場所を解決（locationFrom 以前は prevLocation を使う）
+                const refLoc = (cls.locationFrom && cls.prevLocation && referenceMonth < cls.locationFrom)
+                    ? cls.prevLocation
+                    : (cls.location || cls.venue || '');
                 cls.students = cls.students.filter(s => {
                     const fn = (s.lastName || '') + (s.firstName || '');
                     const cust = custByName.get(fn);
-                    const studentKey = `${day}_${loc}_${cls.name}_${fn}`;
+                    const studentKey = `${day}_${refLoc}_${cls.name}_${fn}`;
                     const hasMarks = markedKeys.has(studentKey);
                     const isRecentlyAdded = s.enrolledFrom && s.enrolledFrom > referenceMonth;
 
