@@ -69,3 +69,55 @@ git push origin main
 - `cleanupNonRegularStudents()`: ビジターを破壊的に削除 → 無効化済み、表示フィルターで代替
 - schedule は全月共通: ある月で生徒を削除すると全月に影響 → ビジターは attendance のみ削除に変更
 - `migrateOrphanRegulars()`: 前月attendance自動補完で退会済み顧客を復活 → 無効化済み（app.js:117,761,782）。`cleanupAutoAddedStudents()` で初期化時に enrolledFrom < '2026-04' の生徒を一括削除
+
+> 詳細な経緯は @references/decision-log.md を参照。
+
+---
+
+## 言語
+
+応答・コミットメッセージ・コメントは日本語。設定は `.claude/settings.json` の `"language": "japanese"` を参照。
+
+## スキル / コマンド / エージェント
+
+- **`.claude/skills/`** が公式推奨の置き場所（`SKILL.md` 形式、Gotchas 付き）
+- **`.claude/commands/`** は後方互換のため残置（v2.1 移行前の旧形式）
+- **`.claude/agents/code-reviewer`** が `PROACTIVELY` で起動し、Firestore 操作・キャッシュバスティング・schedule 全月影響を重点チェック
+
+スキル一覧:
+
+| スキル | 用途 | トリガー例 |
+|--------|------|----------|
+| `deploy` | new-app/ の変更を本番に反映 | 「デプロイして」「pushして」 |
+| `verify` | 本番反映状態を確認 | 「反映されてる？」「verify して」 |
+| `versions` | キャッシュバスティング `?v=N` 一覧 | 「バージョン確認」「versions 出して」 |
+| `firestore-backup` | 修正前に schedule/attendance/customers をダンプ | 「データを変更する前に」「Firestore を修正」 |
+
+## 推奨ループ（Recurring Workflows）
+
+| ループ | 推奨頻度 | 機構 | 目的 |
+|--------|---------|------|------|
+| `deploy-verify` | push 後 5min | `/loop 5m /verify` | GitHub Pages 反映確認 |
+| `attendance-snapshot` | 月初 1回 | `routines`（schedule trigger） | 前月 attendance を /tmp/claude/ にダンプ（バックアップ） |
+
+ループは **3〜5本以内** に抑える（resource exhaustion 回避）。
+
+## 非エンジニア向け技術用語対応表
+
+技術判断は Claude に委任して構いません。以下は読み解きの補助です。
+
+| 技術用語 | 業務的な意味 |
+|----------|------------|
+| Firestore | クラウド上の生徒・出席データ保管庫 |
+| キャッシュバスティング (`?v=N`) | ブラウザに古い画面を見せないための更新印 |
+| ビュー (`views/*.js`) | 各ページの画面（HOME / 出席名簿 / 顧客一覧 等） |
+| commit / push | 変更を本番サイトに送る作業 |
+| `schedule` コレクション | レギュラー生徒の名簿（全月共通） |
+| `attendance_YYYYMM` | 月別の出席記録 |
+| `customers` コレクション | 顧客マスター（住所・連絡先・プラン） |
+| `Promise.allSettled` | 「全部試して、失敗したものだけ報告して」という安全な並列処理 |
+
+## 設計判断の履歴
+
+@references/decision-log.md
+

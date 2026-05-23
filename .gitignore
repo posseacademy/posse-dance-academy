@@ -1,0 +1,9 @@
+# Claude Code 個人設定（チームに共有しない）
+CLAUDE.local.md
+.claude/settings.local.json
+
+# 一時ファイル / バックアップ
+/tmp/claude/
+*.bak
+*.swp
+.DS_Store
