@@ -250,7 +250,7 @@ export function getClassStudentsForMonth(cls, day, attendanceData, customers, se
     const _hasMark = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
     const _inRange = (s) => {
         if (s.enrolledFrom && s.enrolledFrom > selectedMonth) return false;
-        if (s.leftAt && selectedMonth > s.leftAt) return false;
+        if (s.leftAt && selectedMonth >= s.leftAt) return false;
         return true;
     };
     const regulars = (cls.students || [])
@@ -274,6 +274,10 @@ export function getClassStudentsForMonth(cls, day, attendanceData, customers, se
             seen.add(nameCombined);
             visitors.push({ name: nameCombined, plan: p });
         } else if (_hasMark(rec)) {
+            // schedule に登録があり leftAt で当月から除外されたレギュラーは
+            // 過去在籍にも入れない（当月以降の集計から外す）
+            const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
+            if (fromSchedule && fromSchedule.leftAt && selectedMonth >= fromSchedule.leftAt) continue;
             seen.add(nameCombined);
             let planLabel = (p && isRegularPlan(p)) ? p : null;
             if (!planLabel) {

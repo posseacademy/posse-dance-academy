@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, sortStudentsByPlan, isRegularPlan, effectiveLocation } from '../utils.js?v=16';
+import { getAttendanceRate, sortStudentsByPlan, isRegularPlan, effectiveLocation } from '../utils.js?v=17';
 
 /**
  * Main attendance wrapper with subtabs
@@ -163,7 +163,7 @@ export function renderAttendanceRecord(app) {
                     const _selectedM = app.selectedMonth || '';
                     const _inEnrollmentRange = (s) => {
                       if (s.enrolledFrom && s.enrolledFrom > _selectedM) return false;
-                      if (s.leftAt && _selectedM > s.leftAt) return false;
+                      if (s.leftAt && _selectedM >= s.leftAt) return false;
                       return true;
                     };
                     const regulars = (cls.students || [])
@@ -203,6 +203,10 @@ export function renderAttendanceRecord(app) {
                       } else if (hasMark) {
                         // 出席記録あり (○/×/休講) で schedule から消えているレギュラー
                         // → 過去在籍として表示
+                        // ただし schedule に登録があり leftAt で当月から除外されたレギュラーは
+                        // 過去在籍にも入れない（当月以降の名簿には絶対に出さない）
+                        const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
+                        if (fromSchedule && fromSchedule.leftAt && _selectedM >= fromSchedule.leftAt) continue;
                         seen.add(nameCombined);
                         const { ln, fn } = splitName(nameCombined);
                         // プラン: _plan が regular なら採用、無ければ customers.plan or デフォルト

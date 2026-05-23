@@ -61,6 +61,15 @@
 
 ---
 
+## 2026-05-23: leftAt 表示フィルタの off-by-one を修正（当月削除即非表示）
+
+**Decision**: `attendance.js` と `utils.js` の在籍範囲判定 `_selectedM > leftAt` を `_selectedM >= leftAt` に統一。pastRegulars 経由の再表示も同じガードで遮断（schedule に同名があり leftAt が当月以前なら過去在籍にも入れない）。
+**Reason**: ユーザーが「削除しても消えない」と訴えていた問題の根本原因。`deleteStudent` 自体は `target.leftAt = this.selectedMonth` を Firestore に保存していたが、表示側が「leftAt と同じ月 = 在籍中」として描画していたため、削除実行月の名簿に生徒名が残り続けていた。
+**Impact**: `new-app/js/views/attendance.js`, `new-app/js/utils.js`（ロジック修正）+ utils.js import 連鎖で `home.js / customers.js / csv-export.js / app.js / app.html` のキャッシュバスティング更新。
+**Pattern**: failure → success — 「削除」「退会」「終了月」を扱う比較演算子は **`>=` が直感に近い**。同じ判定が複数ファイルにコピーされている場合、1 つ修正したら必ず `grep` で全箇所を網羅すること（今回 utils.js を見落とすと home.js 月別集計が壊れたまま残った）。
+
+---
+
 ## 2026-05-XX: HOME 集計を当月ベースに統一
 
 **Decision**: HOMEダッシュボードのレッスン人数とプラン別内訳を、出席名簿と同じ「当月ベース」のロジックに統一（commits `d2a7b0e`, `3ddbc76`）。「ハーフ」プランも正式対応した。
