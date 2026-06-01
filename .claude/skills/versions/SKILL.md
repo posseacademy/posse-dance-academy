@@ -1,7 +1,7 @@
 ---
 name: versions
 description: new-app/ 配下の全ファイルの現在のキャッシュバスティングバージョン (?v=N) を一覧表示する。ユーザーが「バージョン確認」「versions 出して」「キャッシュバスティング一覧」「今のバージョンは？」と言ったとき、または CLAUDE.md の記載と実ファイルが乖離していないか確認したいときに使用。表形式で出力し、CLAUDE.md との差分も指摘する。
-model: claude-opus-4-7
+model: claude-opus-4-8
 allowed-tools: Bash, Read, Grep
 ---
 

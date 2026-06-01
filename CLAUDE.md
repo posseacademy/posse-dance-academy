@@ -102,6 +102,11 @@ git push origin main
 
 ループは **3〜5本以内** に抑える（resource exhaustion 回避）。
 
+## Dynamic Workflows 活用候補
+独立した work-list がある一括処理のみ有効（逐次タスクには不要。並列＝トークン増に留意）:
+- 全 `attendance_YYYYMM` の整合性一括監査（月別ドキュメントを並列処理し、キー形式・場所不一致・`_plan` 欠落を検出）
+- 全 `customers` のプラン/料金整合チェック（顧客×プランを並列検証）
+
 ## 非エンジニア向け技術用語対応表
 
 技術判断は Claude に委任して構いません。以下は読み解きの補助です。

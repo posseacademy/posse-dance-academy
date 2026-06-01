@@ -79,6 +79,22 @@
 
 ---
 
+## 2026-06-01: v2.2.3 適用時にローカルが stale だった問題と統合（リモート優先）
+
+**Decision**: Universal Base Prompt v2.2.3 をローカルで適用・コミット後、push 時に non-fast-forward を検出。原因はローカル main が stale で、リモートには既に「Claude Code 設定 v2.1 更新（`758e635`）」＋アプリ修正2件（attendance/mobile）が入っていた。リモートの `.claude` 設定の方が完成度が高かったため、**リモートを土台に採用**し、`git rebase --skip` で自分の重複コミット（`1207524`, `d76bbe0`）を破棄。`MANUAL.md` のみ残し、価値ある差分だけを再適用:
+- 全 agent/skill/settings の `claude-opus-4-7` → `claude-opus-4-8`（v2.2.3 Model Policy・最新版）
+- `settings.json` に `effortLevel: high` / `alwaysThinkingEnabled: true` を追加（`language` は既存）
+- `CLAUDE.md` に「Dynamic Workflows 活用候補」節を追加
+- rebase --skip で消えたローカル限定スキル `data-recovery` / `firestore-inspect` を復元（リモートに代替なし）
+
+**Reason**: 開始時にリモートを fetch せず stale なローカルで作業したため、リモートの先行作業と重複・衝突した。リモート版が優れていたため、自分の成果に固執せずリモートを採用するのが正しい統合だった。
+
+**Impact**: `.claude/settings.json`, `.claude/agents/code-reviewer.md`, `.claude/skills/{deploy,firestore-backup,verify,versions,data-recovery,firestore-inspect}/SKILL.md`, `CLAUDE.md`, `references/decision-log.md`。アプリコード（`new-app/js/`）は不変。
+
+**Pattern (failure→lesson)**: **セットアップ/設定作業の前に必ず `git fetch origin` して divergence を確認する**。stale なローカルで作業するとリモートの先行作業と衝突し大幅な手戻りになる。リモートが優れている場合は自分のコミットを `rebase --skip` で捨て、価値ある差分だけ再適用するのが最短。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。

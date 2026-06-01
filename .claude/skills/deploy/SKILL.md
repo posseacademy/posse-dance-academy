@@ -1,7 +1,7 @@
 ---
 name: deploy
 description: new-app/ の変更を本番（GitHub Pages）にデプロイする。ユーザーが「デプロイして」「pushして」「本番に上げて」「リリースして」と言ったとき、または new-app/ 配下のファイル修正後に自動的にバージョン更新→コミット→push を行う。キャッシュバスティングの更新を必ずセットで実施する。
-model: claude-opus-4-7
+model: claude-opus-4-8
 allowed-tools: Read, Edit, Bash, Glob, Grep
 ---
 
