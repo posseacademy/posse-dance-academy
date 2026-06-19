@@ -1,7 +1,7 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
-import { getCustomerClasses, effectiveLocation } from './utils.js?v=17';
+import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=17';
 
 /**
  * CSVファイルをダウンロード
@@ -124,7 +124,7 @@ export function exportCustomersCSV(customers, scheduleData) {
 /**
  * 出席名簿 月別CSV書き出し
  */
-export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selectedMonth, isRegularPlan) {
+export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selectedMonth, customers) {
     const header = ['曜日', '場所', 'クラス名', '生徒名', 'プラン', 'W1', 'W2', 'W3', 'W4', 'W5', '出席率'];
     const rows = [header];
     const days = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
@@ -132,20 +132,25 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
         const classes = scheduleData[day] || [];
         classes.forEach(cls => {
             const effLoc = effectiveLocation(cls, selectedMonth);
-            const students = cls.students || [];
+            // 画面（出席名簿）・HOME と同一ロジックで生徒を集約:
+            //   レギュラー（在籍範囲内）＋ 過去在籍レギュラー ＋ ビジター/体験（attendance 由来）
+            const { regulars, pastRegulars, visitors } =
+                getClassStudentsForMonth(cls, day, attendanceData, customers, selectedMonth);
+            const students = [
+                ...regulars.map(s => ({ name: `${s.lastName}${s.firstName}`, plan: s.plan })),
+                ...pastRegulars,   // { name, plan }
+                ...visitors        // { name, plan }
+            ];
             students.forEach(student => {
-                const classId = `${day}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
-                const att = attendanceData[classId];
-                // Non-regular: only include if they have attendance data
-                if (!isRegularPlan(student.plan) && !att) return;
-                const attData = att || {};
-                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'].map(w => attData[w] || '');
+                const classId = `${day}_${effLoc}_${cls.name}_${student.name}`;
+                const att = attendanceData[classId] || {};
+                const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'].map(w => att[w] || '');
                 const attended = weeks.filter(w => w === '○').length;
                 const total = weeks.filter(w => w === '○' || w === '×').length;
                 const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                 rows.push([
                     day, effLoc, cls.name,
-                    `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
+                    student.name, att._plan || student.plan || '',
                     ...weeks, rate
                 ]);
             });
@@ -157,7 +162,7 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
 /**
  * 出席名簿 年間CSV書き出し
  */
-export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, isRegularPlan, loadAttendance) {
+export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, loadAttendance, customers) {
     const year = selectedMonth.slice(0, 4);
     const header = ['月', '曜日', '場所', 'クラス名', '生徒名', 'プラン', 'W1', 'W2', 'W3', 'W4', 'W5', '出席率'];
     const rows = [header];
@@ -173,18 +178,24 @@ export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, isR
             const classes = scheduleData[day] || [];
             classes.forEach(cls => {
                 const effLoc = effectiveLocation(cls, monthStr);
-                (cls.students || []).forEach(student => {
-                    const classId = `${day}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
-                    const att = attData[classId];
-                    if (!isRegularPlan(student.plan) && !att) return;
-                    const ad = att || {};
-                    const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'].map(w => ad[w] || '');
+                // 月別CSVと同一: 画面・HOME と揃えてビジター/体験/過去在籍も網羅
+                const { regulars, pastRegulars, visitors } =
+                    getClassStudentsForMonth(cls, day, attData, customers, monthStr);
+                const students = [
+                    ...regulars.map(s => ({ name: `${s.lastName}${s.firstName}`, plan: s.plan })),
+                    ...pastRegulars,
+                    ...visitors
+                ];
+                students.forEach(student => {
+                    const classId = `${day}_${effLoc}_${cls.name}_${student.name}`;
+                    const att = attData[classId] || {};
+                    const weeks = ['week1', 'week2', 'week3', 'week4', 'week5'].map(w => att[w] || '');
                     const attended = weeks.filter(w => w === '○').length;
                     const total = weeks.filter(w => w === '○' || w === '×').length;
                     const rate = total > 0 ? Math.round((attended / total) * 100) + '%' : '0%';
                     rows.push([
                         `${year}年${m}月`, day, effLoc, cls.name,
-                        `${student.lastName}${student.firstName}`, attData._plan || student.plan || '',
+                        student.name, att._plan || student.plan || '',
                         ...weeks, rate
                     ]);
                 });

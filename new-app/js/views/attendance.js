@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, sortStudentsByPlan, isRegularPlan, effectiveLocation } from '../utils.js?v=17';
+import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth } from '../utils.js?v=17';
 
 /**
  * Main attendance wrapper with subtabs
@@ -152,73 +152,25 @@ export function renderAttendanceRecord(app) {
                 </thead>
                 <tbody>
                   ${(() => {
-                    // 表示ルール（在籍期間ベース）:
-                    // - schedule.students の各生徒について enrolledFrom / leftAt で在籍期間判定
-                    //   - enrolledFrom が選択月より後 → 非表示（追加前の月）
-                    //   - leftAt が選択月より前 → 非表示（退会後の月）
-                    //   - どちらも未設定 → 全月表示（既存データの後方互換）
-                    // - + attendance に記録があるが schedule にない過去在籍生徒（孤立データ）
-                    // - + attendance のビジター
-                    const _hasMarkRec = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
-                    const _selectedM = app.selectedMonth || '';
-                    const _inEnrollmentRange = (s) => {
-                      if (s.enrolledFrom && s.enrolledFrom > _selectedM) return false;
-                      if (s.leftAt && _selectedM >= s.leftAt) return false;
-                      return true;
-                    };
-                    const regulars = (cls.students || [])
-                      .filter(s => isRegularPlan(s.plan))
-                      .filter(_inEnrollmentRange);
-                    const seen = new Set(regulars.map(s => s.lastName + s.firstName));
-                    const prefix = `${currentDay}_${effLoc}_${cls.name}_`;
-                    const pastRegulars = [];
-                    const visitors = [];
-
+                    // 画面・HOME・CSV を単一ロジックに統一するため、当月の出席対象者を
+                    // 共通関数 getClassStudentsForMonth（utils.js）で集約する。
+                    // 在籍範囲判定（enrolledFrom / leftAt）・過去在籍レギュラー・ビジター抽出は
+                    // すべて同関数に集約済み。片側だけ修正して画面/CSV が乖離する事故を防ぐ。
+                    const { regulars, pastRegulars, visitors } =
+                      getClassStudentsForMonth(cls, currentDay, app.attendanceData, app.customers, app.selectedMonth);
+                    // 共通関数は pastRegulars / visitors を { name, plan } で返すため、
+                    // 描画で使う lastName / firstName へ姓名分解する（regulars は schedule 由来でそのまま）。
                     const splitName = (nameCombined) => {
                       // schedule内の同名から先取り
                       const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
-                      if (fromSchedule) return { ln: fromSchedule.lastName, fn: fromSchedule.firstName };
+                      if (fromSchedule) return { lastName: fromSchedule.lastName, firstName: fromSchedule.firstName };
                       // customers から
                       const c = (app.customers || []).find(c => (c.lastName + c.firstName) === nameCombined);
-                      if (c) return { ln: c.lastName, fn: c.firstName };
-                      return { ln: '', fn: nameCombined };
+                      if (c) return { lastName: c.lastName, firstName: c.firstName };
+                      return { lastName: '', firstName: nameCombined };
                     };
-
-                    for (const key of Object.keys(app.attendanceData || {})) {
-                      if (!key.startsWith(prefix)) continue;
-                      if (key.startsWith('練習会_')) continue;
-                      const rec = app.attendanceData[key];
-                      if (!rec || typeof rec !== 'object') continue;
-                      const nameCombined = key.slice(prefix.length);
-                      if (seen.has(nameCombined)) continue;
-
-                      const p = rec._plan;
-                      const hasMark = ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
-
-                      if (p && !isRegularPlan(p)) {
-                        // 明示的なビジター/体験プラン
-                        seen.add(nameCombined);
-                        const { ln, fn } = splitName(nameCombined);
-                        visitors.push({ lastName: ln, firstName: fn, plan: p });
-                      } else if (hasMark) {
-                        // 出席記録あり (○/×/休講) で schedule から消えているレギュラー
-                        // → 過去在籍として表示
-                        // ただし schedule に登録があり leftAt で当月から除外されたレギュラーは
-                        // 過去在籍にも入れない（当月以降の名簿には絶対に出さない）
-                        const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
-                        if (fromSchedule && fromSchedule.leftAt && _selectedM >= fromSchedule.leftAt) continue;
-                        seen.add(nameCombined);
-                        const { ln, fn } = splitName(nameCombined);
-                        // プラン: _plan が regular なら採用、無ければ customers.plan or デフォルト
-                        let planLabel = (p && isRegularPlan(p)) ? p : null;
-                        if (!planLabel) {
-                          const c = (app.customers || []).find(c => (c.lastName + c.firstName) === nameCombined);
-                          planLabel = c?.plan || '１クラス';
-                        }
-                        pastRegulars.push({ lastName: ln, firstName: fn, plan: planLabel });
-                      }
-                    }
-                    return [...regulars, ...pastRegulars, ...visitors];
+                    const toRow = (s) => ({ ...splitName(s.name), plan: s.plan });
+                    return [...regulars, ...pastRegulars.map(toRow), ...visitors.map(toRow)];
                   })().map(student => {
                     const classId = `${currentDay}_${effLoc}_${cls.name}_${student.lastName}${student.firstName}`;
                     const attData = app.attendanceData[classId] || {};

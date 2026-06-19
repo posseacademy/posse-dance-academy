@@ -95,6 +95,15 @@
 
 ---
 
+## 2026-06-19: 出席名簿CSVがビジター/体験を取りこぼす（schedule.students のみ反復）
+
+**Decision**: 月別/年間CSV(`csv-export.js`)を `schedule.students` 反復から共通関数 `getClassStudentsForMonth`(`utils.js`) ベースに変更。画面(`attendance.js`)のインライン複製も同関数へ統一し、画面・HOME・CSV の3系統を単一ロジック化した。
+**Reason**: CSVが `schedule.students` のみ反復していたため、`attendance_YYYYMM` にしか記録のないビジター/体験生徒が脱落（実データ202606で嶋川1名のみ表示）。画面表示は attendance スキャンで拾っていたため、画面とCSVが乖離していた。
+**Impact**: `new-app/js/csv-export.js`, `new-app/js/views/attendance.js`, `new-app/js/app.js`（呼び出しに `customers` 追加・`isRegularPlan` 引数を削除）, `app.html`/`CLAUDE.md`（キャッシュバスティング）。
+**Pattern**: failure → success — 「同じ事実を出す画面・帳票は必ず同一のソースロジックから派生させる」。`getClassStudentsForMonth` が唯一の生徒集約ロジックになった。年間CSVの `attData._plan`（月全体オブジェクト参照）バグも `att._plan`（個別レコード）に是正。実データ202606で非レギュラーが 1→11 名に増えることを preview で確認。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。

@@ -7,6 +7,9 @@
 - **リポジトリ**: https://github.com/posseacademy/posse-dance-academy
 - **スタック**: JavaScript (ES Modules), HTML, CSS, Firebase Firestore
 
+## 最優先ルール（絶対遵守）
+@.claude/rules/turn-ownership.md — ユーザー発言の捏造・一人芝居を禁止する統一ガード。他のどのルールよりも先に従うこと。
+
 ## コマンド
 ```bash
 git push origin main        # デプロイ（GitHub Pages、反映まで2-5分）
@@ -33,11 +36,11 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-05-23):**
-- `app.html`: `style.css?v=25`, `app.js?v=114`
+**現在のバージョン (2026-06-19):**
+- `app.html`: `style.css?v=25`, `app.js?v=116`
 - `app.js`: `config.js?v=16`, `utils.js?v=17`, `firebase-service.js?v=8`
-- `app.js`: `home.js?v=27`, `customers.js?v=19`, `attendance.js?v=48`, `schedule.js?v=26`
-- `app.js`: `csv-export.js?v=19`
+- `app.js`: `home.js?v=27`, `customers.js?v=19`, `attendance.js?v=49`, `schedule.js?v=26`
+- `app.js`: `csv-export.js?v=20`
 
 **手順:** ファイル修正 → 親ファイルの `?v=N+1` 更新 → コミット → push
 
@@ -69,6 +72,7 @@ git push origin main
 - `cleanupNonRegularStudents()`: ビジターを破壊的に削除 → 無効化済み、表示フィルターで代替
 - schedule は全月共通: ある月で生徒を削除すると全月に影響 → ビジターは attendance のみ削除に変更
 - `migrateOrphanRegulars()`: 前月attendance自動補完で退会済み顧客を復活 → 無効化済み（app.js:117,761,782）。`cleanupAutoAddedStudents()` で初期化時に enrolledFrom < '2026-04' の生徒を一括削除
+- CSV書き出しが `schedule.students` のみ反復 → ビジター/体験が脱落（嶋川1名のみ）→ 画面・HOME と同じ `getClassStudentsForMonth()` で集約し3系統を統一（`csv-export.js`/`attendance.js`、2026-06-19）
 
 > 詳細な経緯は @references/decision-log.md を参照。
 

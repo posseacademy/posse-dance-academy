@@ -4,9 +4,9 @@ import * as db from './firebase-service.js?v=8';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=17';
 import { renderDashboard } from './views/home.js?v=27';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=19';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=48';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=49';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=19';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=20';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -1135,11 +1135,11 @@ class DanceStudioApp {
     }
 
     handleExportAttendanceMonthly() {
-        exportAttendanceMonthlyCSV(this.scheduleData, this.attendanceData, this.selectedMonth, isRegularPlan);
+        exportAttendanceMonthlyCSV(this.scheduleData, this.attendanceData, this.selectedMonth, this.customers);
     }
 
     async handleExportAttendanceYearly() {
-        await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, isRegularPlan, db.loadAttendance);
+        await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, db.loadAttendance, this.customers);
     }
 
     // ===== CALENDAR =====
