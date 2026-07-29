@@ -7,3 +7,20 @@ CLAUDE.local.md
 *.bak
 *.swp
 .DS_Store
+
+# 認証情報（2026-07-29 追加 — 自動コミット導入にあたり）
+# auto-commit.sh は `git add -A` で未追跡ファイルも取り込むため、
+# 秘匿系は .gitignore とスクリプト側ガードの二重で防ぐ。
+.env
+.env.*
+*.pem
+*.p12
+*.key
+credentials*
+*credential*
+*secret*
+*token*
+service-account*.json
+serviceaccount*.json
+*-key.json
+gha-creds-*.json
