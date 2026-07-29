@@ -1,7 +1,7 @@
 ---
 name: firestore-backup
 description: POSSE システムの Firestore データ（schedule / attendance_YYYYMM / customers）を修正する **前** に、必ず /tmp/claude/ にバックアップを取得する。ユーザーが「Firestore を変更」「データを修正する前に」「schedule を更新」「customers を整理」「attendance を編集」と言ったとき、または firebase-service.js の書き込み系関数（saveScheduleData / cleanup* / migrate*）を改修するときに自動的に起動する。バックアップなしの破壊的操作は禁止。
-model: claude-opus-4-8
+model: claude-opus-5
 allowed-tools: Bash, Read, Write
 ---
 

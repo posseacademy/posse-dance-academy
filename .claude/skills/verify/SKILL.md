@@ -1,7 +1,7 @@
 ---
 name: verify
 description: 本番サイト（GitHub Pages）に最新のキャッシュバスティングバージョンが反映されているか確認する。ユーザーが「反映されてる？」「verify して」「本番確認」「デプロイ完了したか」と言ったとき、または deploy スキル実行後 5 分経過したタイミングで使用。本番とローカルの ?v=N を比較する。
-model: claude-opus-4-8
+model: claude-sonnet-5
 allowed-tools: Bash, Read, Grep
 ---
 

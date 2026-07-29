@@ -5,7 +5,7 @@ description: >
   「Firestoreの中身を見て」と言われたときに使用。ブラウザコンソール経由でFirestoreに
   クエリを実行し、データの整合性を検証する。
 allowed-tools: Read, Grep, Glob
-model: claude-opus-4-8
+model: claude-opus-5
 ---
 
 ## 手順

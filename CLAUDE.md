@@ -82,6 +82,16 @@ git push origin main
 
 応答・コミットメッセージ・コメントは日本語。設定は `.claude/settings.json` の `"language": "japanese"` を参照。
 
+## モデル運用方針（2026-07-28）
+
+創る=Opus / 運ぶ=Sonnet / Haiku=使用禁止。判断基準は「成果物が受け側に届く文章・判定なら Opus、材料集め・転記・操作なら Sonnet」。（業務的には Opus=判断や文章を任せる高性能モデル、Sonnet=確認や転記を任せる軽量モデル）
+
+| `claude-opus-5` | `claude-sonnet-5` |
+|---|---|
+| settings.json / code-reviewer / deploy / firestore-backup / data-recovery / firestore-inspect | verify / versions |
+
+正本: `/Users/ATSUSHITO_RYCE/CLAUDE/AD_シニア漫画/works/HANDOFF_モデル配分ポリシー_2026-07-02.md`
+
 ## スキル / コマンド / エージェント
 
 - **`.claude/skills/`** が公式推奨の置き場所（`SKILL.md` 形式、Gotchas 付き）
@@ -129,4 +139,12 @@ git push origin main
 ## 設計判断の履歴
 
 @references/decision-log.md
+
+## Opus 5 運用指示（2026-07-28）
+
+- **簡潔に**: 説明の丁寧さは維持しつつ、前置きと要約の繰り返しを削る。免責・注意書きは短く、本題に大半を割く
+- **成果物の長さ**: 生成する文書は水増しの節・重複要約・定型文で膨らませない
+- **スコープ規律**: 頼まれた範囲を頼まれた粒度で完遂する。懸念は1文で述べて指示どおり進める。完了報告は本当に終わってから
+- **委譲の上限**: サブエージェントは大きく独立した並列可能なトラックに限る。数回のツール呼び出しで終わる作業は自分で完遂する。**検証目的の委譲はしない**
+- **訂正の作法**: ユーザーの判断が変わる誤りだけを、簡潔に訂正して続行する
 

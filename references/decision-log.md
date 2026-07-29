@@ -104,6 +104,22 @@
 
 ---
 
+## 2026-07-29: Claude Opus 5 への移行（モデルID更新・旧 malformed 対策の撤回）
+
+**ユーザー意図 (User Intent)**: 統括（Clude開発）発行の指示書 `works/opus5-rollout/09_posse.md` を読み、記載の手順で Opus 5 移行を実行すること。posse は 2026-07-02 の Sonnet 化では対象外だったが、今回は Opus 世代の追従という性質の違いから 2026-07-28 に対象へ含める判断がなされた。§4 の削除2件はユーザーが「両方削除する（指示書どおり）」を選択し承認済み。
+
+**Decision**: モデルIDを8箇所置換（`settings.json` / `code-reviewer` / `deploy` / `firestore-backup` / `data-recovery` / `firestore-inspect` → `claude-opus-5`、`verify` / `versions` → `claude-sonnet-5` ⚡降格）。CLAUDE.md に「モデル運用方針（2026-07-28）」と「Opus 5 運用指示（2026-07-28）」の2節を新設。旧 Opus 4.8 対策の `turn-ownership.md` L23「compose/act ターン分離」と、`code-reviewer.md` L79「該当関数全体を Read してから判定」を削除。`versions` の「正規表現の取りこぼし」Gotcha は削除せず手法メモ1行（`grep -oE "\?v=[0-9]+"`）へ圧縮。
+
+**Reason**: Opus 5（2026-07-24 リリース）は 3層構造（創る=Opus / 運ぶ=Sonnet / Haiku 禁止）を変えず生成層のモデルIDのみが移る。撤回した2件はいずれも Opus 4.8 固有の malformed tool call 対策および自己再検証指示であり、Opus 5 では不要かつスループット低下を伴う。`verify` / `versions` の Sonnet 降格は「デプロイ後の照合・バージョン確認＝転記・操作」という基準の双方向適用。
+
+**Impact**: `.claude/settings.json`, `.claude/agents/code-reviewer.md`, `.claude/skills/{deploy,verify,versions,firestore-backup,data-recovery,firestore-inspect}/SKILL.md`, `.claude/rules/turn-ownership.md`, `CLAUDE.md`, 本ファイル。**アプリコード（`new-app/`）は不変**、CLAUDE.md「現在のバージョン」表も不変（`deploy` / `versions` の Source of Truth のため書式保全）。
+
+**Pattern**: success — **「malformed」「必ず」「確認」で機械的に grep して一括削除しない**。同じ語で書かれていても turn-ownership §1〜§4（2026-06-16 に実発火した捏造防止ルール）・外部実態との照合（本番 curl・バックアップ検証・完全一致比較）は Opus 4.8 とは無関係の資産であり保全対象。削除は項目単位で取捨し、事前にユーザー承認を取る。
+
+**残タスク**: `git fetch origin` が権限で拒否されたため、リモート最新との差分は未確認のまま。`.claude/` はリモート共有されており 2026-06-01 に non-fast-forward 事故の前例があるため、**push 前にユーザーが手元で fetch し divergence を確認すること**。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。

@@ -5,7 +5,7 @@ description: >
   「生徒が表示されない」と言ったときに使用。attendance_YYYYMMとscheduleの整合性を
   チェックし、欠損データを他月のattendanceやscheduleから復元する。
 allowed-tools: Read, Grep, Glob
-model: claude-opus-4-8
+model: claude-opus-5
 ---
 
 ## 手順

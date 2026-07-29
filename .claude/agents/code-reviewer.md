@@ -2,7 +2,7 @@
 name: code-reviewer
 description: コード変更の品質レビューを行う。PRレビュー、実装確認、バグチェック時に PROACTIVELY 使用。特に Firestore データ操作（schedule / attendance / customers）とキャッシュバスティング更新の漏れを重点的にチェックする。読み取り専用で安全。
 tools: Read, Grep, Glob, Bash
-model: claude-opus-4-8
+model: claude-opus-5
 permissionMode: plan
 maxTurns: 20
 memory: project
@@ -76,7 +76,6 @@ POSSE Dance Academy プロジェクトの JavaScript / HTML / CSS 変更につ�
 - **退会済み顧客の復活パターンの見落とし**: `migrateOrphanRegulars` 系の「親切な自動補完」コードが復活していないか。前月 attendance を参照して当月に追加するロジックは **すべて要警告**。
 - **firestore-backup の確認忘れ**: Firestore 書き込みを含む変更なのに、バックアップ取得の痕跡（コミットメッセージ・/tmp/claude/ の存在）を確認せずに承認してしまう。**必ず確認**。
 - **rules/firestore-safety.md の参照漏れ**: ルールに既に書かれている事項を再指摘して冗長になる。レビュー前に rules/ を一読し、ルールに無い観点だけを指摘する。
-- **diff の文脈不足で誤解**: `git diff` だけ見て前後関数を読まずに判定すると誤指摘になる。**該当ファイルの該当関数全体を Read** してから判定する。
 
 ## 言語
 
