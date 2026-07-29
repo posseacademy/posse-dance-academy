@@ -114,9 +114,11 @@
 
 **Impact**: `.claude/settings.json`, `.claude/agents/code-reviewer.md`, `.claude/skills/{deploy,verify,versions,firestore-backup,data-recovery,firestore-inspect}/SKILL.md`, `.claude/rules/turn-ownership.md`, `CLAUDE.md`, 本ファイル。**アプリコード（`new-app/`）は不変**、CLAUDE.md「現在のバージョン」表も不変（`deploy` / `versions` の Source of Truth のため書式保全）。
 
+**適用**: commit `7e25de3`（11ファイル / +65 -10）で push 済み。`.claude/rules/turn-ownership.md` はそれまで untracked だったため、このコミットで新規追跡になり CLAUDE.md の `@import` が他環境でも通るようになった。
+
 **Pattern**: success — **「malformed」「必ず」「確認」で機械的に grep して一括削除しない**。同じ語で書かれていても turn-ownership §1〜§4（2026-06-16 に実発火した捏造防止ルール）・外部実態との照合（本番 curl・バックアップ検証・完全一致比較）は Opus 4.8 とは無関係の資産であり保全対象。削除は項目単位で取捨し、事前にユーザー承認を取る。
 
-**残タスク**: `git fetch origin` が権限で拒否されたため、リモート最新との差分は未確認のまま。`.claude/` はリモート共有されており 2026-06-01 に non-fast-forward 事故の前例があるため、**push 前にユーザーが手元で fetch し divergence を確認すること**。
+**追補（同日）**: 指示書 §5 のテンプレ「検証目的の委譲はしない」が、本プロジェクトの `code-reviewer`（`PROACTIVELY` 起動のレビュー専用エージェント）と「Dynamic Workflows 活用候補」の一括監査2件を丸ごと禁止していたため、保護対象を実名で明示する形に修正した（正本 §6 の keep 判定「レビューゲートは保全」とも矛盾していた）。REPORT_05 人生劇場放送局の申し送り「テンプレ適用直後に自部署の資産と照合せよ」で検出。**テンプレは最大公約数であり各部署の資産を知らない。貼った直後に必ず照合すること。**
 
 ---
 
