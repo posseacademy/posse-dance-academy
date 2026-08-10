@@ -402,6 +402,10 @@ class DanceStudioApp {
             await db.saveScheduleData(this.scheduleData);
         } catch (e) {
             console.error(`schedule の保存に失敗（${reason}）:`, e);
+            // 通信失敗でもバナーを出す。メモリだけ変わって画面が反映済みに見えるため、
+            // リロードを促さないと以後の操作が食い違ったまま進む。
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ 保存できませんでした。変更は反映されていません。ページを再読み込みしてください。');
             return false;
         }
         this._updateScheduleBaseline();
@@ -421,6 +425,10 @@ class DanceStudioApp {
             await db.saveScheduleDay(day, this.scheduleData[day]);
         } catch (e) {
             console.error(`schedule の保存に失敗（${reason}）:`, e);
+            // 通信失敗でもバナーを出す。メモリだけ変わって画面が反映済みに見えるため、
+            // リロードを促さないと以後の操作が食い違ったまま進む。
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ 保存できませんでした。変更は反映されていません。ページを再読み込みしてください。');
             return false;
         }
         this._updateScheduleBaseline();
