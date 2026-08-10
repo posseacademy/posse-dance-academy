@@ -8,6 +8,15 @@ CLAUDE.local.md
 *.swp
 .DS_Store
 
+# Firestore バックアップ（2026-08-10 追加 — 顧客の個人情報を含む）
+# このリポジトリは PUBLIC。顧客131名の氏名・住所・電話・生年月日を含むダンプが
+# auto-commit.sh の `git add -A` に拾われると、取り消せない形で全世界に公開される。
+# .gitignore とスクリプト側の内容ガードの二重で防ぐ。
+/backups/
+*firestore*backup*.json
+posse-backup-*.json
+現状記録*.html
+
 # 認証情報（2026-07-29 追加 — 自動コミット導入にあたり）
 # auto-commit.sh は `git add -A` で未追跡ファイルも取り込むため、
 # 秘匿系は .gitignore とスクリプト側ガードの二重で防ぐ。

@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth } from '../utils.js?v=17';
+import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule } from '../utils.js?v=18';
 
 /**
  * Main attendance wrapper with subtabs
@@ -77,7 +77,21 @@ export function renderAttendance(app) {
 export function renderAttendanceRecord(app) {
   const daysOfWeek = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
   const currentDay = app.selectedDay || '月曜日';
-  const schedule = app.scheduleData[currentDay] || [];
+  // 時間割から削除されたクラスは名簿に残る（過去月の記録を参照できるようにするため）。
+  // その月に受講者がいなければ表示しない ＝ 終了した月から自然に消える。
+  // タイムスケジュールの読み込みに失敗しているときは判定材料が無いので全部表示する
+  // （config フォールバックには本番固有のクラスが無く、消えたと誤解させてしまうため）。
+  const _tsDay = (app.timeScheduleData || timeSchedule)[currentDay];
+  const schedule = (app.scheduleData[currentDay] || []).filter(cls => {
+    if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
+    if (isClassInTimeSchedule(cls, _tsDay)) return true;
+    const { total } = getClassStudentsForMonth(cls, currentDay, app.attendanceData, app.customers, app.selectedMonth);
+    if (total === 0) {
+      console.info(`[出席名簿] 非表示: ${currentDay}/${cls.name}（時間割に無く、${app.selectedMonth} の受講者が0名）`);
+      return false;
+    }
+    return true;
+  });
 
   return `
     <!-- Day Tabs with Month Navigation -->

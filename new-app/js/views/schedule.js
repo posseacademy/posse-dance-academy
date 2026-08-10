@@ -49,6 +49,10 @@ export function renderTimeSchedule(app) {
   // Build class blocks per day with column assignment for overlaps
   const dayColumns = daysOfWeek.map((day, di) => {
     const classes = (ts[day] || []).filter(c => !c.alias && c.time);
+    // allLessons は絶対にフィルタしないこと。
+    // origIndex は saveLessonForm / deleteLesson / renderLessonForm が
+    // timeScheduleData[day] の「生のインデックス」として使うため、
+    // ここで絞ると別のレッスンを編集・削除してしまう。
     const allLessons = ts[day] || [];
     const blocks = classes.map(cls => {
       const origIndex = allLessons.indexOf(cls);
@@ -57,7 +61,7 @@ export function renderTimeSchedule(app) {
       const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
       const top = (start - startHour * 60) * PX_PER_MIN;
       const height = (end - start) * PX_PER_MIN;
-      const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+      const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|SHIN|Key-lock|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
       const instructor = cls.name.replace(shortName, '').trim();
       return { cls, top, height, shortName, instructor, startMin: start, endMin: end, col: 0, origIndex };
     });
@@ -193,7 +197,7 @@ function renderLessonForm(app) {
     timeStart = parts[0]?.replace('〜', '').trim() || '';
     timeEnd = parts[1]?.trim() || '';
     venue = existing.venue || '';
-    const nameMatch = existing.name.match(/^(.+?)\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO|.+)$/i);
+    const nameMatch = existing.name.match(/^(.+?)\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|SHIN|Key-lock|AYANO \/ HARUHIKO|AYANO HARUHIKO|.+)$/i);
     if (nameMatch) {
       lessonName = nameMatch[1].trim();
       instructor = nameMatch[2].trim();
@@ -213,9 +217,10 @@ function renderLessonForm(app) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
         <div>
           <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">曜日</label>
-          <select id="lessonDay" class="input" style="margin-top:0.25rem;">
+          <select id="lessonDay" class="input" style="margin-top:0.25rem;" ${existing ? 'disabled' : ''}>
             ${days.map(d => `<option value="${d}" ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
           </select>
+          ${existing ? '<div style="font-size:0.7rem;color:#6b7280;margin-top:0.2rem;">曜日を変える場合は、いったん削除して追加し直してください</div>' : ''}
         </div>
         <div>
           <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">スタジオ</label>
@@ -451,13 +456,13 @@ export function renderMonthlySchedule(app) {
             } else {
               // Active regular lessons as colored tags
               badges = info.lessons.filter(l => !l.cancelled).map(cls => {
-                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|SHIN|Key-lock|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
                 const bg = getVenueColor(cls.venue);
                 return `<div class="cal-tag" style="background:${bg};color:white;">${shortName}</div>`;
               }).join('');
               // Cancelled lessons with strikethrough
               badges += info.lessons.filter(l => l.cancelled).map(cls => {
-                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
+                const shortName = cls.name.replace(/\s+(SOYA|HARUHIKO|DAZU|AYANO|RYUSEI|AI|HIMEKA|SHIN|Key-lock|AYANO \/ HARUHIKO|AYANO HARUHIKO).*/i, '').trim();
                 return `<div class="cal-tag cal-tag-cancelled">${shortName}</div>`;
               }).join('');
               // Workshops in orange

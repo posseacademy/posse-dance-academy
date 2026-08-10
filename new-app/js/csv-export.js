@@ -1,7 +1,7 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
-import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=17';
+import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=18';
 
 /**
  * CSVファイルをダウンロード
@@ -64,7 +64,7 @@ export function exportCustomersCSV(customers, scheduleData) {
     const dayShort = {'月曜日':'月','火曜日':'火','水曜日':'水','木曜日':'木','金曜日':'金'};
     // クラスを2列表記に分割: クラス列「曜日/場所/クラス名(先生除去)」、講師列「先生名」
     const formatClassName = (x) => {
-        const nameWithoutTeacher = (x.name || '').replace(/\s+[A-Z]+$/, '').trim();
+        const nameWithoutTeacher = (x.name || '').replace(/\s[A-Za-z][A-Za-z-]*$/, '').trim();
         return `${dayShort[x.day]||x.day[0]}/${x.location}/${nameWithoutTeacher}`;
     };
     // 6クラス以上のオーバーフロー用（コンパクト・1行表記、クラス間はパイプ）

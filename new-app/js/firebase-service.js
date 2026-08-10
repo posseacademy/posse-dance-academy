@@ -4,10 +4,12 @@ import {
     collection,
     addDoc,
     getDocs,
+    getDoc,
     doc,
     updateDoc,
     deleteDoc,
-    setDoc
+    setDoc,
+    writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { firebaseConfig } from './config.js';
 
@@ -100,6 +102,8 @@ export async function deleteCustomer(id) {
  * Load schedule data from Firestore
  * @param {Object} defaultSchedule - Default schedule to use as fallback
  * @returns {Promise<Object>} Schedule data
+ * @returns 失敗時・空の場合は引数と同一参照を返す（呼び出し側が成否判定に使用している）。
+ *          この契約を変えると app.js の scheduleLoaded 判定が無言で壊れる。
  */
 export async function loadScheduleData(defaultSchedule) {
     try {
@@ -144,9 +148,50 @@ export async function saveScheduleData(scheduleData) {
 }
 
 /**
+ * 1曜日分の名簿だけを保存する。他曜日を巻き添えにしない。
+ * saveScheduleData（全曜日一括）は重く、途中で失敗すると片側だけ保存された状態が残るため、
+ * ユーザー操作由来の保存はすべてこちらを使う（2026-08-10）。
+ * @param {string} day - '月曜日' など
+ * @param {Array} classes - その曜日のクラス配列
+ */
+export async function saveScheduleDay(day, classes) {
+    await setDoc(doc(db, 'schedule', day), {
+        classes: Array.isArray(classes) ? classes : []
+    });
+}
+
+/**
+ * 1曜日分の名簿を読む。保存直後の書き戻し検証に使う。
+ * @param {string} day
+ * @returns {Promise<Array>} ドキュメントが無ければ空配列（呼び出し側が .some() を安全に使えるように）
+ */
+export async function loadScheduleDay(day) {
+    const snap = await getDoc(doc(db, 'schedule', day));
+    return snap.exists() ? (snap.data().classes || []) : [];
+}
+
+/**
+ * 時間割と名簿を1コミットで書く（原子的）。
+ * 逐次2回の setDoc だと「時間割は保存されたが名簿は失敗」が起こり、
+ * 画面上は登録できたのに出席名簿に出ない状態になる（2026-08-10 に実発生）。
+ * batch なら全か無かなので、この部分成功が原理的に起きない。
+ * @param {string} day
+ * @param {Array} lessons - timeSchedule/{day} の lessons
+ * @param {Array} classes - schedule/{day} の classes
+ */
+export async function saveLessonAtomic(day, lessons, classes) {
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'timeSchedule', day), { lessons: Array.isArray(lessons) ? lessons : [] });
+    batch.set(doc(db, 'schedule', day), { classes: Array.isArray(classes) ? classes : [] });
+    await batch.commit();
+}
+
+/**
  * Load time schedule from Firestore
  * @param {Object} defaultTimeSchedule - Fallback from config.js
  * @returns {Promise<Object>} Time schedule keyed by day
+ * @returns 失敗時は引数と同一参照を返す（呼び出し側が成否判定に使用している）。
+ *          成功時のみ新しいオブジェクトを返す。この契約を変えると timeScheduleLoaded 判定が壊れる。
  */
 export async function loadTimeSchedule(defaultTimeSchedule) {
     try {

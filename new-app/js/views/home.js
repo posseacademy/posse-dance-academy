@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=16';
-import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth } from '../utils.js?v=17';
+import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule } from '../utils.js?v=18';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -110,7 +110,13 @@ export function renderDashboard(app) {
         <div class="card-content" style="padding:0;">
           ${['月曜日','火曜日','水曜日','木曜日','金曜日'].map(day => {
             const dayColors = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
-            const classes = (app.scheduleData[day] || []);
+            // 出席名簿と同じ基準で、終了したクラス（時間割に無く当月0名）を隠す
+            const _tsDay = (app.timeScheduleData || timeSchedule)[day];
+            const classes = (app.scheduleData[day] || []).filter(cls => {
+              if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
+              if (isClassInTimeSchedule(cls, _tsDay)) return true;
+              return getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth).total > 0;
+            });
             if (!classes.length) return '';
             return `
               <div style="font-weight:600;font-size:0.9rem;padding:0.5rem 1rem;background:${dayColors[day]}15;border-left:4px solid ${dayColors[day]};color:${dayColors[day]};display:flex;align-items:center;gap:8px;">

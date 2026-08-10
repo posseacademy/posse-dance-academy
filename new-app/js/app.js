@@ -1,12 +1,12 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
-import * as db from './firebase-service.js?v=8';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey } from './utils.js?v=17';
-import { renderDashboard } from './views/home.js?v=27';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=19';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=49';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=26';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=20';
+import * as db from './firebase-service.js?v=9';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation } from './utils.js?v=18';
+import { renderDashboard } from './views/home.js?v=28';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=20';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=50';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=27';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=21';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -192,7 +192,9 @@ class DanceStudioApp {
 
         // Attendance
         this.attendanceSubtab = '出席記録';
-        this.selectedMonth = new Date().toISOString().slice(0, 7);
+        // ローカル時刻で組み立てる。toISOString() は UTC なので、JST では
+        // 毎月1日の 09:00 前に「前月」を選んでしまう（月初の作業で前月の名簿を触る事故になる）。
+        this.selectedMonth = this.currentMonthLocal();
         this.selectedDay = '月曜日';
         this.attendanceData = {};
         this.eventsData = {};
@@ -230,8 +232,16 @@ class DanceStudioApp {
         const withTimeout = (promise, ms = 15000) =>
             Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
 
+        // フォールバック参照を退避してから allSettled する。
+        // loadScheduleData / loadTimeSchedule は失敗時に「引数として渡したオブジェクトそのもの」を
+        // 返して正常終了するため（firebase-service.js の catch / snapshot.empty 経路）、
+        // 件数や truthy では成否を判定できない。参照比較が唯一の確実な判定手段。
+        const schedFallback = this.scheduleData;
+        const tsFallback = this.timeScheduleData;
+
+        let results = [];
         try {
-            const results = await Promise.allSettled([
+            results = await Promise.allSettled([
                 withTimeout(db.loadCustomers()),
                 withTimeout(db.loadScheduleData(this.scheduleData)),
                 withTimeout(db.loadAttendance(this.selectedMonth)),
@@ -256,18 +266,27 @@ class DanceStudioApp {
         // try { await this.migrateOrphanRegulars(this.selectedMonth); } catch(e) { console.error('migrateOrphanRegulars error:', e); }
 
         // ===== 安全ガード（2026-08-10 事故対応） =====
-        // loadCustomers() は通信エラー/タイムアウト時に [] を返して正常終了する。
-        // その状態で後続処理が走ると cleanupAutoAddedStudents が全生徒を
-        // 「顧客レコード無し(条件C)」と誤判定し schedule から一括削除する
-        // （2026-08-10 に実発火: 47名削除・本番保存済み）。
-        // Firestore には常に顧客が存在する運用のため 0 件 = ロード失敗とみなし、
-        // 書き込みを伴う自動メンテナンス処理を全てスキップする。
+        // 事故の経緯: loadCustomers() が通信エラー時に [] を返して正常終了したため、
+        // 顧客0件のまま cleanupAutoAddedStudents が全生徒を「顧客レコード無し(条件C)」と
+        // 誤判定し、schedule から47名を一括削除して本番保存した。
+        //
+        // customers は失敗時 [] なので件数で判定できるが、schedule / timeSchedule は
+        // 「中身の詰まったフォールバック」が返るため件数では検知できない（上記の参照比較を使う）。
         this.customersLoaded = Array.isArray(this.customers) && this.customers.length > 0;
-        if (!this.customersLoaded) {
-            console.error('⚠ 顧客データのロードに失敗（0件）。データ保護のため自動メンテナンス処理を全てスキップします。');
+        this.scheduleLoaded = results[1]?.status === 'fulfilled' && results[1].value !== schedFallback;
+        this.timeScheduleLoaded = results[5]?.status === 'fulfilled' && results[5].value !== tsFallback;
+        this.readOnlyMode = !this.customersLoaded || !this.scheduleLoaded;
+        this._updateScheduleBaseline();
+
+        if (this.readOnlyMode) {
+            const what = [!this.customersLoaded && '顧客', !this.scheduleLoaded && '名簿'].filter(Boolean).join('・');
+            console.error(`⚠ ${what}データのロードに失敗。データ保護のため自動メンテナンス処理を全てスキップし、保存操作もブロックします。`);
             this.showDataLoadWarning();
             this.render();
             return;
+        }
+        if (!this.timeScheduleLoaded) {
+            console.warn('⚠ タイムスケジュールのロードに失敗。時間割への書き込みを伴う処理をスキップします。');
         }
 
         // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒（enrolledFrom < '2026-04'）を schedule から除去
@@ -280,7 +299,11 @@ class DanceStudioApp {
         try { await this.restoreRegularStudentsOnce(); } catch(e) { console.error('restoreRegularStudentsOnce error:', e); }
 
         // 一回限り場所移行: 5月以降の場所変更を schedule + timeSchedule に適用（過去月キーは保全）
-        try { await this.applyLocationMigrationOnce(); } catch(e) { console.error('applyLocationMigrationOnce error:', e); }
+        // timeSchedule への書き込みを含むため、ロード失敗時はスキップする
+        // （config フォールバックを本番へ書き戻してしまうため）
+        if (this.timeScheduleLoaded) {
+            try { await this.applyLocationMigrationOnce(); } catch(e) { console.error('applyLocationMigrationOnce error:', e); }
+        }
 
         // 一回限り同期: schedule/attendance の plan スナップショットを customer.plan に揃える
         try { await this.syncSnapshotsToCustomerPlanOnce(); } catch(e) { console.error('syncSnapshotsToCustomerPlanOnce error:', e); }
@@ -291,14 +314,123 @@ class DanceStudioApp {
         this.render();
     }
 
-    // 顧客データ未ロード時の警告バナー（不完全な表示のまま編集・保存されるのを防ぐ）
-    showDataLoadWarning() {
-        if (document.getElementById('dataLoadWarning')) return;
+    // データ未ロード時の警告バナー（不完全な表示のまま編集・保存されるのを防ぐ）
+    showDataLoadWarning(message) {
+        const text = message || '⚠ データを読み込めませんでした。表示が不完全です。ページを再読み込みしてください。';
+        const existing = document.getElementById('dataLoadWarning');
+        if (existing) { existing.textContent = text; return; }
         const bar = document.createElement('div');
         bar.id = 'dataLoadWarning';
         bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;text-align:center;line-height:1.4;';
-        bar.textContent = '⚠ 顧客データを読み込めませんでした。表示が不完全です。データを変更せず、ページを再読み込みしてください。';
+        bar.textContent = text;
         document.body.prepend(bar);
+    }
+
+    // ===== 保存ガード（2026-08-10 事故対応） =====
+
+    // ユーザー操作由来の保存を止める。各ハンドラの「入口」で呼ぶこと。
+    // 保存呼び出しの直前に置くとメモリ変更が先に走り、「画面から消えたのに保存されていない」
+    // という不整合が残る（例: deleteStudent は leftAt を立ててから保存する）。
+    assertWritable(needTimeSchedule = false) {
+        if (this.readOnlyMode) {
+            alert('データを読み込めていないため保存できません。ページを再読み込みしてください。');
+            return false;
+        }
+        if (needTimeSchedule && !this.timeScheduleLoaded) {
+            alert('タイムスケジュールを読み込めていないため保存できません。ページを再読み込みしてください。');
+            return false;
+        }
+        return true;
+    }
+
+    // 現在の年月を「ローカル時刻」で返す。
+    // toISOString() は UTC なので、JST では毎月1日の 09:00 前に前月を返してしまう。
+    currentMonthLocal() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    // schedule の延べ生徒数を曜日別に記録する。ロード成功時と保存成功時の2点で更新する。
+    // （他端末の変更後にベースラインが古いままだと、下の件数チェックが誤発火・見逃しを起こす）
+    _updateScheduleBaseline() {
+        const byDay = {};
+        for (const [day, classes] of Object.entries(this.scheduleData || {})) {
+            if (!Array.isArray(classes)) continue;   // 'イベント' ドキュメントなど
+            byDay[day] = classes.reduce((n, c) => n + ((c.students || []).length), 0);
+        }
+        this._scheduleBaselineByDay = byDay;
+    }
+
+    // 保存前の共通検査。壊れたメモリを Firestore へ書くのを最後の砦として止める。
+    _assertScheduleSane(day, opts = {}) {
+        if (this._forceScheduleSave) { this._forceScheduleSave = false; return true; }
+
+        // ① ロード失敗の検知。フォールバックの形が経路によって違うため2条件で見る。
+        //    - !scheduleLoaded      : init 経路（app.js の deep clone なので参照は一致しない）
+        //    - === defaultSchedule  : changeMonth/selectMonth 経路（モジュール定数がそのまま入る）
+        if (!this.scheduleLoaded || this.scheduleData === defaultSchedule) {
+            console.error('⚠ schedule の保存を中止: データが正しく読み込まれていません');
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ データが不完全なため保存を中止しました。ページを再読み込みしてください。');
+            return false;
+        }
+
+        // ② 生徒数の急減を検知（増加は正当な復元・引き継ぎがあるため検知しない）
+        if (opts.allowShrink) return true;
+        const base = this._scheduleBaselineByDay || {};
+        const days = day ? [day] : Object.keys(base);
+        for (const d of days) {
+            const before = base[d];
+            const classes = this.scheduleData[d];
+            if (before == null || !Array.isArray(classes)) continue;
+            const after = classes.reduce((n, c) => n + ((c.students || []).length), 0);
+            if (before - after > 10 && after < before * 0.8) {
+                console.error(`⚠ schedule の保存を中止: ${d} の生徒数が ${before} → ${after} に急減しました`);
+                this.readOnlyMode = true;
+                this.showDataLoadWarning(`⚠ ${d}の生徒が大量に減る保存を中止しました。ページを再読み込みしてください。`);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 全曜日を保存する（一回限り処理・全曜日を横断する同期処理のみ）
+    // 戻り値: 保存できたか。呼び出し側は必ず受け取り、false なら成功扱いにしないこと。
+    async _saveSchedule(reason) {
+        if (!this._assertScheduleSane(null, {})) return false;
+        try {
+            await db.saveScheduleData(this.scheduleData);
+        } catch (e) {
+            console.error(`schedule の保存に失敗（${reason}）:`, e);
+            return false;
+        }
+        this._updateScheduleBaseline();
+        return true;
+    }
+
+    // 1曜日だけ保存する（ユーザー操作由来。他曜日を巻き添えにしない）
+    // 戻り値: 保存できたか。false のまま処理を続けると
+    // 「画面では変わったのに Firestore は変わっていない」状態になる。
+    async _saveScheduleDay(day, reason, opts = {}) {
+        if (!Array.isArray(this.scheduleData[day])) {
+            console.error(`schedule の保存を中止: ${day} の名簿が読み込まれていません（${reason}）`);
+            return false;
+        }
+        if (!this._assertScheduleSane(day, opts)) return false;
+        try {
+            await db.saveScheduleDay(day, this.scheduleData[day]);
+        } catch (e) {
+            console.error(`schedule の保存に失敗（${reason}）:`, e);
+            return false;
+        }
+        this._updateScheduleBaseline();
+        return true;
+    }
+
+    // 保存に失敗したことをユーザーへ伝える共通処理
+    _reportSaveFailure() {
+        alert('保存できませんでした。変更は反映されていません。\nページを再読み込みして、状態を確認してください。');
+        this.render();
     }
 
     // Save current navigation state to URL hash
@@ -394,7 +526,7 @@ class DanceStudioApp {
         });
 
         if (added > 0) {
-            await db.saveScheduleData(this.scheduleData);
+            await this._saveSchedule('migrateOrphanRegulars');
             console.log(`migrateOrphanRegulars: ${added}名を ${prevYM} の記録から名簿に補完`);
         }
         return added;
@@ -496,7 +628,7 @@ class DanceStudioApp {
         }
 
         if (scheduleChanged) {
-            await db.saveScheduleData(this.scheduleData);
+            await this._saveSchedule('cleanupAutoAddedStudents');
             console.log(`✓ cleanupAutoAddedStudents: ${removedCount}名を schedule から削除 (refMonth=${referenceMonth})`, removed);
         } else {
             console.log(`✓ cleanupAutoAddedStudents: 削除対象なし (refMonth=${referenceMonth})`);
@@ -598,7 +730,7 @@ class DanceStudioApp {
         }
 
         if (scheduleChanged) {
-            await db.saveScheduleData(this.scheduleData);
+            await this._saveSchedule('restoreRegularStudentsOnce');
             console.log(`✓ restoreRegularStudentsOnce: ${added}名を schedule に復元`, log);
         } else {
             console.log(`✓ restoreRegularStudentsOnce: 復元対象なし`);
@@ -663,7 +795,7 @@ class DanceStudioApp {
             }
         }
 
-        if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
+        if (scheduleChanged) await this._saveSchedule('applyLocationMigrationOnce');
         for (const day of tsChangedDays) {
             try {
                 await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
@@ -727,7 +859,7 @@ class DanceStudioApp {
                 }
             }
         }
-        if (scheduleChanged) await db.saveScheduleData(this.scheduleData);
+        if (scheduleChanged) await this._saveSchedule('syncSnapshotsToCustomerPlanOnce');
 
         // 2. 当月以降 attendance._plan を customer.plan に同期（過去月は触らない）
         //    対象月: 今日が属する月 〜 今日+6ヶ月
@@ -821,7 +953,7 @@ class DanceStudioApp {
             }
         }
         if (scheduleChanged) {
-            await db.saveScheduleData(this.scheduleData);
+            await this._saveSchedule('syncPlanToCurrentMonth');
         }
 
         // 2. attendance は selectedMonth が今日の月以降のときのみ更新（過去月の履歴保全）
@@ -841,6 +973,12 @@ class DanceStudioApp {
 
     // 新月アクセス時にcustomers.planをattendance._planにスナップショット保存
     async ensureMonthlyPlanSnapshot() {
+        // 過去月には書き込まない。
+        // loadAttendance が失敗して {} を返すと「まだ _plan が無い＝初回月」と誤認し、
+        // 過去月の _plan を現在のプランで上書きしてしまう。
+        // syncSnapshotsToCustomerPlanOnce が守っている「過去月は変更しない」原則に揃える。
+        if (this.selectedMonth < this.currentMonthLocal()) return;
+
         // レギュラー生徒で_planが1つでもあれば初期化済みとみなす
         const hasAnyRegularPlan = Object.values(this.attendanceData).some(d =>
             d._plan && isRegularPlan(d._plan)
@@ -854,8 +992,11 @@ class DanceStudioApp {
             for (const cls of classes) {
                 for (const student of (cls.students || [])) {
                     if (!isRegularPlan(student.plan)) continue;
+                    if (!isStudentEnrolledIn(student, this.selectedMonth)) continue;
                     const fullName = `${student.lastName}${student.firstName}`;
-                    const loc = cls.location || cls.venue || '';
+                    // 場所の履歴を考慮する。生の location を使うと、移転前の月に
+                    // 新しい場所名でキーを作ってしまう（既に生成済みの誤キーは触らない）。
+                    const loc = effectiveLocation(cls, this.selectedMonth);
                     const studentKey = `${day}_${loc}_${cls.name}_${fullName}`;
 
                     // 既存の_planがあればスキップ
@@ -901,8 +1042,45 @@ class DanceStudioApp {
         this.render();
     }
 
+    // 会場名 → 名簿の場所名。
+    // 旧実装の venue.replace(/校$|スタジオ$|クラス$/,'') は「天神BUZZ校 2スタジオ」で
+    // 末尾の「スタジオ」しか落とせず「天神BUZZ校 2」を返していた（校$ が末尾でないため不発）。
+    // 既存の天神クラスは location:'天神' なので、そのまま保存すると出席キーが
+    // 「水曜日_天神BUZZ校 2_…」に分岐し、過去の出席記録が引けなくなる。
+    venueToLocation(venue) {
+        const MAP = {
+            '天神BUZZ校 2スタジオ': '天神', '天神BUZZ校 5スタジオ': '天神', '天神BUZZ校 11スタジオ': '天神',
+            '大橋校': '大橋', '照葉校': '照葉', '千早クラス': '千早', '九産大前スタジオ': '九産大前'
+        };
+        return MAP[venue] || (venue || '').replace(/校$|スタジオ$|クラス$/, '').trim();
+    }
+
+    // 時間割エントリに対応する名簿クラスを引く。
+    // 時間割には「画面に出る正式名」と「名簿連携用の alias」が二重登録されており、
+    // 名簿のクラス名は alias 側と一致する。時刻や会場での推測照合は本番データの
+    // 2/3 で成立せず、時刻のみだと別クラス（11名在籍）を誤爆するため、
+    // エントリが持つ scheduleName を唯一の手掛かりにする。
+    findScheduleClass(day, lesson) {
+        const classes = this.scheduleData[day];
+        if (!lesson || !Array.isArray(classes)) return null;
+        const wanted = lesson.scheduleName || lesson.name;
+        const loc = this.venueToLocation(lesson.venue);
+        const normLoc = (v) => (v || '').replace(/校$/, '');
+        // name + location で引く（同一曜日に同名クラスが別会場で存在しうるため）
+        return classes.find(c => c.name === wanted && normLoc(c.location || c.venue || '') === normLoc(loc))
+            || classes.find(c => c.name === wanted)
+            || null;
+    }
+
     async saveLessonForm() {
-        const day = document.getElementById('lessonDay')?.value || this.editingLessonDay;
+        if (!this.assertWritable(true)) return;
+
+        const isEdit = this.editingLessonIndex !== null;
+        // 編集時は必ず元の曜日を使う。フォームの曜日 select は編集中は無効化しているが、
+        // disabled でも .value は読めてしまうため、値の側で確実に固定する。
+        // （曜日をまたぐ移動は「移動先の配列 × 移動元のインデックス」に代入して
+        //   無関係のレッスンを破壊するため、移動は削除→追加に誘導する）
+        const day = isEdit ? this.editingLessonDay : (document.getElementById('lessonDay')?.value || this.editingLessonDay);
         const timeStart = document.getElementById('lessonTimeStart')?.value;
         const timeEnd = document.getElementById('lessonTimeEnd')?.value;
         const venue = document.getElementById('lessonVenue')?.value;
@@ -914,46 +1092,70 @@ class DanceStudioApp {
             return;
         }
 
+        // メモリを変更する前に退避する（変更後に取ると巻き戻しにならない）
+        const snapshot = {
+            ts: JSON.parse(JSON.stringify(this.timeScheduleData[day] || [])),
+            sc: JSON.parse(JSON.stringify(this.scheduleData[day] || []))
+        };
+
         const fullName = `${lessonName} ${instructor}`;
         const time = `${timeStart}-${timeEnd}`;
         const color = this.getVenueColor(venue);
         const lessonData = { time, venue, name: fullName, color };
+        const location = this.venueToLocation(venue);
 
         if (!this.timeScheduleData[day]) this.timeScheduleData[day] = [];
+        if (!this.scheduleData[day]) this.scheduleData[day] = [];
 
-        if (this.editingLessonIndex !== null) {
-            // Edit existing
+        let expectName = null;   // 書き戻し検証で名簿に在ることを確認する名前
+
+        if (isEdit) {
             const old = this.timeScheduleData[day][this.editingLessonIndex];
-            this.timeScheduleData[day][this.editingLessonIndex] = lessonData;
-            // Update scheduleData class name/location if changed
-            if (old && this.scheduleData[day]) {
-                const clsIdx = this.scheduleData[day].findIndex(c => c.name === old.name);
-                if (clsIdx !== -1) {
-                    this.scheduleData[day][clsIdx].name = fullName;
-                    this.scheduleData[day][clsIdx].location = venue.replace(/校$|スタジオ$|クラス$/, '').trim();
-                }
+            // マージで更新する。全置換すると alias / scheduleName が落ち、
+            // alias が消えると週間時間割とカレンダーに二重表示される。
+            this.timeScheduleData[day][this.editingLessonIndex] = { ...old, ...lessonData };
+
+            const target = this.findScheduleClass(day, old);
+            if (target) {
+                // 名簿のクラス名は絶対に書き換えない。
+                // 出席キーが「曜日_場所_クラス名_姓名」のため、改名すると過去の記録が孤児化する。
+                target.location = location;
+                expectName = target.name;
             }
+            // 名簿に対応クラスが無い場合（練習会など）は検証をスキップする
         } else {
-            // Add new
             this.timeScheduleData[day].push(lessonData);
-            // Auto-create class in scheduleData for attendance
-            if (!this.scheduleData[day]) this.scheduleData[day] = [];
-            const exists = this.scheduleData[day].some(c => c.name === fullName);
+            const normLoc = (v) => (v || '').replace(/校$/, '');
+            const exists = this.scheduleData[day].some(c =>
+                c.name === fullName && normLoc(c.location || c.venue || '') === normLoc(location)
+            );
             if (!exists) {
-                this.scheduleData[day].push({
-                    location: venue.replace(/校$|スタジオ$|クラス$/, '').trim(),
-                    name: fullName,
-                    students: []
-                });
+                this.scheduleData[day].push({ location, name: fullName, students: [] });
             }
+            expectName = fullName;
         }
 
         try {
-            await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
-            await db.saveScheduleData(this.scheduleData);
+            // saveLessonAtomic はラッパを経由しないので、ここで同じ検査を通す
+            if (!this._assertScheduleSane(day, {})) throw new Error('保存前の安全確認に失敗しました');
+            // 時間割と名簿を1コミットで書く。逐次2回の setDoc だと
+            // 「時間割は保存されたが名簿は失敗」が起こり、登録したのに出席名簿に出ない状態になる。
+            await db.saveLessonAtomic(day, this.timeScheduleData[day], this.scheduleData[day]);
+            if (expectName) {
+                const verify = await db.loadScheduleDay(day);
+                if (!verify.some(c => c.name === expectName)) {
+                    throw new Error('名簿への反映を確認できませんでした');
+                }
+            }
+            this._updateScheduleBaseline();
         } catch (e) {
+            // batch は全か無かなので、Firestore は変更前のまま。メモリを戻せば整合する。
+            this.timeScheduleData[day] = snapshot.ts;
+            this.scheduleData[day] = snapshot.sc;
             console.error('レッスン保存エラー:', e);
-            alert('保存に失敗しました');
+            alert(`保存に失敗しました。\n${e.message}\nページを再読み込みして、登録されているか確認してください。`);
+            this.render();
+            return;
         }
 
         this.editingLessonDay = null;
@@ -962,28 +1164,63 @@ class DanceStudioApp {
     }
 
     async deleteLesson(day, index) {
+        if (!this.assertWritable(true)) return;
+
+        // 名簿が読み込めていない状態で保存すると、saveLessonAtomic が
+        // undefined を [] に丸めてその曜日の名簿を空で上書きしてしまう
+        if (!Array.isArray(this.scheduleData[day])) {
+            alert('名簿を読み込めていません。ページを再読み込みしてください。');
+            return;
+        }
+
         const lesson = this.timeScheduleData[day]?.[index];
         if (!lesson) return;
 
-        // Check for students
-        const cls = this.scheduleData[day]?.find(c => c.name === lesson.name);
+        // 在籍者は scheduleName 経由で引く。
+        // lesson.name（時間割側の名前）で引くと、名前が食い違うクラスでは
+        // 在籍していても0名と表示され「消して平気」と誤認させる。
+        const cls = this.findScheduleClass(day, lesson);
         const studentCount = cls?.students?.length || 0;
-        const msg = studentCount > 0
-            ? `「${lesson.name}」を削除しますか？\n（${studentCount}名の生徒が登録されています）`
-            : `「${lesson.name}」を削除しますか？`;
-        if (!confirm(msg)) return;
 
-        this.timeScheduleData[day].splice(index, 1);
-        // Remove from scheduleData too
-        if (this.scheduleData[day]) {
-            this.scheduleData[day] = this.scheduleData[day].filter(c => c.name !== lesson.name);
+        const head = studentCount > 0
+            ? `「${lesson.name}」には ${studentCount}名 の生徒が登録されています。\n\n`
+            : `「${lesson.name}」を削除します。\n\n`;
+        if (!confirm(head + '時間割から削除しますか？\n（出席名簿と過去の出席記録は残ります）')) return;
+
+        const purge = cls ? confirm(
+            '名簿からも完全に削除しますか？\n\n' +
+            '「OK」＝ 名簿ごと削除します。過去月の出席名簿・CSV からもこのクラスが見えなくなります。\n' +
+            '「キャンセル」＝ 時間割からのみ削除します（推奨。受講者がいない月は自動的に非表示になります）'
+        ) : false;
+
+        const snapshot = {
+            ts: JSON.parse(JSON.stringify(this.timeScheduleData[day] || [])),
+            sc: JSON.parse(JSON.stringify(this.scheduleData[day] || []))
+        };
+
+        // 対になる alias エントリも一緒に消す（非alias だけ消すと alias が孤立して残る）。
+        // filter で一度に除去する（splice を小さい index から回すと後続がずれて別レッスンを巻き込む）。
+        const targetName = lesson.scheduleName || lesson.name;
+        this.timeScheduleData[day] = this.timeScheduleData[day].filter((l, i) => {
+            if (i === index) return false;
+            if (l.alias && l.name === targetName) return false;
+            return true;
+        });
+
+        if (purge && cls) {
+            this.scheduleData[day] = this.scheduleData[day].filter(c => c !== cls);
         }
 
         try {
-            await db.saveTimeScheduleDay(day, this.timeScheduleData[day]);
-            await db.saveScheduleData(this.scheduleData);
+            // 「完全に削除」は在籍者ごと消す意図的な操作なので、急減チェックは通す
+            if (!this._assertScheduleSane(day, { allowShrink: purge })) throw new Error('保存前の安全確認に失敗しました');
+            await db.saveLessonAtomic(day, this.timeScheduleData[day], this.scheduleData[day]);
+            this._updateScheduleBaseline();
         } catch (e) {
+            this.timeScheduleData[day] = snapshot.ts;
+            this.scheduleData[day] = snapshot.sc;
             console.error('レッスン削除エラー:', e);
+            alert(`削除に失敗しました。\n${e.message}\nページを再読み込みしてください。`);
         }
         this.render();
     }
@@ -1059,6 +1296,7 @@ class DanceStudioApp {
     }
 
     async addCustomer() {
+        if (!this.assertWritable()) return;
         if (!this.newCustomer.lastName || !this.newCustomer.firstName) {
             alert('氏名を入力してください'); return;
         }
@@ -1103,6 +1341,7 @@ class DanceStudioApp {
     }
 
     async saveEdit() {
+        if (!this.assertWritable()) return;
         if (!this.editForm.id) { alert('保存エラー: IDが見つかりません'); return; }
         try {
             // プラン⇔コース 双方向同期（保存直前）
@@ -1134,6 +1373,7 @@ class DanceStudioApp {
     }
 
     async deleteCustomer(id) {
+        if (!this.assertWritable()) return;
         if (!confirm('この顧客を削除してもよろしいですか?')) return;
         try {
             await db.deleteCustomer(id);
@@ -1227,6 +1467,7 @@ class DanceStudioApp {
     }
 
     async _saveCalendarDay(dateStr, data) {
+        if (!this.assertWritable()) return;
         // Clean empty overrides
         const isEmpty = !data.holiday && !data.cancelledLessons?.length && !data.workshops?.length && !data.note;
         if (isEmpty) {
@@ -1246,6 +1487,7 @@ class DanceStudioApp {
 
     // Note: these methods are accessed by views and events
     toggleAttendance(classId, week) {
+        if (!this.assertWritable()) return;
         const current = this.attendanceData[classId]?.[week] || '';
         const next = current === '○' ? '×' : current === '×' ? '休講' : current === '休講' ? '' : '○';
         if (!this.attendanceData[classId]) this.attendanceData[classId] = {};
@@ -1298,7 +1540,7 @@ class DanceStudioApp {
             if (newMonth > 12) { newMonth = 1; newYear++; }
             else if (newMonth < 1) { newMonth = 12; newYear--; }
             this.selectedMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
-            this.scheduleData = await db.loadScheduleData(defaultSchedule);
+            if (!(await this._reloadScheduleForMonth())) return;
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
             this.calendarData = await db.loadCalendarData(this.selectedMonth);
@@ -1308,10 +1550,35 @@ class DanceStudioApp {
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月切り替えエラー:', error);
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ 月の切り替えでデータを読み込めませんでした。ページを再読み込みしてください。');
         } finally {
             this.isLoading = false;
             this.render();
         }
+    }
+
+    // 月切替時の名簿再読込。init() と同じ成否判定を行う。
+    //
+    // 旧実装は db.loadScheduleData(defaultSchedule) を呼んでいた。引数が this.scheduleData ではなく
+    // config のモジュール定数だったため、ロードに失敗すると「定数のコピー」ではなく「定数そのもの」が
+    // this.scheduleData に入り、以後のメモリ変更が import した config を直接破壊していた
+    // （init() は deep clone を作るので、汚染された定数がコピー元として残り続ける）。
+    // 引数を this.scheduleData にすることでこの経路を断ち、失敗時は直前の正しいデータが残る。
+    async _reloadScheduleForMonth() {
+        const fallback = this.scheduleData;
+        const loaded = await db.loadScheduleData(this.scheduleData);
+        if (loaded === fallback) {
+            console.error('⚠ 名簿の再読込に失敗しました。保存操作をブロックします。');
+            this.scheduleLoaded = false;
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ 名簿を読み込めませんでした。データを変更せず、ページを再読み込みしてください。');
+            return false;
+        }
+        this.scheduleData = loaded;
+        this.scheduleLoaded = true;
+        this._updateScheduleBaseline();
+        return true;
     }
 
     async selectMonth(monthValue) {
@@ -1321,7 +1588,7 @@ class DanceStudioApp {
         this.selectedMonth = monthValue;
         this.render();
         try {
-            this.scheduleData = await db.loadScheduleData(defaultSchedule);
+            if (!(await this._reloadScheduleForMonth())) return;
             this.attendanceData = await db.loadAttendance(this.selectedMonth);
             this.eventsData = await db.loadEvents(this.selectedMonth);
             // disabled (2026-05-01): migrateOrphanRegulars 停止
@@ -1329,6 +1596,8 @@ class DanceStudioApp {
             await this.ensureMonthlyPlanSnapshot();
         } catch (error) {
             console.error('月選択エラー:', error);
+            this.readOnlyMode = true;
+            this.showDataLoadWarning('⚠ 月の切り替えでデータを読み込めませんでした。ページを再読み込みしてください。');
         } finally {
             this.isLoading = false;
             this.render();
@@ -1346,6 +1615,7 @@ class DanceStudioApp {
     }
 
     async saveNewStudent() {
+        if (!this.assertWritable()) return;
         // 二連打・非同期競合ガード
         if (this._savingNewStudent) return;
         this._savingNewStudent = true;
@@ -1395,11 +1665,13 @@ class DanceStudioApp {
                     if (existing.leftAt) {
                         delete existing.leftAt;
                         existing.enrolledFrom = this.selectedMonth;
-                        await db.saveScheduleData(this.scheduleData);
+                        // 保存できなければ以降（attendance 書き込み・成功メッセージ）へ進まない。
+                        // 進むと「名簿には無いが attendance にはいる」不整合になる。
+                        if (!(await this._saveScheduleDay(day, 'saveNewStudent:再入会'))) { this._reportSaveFailure(); return; }
                     }
                 } else {
                     cls.students.push({ lastName, firstName, plan, enrolledFrom: this.selectedMonth });
-                    await db.saveScheduleData(this.scheduleData);
+                    if (!(await this._saveScheduleDay(day, 'saveNewStudent:追加'))) { this._reportSaveFailure(); return; }
                 }
             } else {
                 // ビジター/初回: schedule には入れない (firestore-safety.md の不変条件)
@@ -1409,7 +1681,7 @@ class DanceStudioApp {
                     !(((s.lastName || '').trim() === lastName) && ((s.firstName || '').trim() === firstName) && !isRegularPlan(s.plan))
                 );
                 if (cls.students.length !== before) {
-                    await db.saveScheduleData(this.scheduleData);
+                    if (!(await this._saveScheduleDay(day, 'saveNewStudent:ビジター整理'))) { this._reportSaveFailure(); return; }
                 }
             }
 
@@ -1436,6 +1708,7 @@ class DanceStudioApp {
     }
 
     async saveEditStudent() {
+        if (!this.assertWritable()) return;
         const newPlan = document.getElementById('edit_student_plan')?.value;
         if (!newPlan) { alert('プランを選択してください'); return; }
         const { day, location, className, lastName, firstName } = this.editingStudent;
@@ -1460,12 +1733,12 @@ class DanceStudioApp {
                     delete cls.students[studentIndex].leftAt;
                     cls.students[studentIndex].enrolledFrom = this.selectedMonth;
                 }
-                await db.saveScheduleData(this.scheduleData);
+                if (!(await this._saveScheduleDay(day, 'saveEditStudent:プラン変更'))) { this._reportSaveFailure(); return; }
             } else if (isRegularPlan(newPlan)) {
                 // ビジター→レギュラー昇格: scheduleDataに新規追加（プラン1〜5は必ずレギュラー名簿に保存）
                 cls.students = cls.students || [];
                 cls.students.push({ lastName, firstName, plan: newPlan, enrolledFrom: this.selectedMonth });
-                await db.saveScheduleData(this.scheduleData);
+                if (!(await this._saveScheduleDay(day, 'saveEditStudent:昇格'))) { this._reportSaveFailure(); return; }
             }
         }
         const classLoc = classIndex !== -1 ? (this.scheduleData[day][classIndex].location || this.scheduleData[day][classIndex].venue || location) : location;
@@ -1479,6 +1752,7 @@ class DanceStudioApp {
     }
 
     async deleteStudent(day, location, className, lastName, firstName) {
+        if (!this.assertWritable()) return;
         if (!confirm(`${lastName} ${firstName} を削除してもよろしいですか？`)) return;
         const normLoc = (loc) => (loc || '').replace(/校$/, '');
         const classIndex = this.scheduleData[day].findIndex(c => normLoc(c.location || c.venue || '') === normLoc(location) && c.name === className);
@@ -1497,7 +1771,11 @@ class DanceStudioApp {
                 );
                 if (target) {
                     target.leftAt = this.selectedMonth;
-                    await db.saveScheduleData(this.scheduleData);
+                    if (!(await this._saveScheduleDay(day, 'deleteStudent:退会'))) {
+                        delete target.leftAt;   // 保存できなかったのでメモリも戻す
+                        this._reportSaveFailure();
+                        return;
+                    }
                 }
             }
             alert('生徒を退会扱いにしました（過去の記録は保持されます）');
@@ -2081,6 +2359,7 @@ class DanceStudioApp {
         // Practice session inputs
         document.querySelectorAll('.practice-input').forEach(input => {
             input.addEventListener('change', async (e) => {
+                if (!this.assertWritable()) return;
                 const day = e.target.getAttribute('data-practice-day');
                 const week = e.target.getAttribute('data-practice-week');
                 const value = parseInt(e.target.value) || 0;

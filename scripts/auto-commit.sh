@@ -23,7 +23,7 @@ if [ -e "$GIT_DIR/MERGE_HEAD" ] || [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_
   exit 0
 fi
 
-# ── 秘匿ファイルのガード ──────────────────────────────────────────
+# ── 秘匿ファイルのガード（ファイル名ベース）────────────────────────
 # コミット対象になりうるファイル名を検査し、認証情報らしきものがあれば中止する。
 # ここで止めるのは「取り消せない事故」の手前で人間の目を入れるため。
 # 誤検知しても実害は「自動コミットが1回見送られる」だけ（次の応答で再試行される）。
@@ -37,6 +37,36 @@ if [ -n "$OFFENDERS" ]; then
     echo "[$(date '+%Y-%m-%d %H:%M')] 自動コミットを中止しました（秘匿ファイルの疑い）"
     printf '%s\n' "$OFFENDERS" | sed 's/^/  - /'
     echo "  対応: .gitignore へ追加するか、意図した追跡なら手動でコミットしてください。"
+    echo
+  } >> .claude/auto-commit-blocked.log
+  exit 0
+fi
+
+# ── 個人情報のガード（内容ベース）──────────────────────────────────
+# 2026-08-10 追加。このリポジトリは PUBLIC で、Firestore のダンプには顧客131名の
+# 氏名・住所・電話・生年月日が含まれる。ファイル名が無害でも中身で検出して止める。
+# .gitignore との二重防御（秘匿情報と同じ方針）。
+PII_RE='"memberNumber"|"phone1"|"birthDate"|"postalCode"|"guardianName"'
+PII_OFFENDERS=""
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    *.json|*.csv|*.html|*.txt) ;;
+    *) continue ;;
+  esac
+  [ -f "$f" ] || continue
+  if grep -qE "$PII_RE" "$f" 2>/dev/null; then
+    PII_OFFENDERS="${PII_OFFENDERS}${f}"$'\n'
+  fi
+done <<< "$CANDIDATES"
+
+if [ -n "$PII_OFFENDERS" ]; then
+  mkdir -p .claude 2>/dev/null
+  {
+    echo "[$(date '+%Y-%m-%d %H:%M')] 自動コミットを中止しました（個人情報の疑い）"
+    printf '%s' "$PII_OFFENDERS" | sed 's/^/  - /'
+    echo "  このリポジトリは PUBLIC です。顧客データを含むファイルはコミットしないでください。"
+    echo "  対応: リポジトリ外へ移動するか、.gitignore へ追加してください。"
     echo
   } >> .claude/auto-commit-blocked.log
   exit 0

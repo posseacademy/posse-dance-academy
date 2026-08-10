@@ -71,6 +71,41 @@ export function effectiveLocation(cls, month) {
 }
 
 /**
+ * クラスが時間割に載っているか
+ *
+ * 時間割から削除されたクラスは名簿に残る（過去月の出席記録を参照できるようにするため）。
+ * そのままだと当月以降も0名の空カードとして残り続けるので、呼び出し側で
+ * 「時間割に無い かつ その月の受講者が0名」なら非表示にする判定に使う。
+ *
+ * 照合は alias エントリも対象に含めること。名簿のクラス名と一致するのは alias 側で、
+ * 非alias だけを見ると名簿にあるクラスを軒並み「時間割に無い」と誤判定する。
+ * @param {Object} cls - schedule のクラス
+ * @param {Array} dayLessons - timeSchedule[曜日]（alias を除外しない生の配列）
+ * @returns {boolean} 判定できない場合は true（表示側に倒す）
+ */
+export function isClassInTimeSchedule(cls, dayLessons) {
+    if (!cls || !Array.isArray(dayLessons)) return true;
+    return dayLessons.some(l => (l.scheduleName || l.name) === cls.name);
+}
+
+/**
+ * 生徒が指定月に在籍しているか
+ * - enrolledFrom: この月から在籍（包含）
+ * - leftAt:       この月から不在（排他。2026-05-23 の off-by-one 修正で >= に統一済み）
+ * s が無ければ false（除外）、month が無ければ true（全通し）。
+ * isClassActiveIn 系と fail 方向が逆なのは意図的で、呼び出し文脈がそれぞれ異なるため。
+ * @param {Object} s - schedule.students の生徒
+ * @param {string} month - 'YYYY-MM'
+ */
+export function isStudentEnrolledIn(s, month) {
+    if (!s) return false;
+    if (!month) return true;
+    if (s.enrolledFrom && s.enrolledFrom > month) return false;
+    if (s.leftAt && month >= s.leftAt) return false;
+    return true;
+}
+
+/**
  * Get attendance rate for a class
  */
 export function getAttendanceRate(attendanceData, classId) {
@@ -248,14 +283,9 @@ export function getCustomerCountByCourse(customers, courseColors) {
 export function getClassStudentsForMonth(cls, day, attendanceData, customers, selectedMonth) {
     const effLoc = effectiveLocation(cls, selectedMonth);
     const _hasMark = (rec) => rec && ['week1','week2','week3','week4','week5'].some(w => ['○','×','休講'].includes(rec[w]));
-    const _inRange = (s) => {
-        if (s.enrolledFrom && s.enrolledFrom > selectedMonth) return false;
-        if (s.leftAt && selectedMonth >= s.leftAt) return false;
-        return true;
-    };
     const regulars = (cls.students || [])
         .filter(s => isRegularPlan(s.plan))
-        .filter(_inRange);
+        .filter(s => isStudentEnrolledIn(s, selectedMonth));
     const seen = new Set(regulars.map(s => s.lastName + s.firstName));
     const prefix = `${day}_${effLoc}_${cls.name}_`;
     const pastRegulars = [];
@@ -276,6 +306,10 @@ export function getClassStudentsForMonth(cls, day, attendanceData, customers, se
         } else if (_hasMark(rec)) {
             // schedule に登録があり leftAt で当月から除外されたレギュラーは
             // 過去在籍にも入れない（当月以降の集計から外す）
+            //
+            // ここは意図的に leftAt だけを見る（enrolledFrom は見ない）。
+            // isStudentEnrolledIn に置き換えてはいけない — 後から名簿に登録した生徒
+            // （enrolledFrom が実際の受講開始より後）の過去の実出席が消えるため。
             const fromSchedule = (cls.students || []).find(s => (s.lastName + s.firstName) === nameCombined);
             if (fromSchedule && fromSchedule.leftAt && selectedMonth >= fromSchedule.leftAt) continue;
             seen.add(nameCombined);
@@ -311,10 +345,16 @@ export function getCustomerClasses(customer, scheduleData) {
     days.forEach(day => {
         const classes = scheduleData[day] || [];
         classes.forEach(cls => {
-            const hit = (cls.students || []).some(s => ((s.lastName||'') + (s.firstName||'')) === fullName);
+            // 退会扱い（leftAt あり）の在籍は受講中クラスに含めない
+            const hit = (cls.students || []).some(s =>
+                ((s.lastName||'') + (s.firstName||'')) === fullName && !s.leftAt
+            );
             if (hit) {
-                const m = (cls.name || '').match(/[A-Z]+$/);
-                const teacher = m ? m[0] : '';
+                // 講師名は「クラス名 講師名」の末尾。Key-lock のように小文字とハイフンを
+                // 含む名前があるため [A-Z]+ では拾えない。キャプチャを使うので m[1] を取る
+                // （m[0] だと先頭の空白まで含んでしまう）。
+                const m = (cls.name || '').match(/\s([A-Za-z][A-Za-z-]*)$/);
+                const teacher = m ? m[1] : '';
                 out.push({
                     day,
                     location: cls.location || cls.venue || '',
