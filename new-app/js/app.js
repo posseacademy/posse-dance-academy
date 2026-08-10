@@ -255,6 +255,21 @@ class DanceStudioApp {
         // disabled (2026-05-01): migrateOrphanRegulars が退会済み顧客を含む過去生徒を復活させるバグのため停止
         // try { await this.migrateOrphanRegulars(this.selectedMonth); } catch(e) { console.error('migrateOrphanRegulars error:', e); }
 
+        // ===== 安全ガード（2026-08-10 事故対応） =====
+        // loadCustomers() は通信エラー/タイムアウト時に [] を返して正常終了する。
+        // その状態で後続処理が走ると cleanupAutoAddedStudents が全生徒を
+        // 「顧客レコード無し(条件C)」と誤判定し schedule から一括削除する
+        // （2026-08-10 に実発火: 47名削除・本番保存済み）。
+        // Firestore には常に顧客が存在する運用のため 0 件 = ロード失敗とみなし、
+        // 書き込みを伴う自動メンテナンス処理を全てスキップする。
+        this.customersLoaded = Array.isArray(this.customers) && this.customers.length > 0;
+        if (!this.customersLoaded) {
+            console.error('⚠ 顧客データのロードに失敗（0件）。データ保護のため自動メンテナンス処理を全てスキップします。');
+            this.showDataLoadWarning();
+            this.render();
+            return;
+        }
+
         // 一回限りクリーンアップ: migrateOrphanRegulars が誤追加した生徒（enrolledFrom < '2026-04'）を schedule から除去
         try { await this.cleanupAutoAddedStudents(); } catch(e) { console.error('cleanupAutoAddedStudents error:', e); }
 
@@ -274,6 +289,16 @@ class DanceStudioApp {
         try { await this.ensureMonthlyPlanSnapshot(); } catch(e) { console.error('スナップショットエラー:', e); }
 
         this.render();
+    }
+
+    // 顧客データ未ロード時の警告バナー（不完全な表示のまま編集・保存されるのを防ぐ）
+    showDataLoadWarning() {
+        if (document.getElementById('dataLoadWarning')) return;
+        const bar = document.createElement('div');
+        bar.id = 'dataLoadWarning';
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:0.6rem 1rem;font-size:0.875rem;font-weight:600;text-align:center;line-height:1.4;';
+        bar.textContent = '⚠ 顧客データを読み込めませんでした。表示が不完全です。データを変更せず、ページを再読み込みしてください。';
+        document.body.prepend(bar);
     }
 
     // Save current navigation state to URL hash
@@ -384,6 +409,13 @@ class DanceStudioApp {
     //      参照月 = 直近の完了月（今日の前月）。selectedMonth に依存しない。
     // saveNewStudent/saveEditStudent 経由の正規追加（customer から選択）は customer に必ず存在するため保持
     async cleanupAutoAddedStudents() {
+        // 二重防御（2026-08-10 事故対応）: 呼び出し元のガードが外れても、
+        // customers が空のまま条件C/D を評価すると全生徒が削除される。
+        if (!Array.isArray(this.customers) || this.customers.length === 0) {
+            console.error('cleanupAutoAddedStudents: customers が空のため中止（誤判定による一括削除を防止）');
+            return 0;
+        }
+
         let removedCount = 0;
         const removed = [];
         let scheduleChanged = false;

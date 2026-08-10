@@ -36,8 +36,8 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-06-19):**
-- `app.html`: `style.css?v=25`, `app.js?v=116`
+**現在のバージョン (2026-08-10):**
+- `app.html`: `style.css?v=25`, `app.js?v=117`
 - `app.js`: `config.js?v=16`, `utils.js?v=17`, `firebase-service.js?v=8`
 - `app.js`: `home.js?v=27`, `customers.js?v=19`, `attendance.js?v=49`, `schedule.js?v=26`
 - `app.js`: `csv-export.js?v=20`
