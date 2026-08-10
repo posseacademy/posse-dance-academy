@@ -122,6 +122,29 @@
 
 ---
 
+## 2026-08-10: 時間割と名簿の連動を writeBatch + scheduleName で作り直し、ロード失敗を参照同一性で検知する
+
+**ユーザー意図 (User Intent)**: 「タイムスケジュールに登録したら、出席名簿やホームのレッスン一覧…すべての一貫性が連携されるようになってから、再度タイムスケジュールから私が手動で行い、すべて連動して設定されるか確認したい」。つまり依頼はクラス追加そのものではなく **連動の仕組みの修復**。9月のクラス登録はユーザーが手動で行う。
+
+**Decision**:
+1. `saveLessonForm` / `deleteLesson` の保存を `saveLessonAtomic()`（`writeBatch` で `timeSchedule/{曜日}` と `schedule/{曜日}` を1コミット）に置換。名簿保存も全曜日一括（`saveScheduleData`）から曜日単位（`saveScheduleDay`）へ。
+2. 時間割の非alias エントリに **`scheduleName`（名簿での名前）を明示的に持たせる**。時刻や会場からの推測照合は実データで成立しない。
+3. ロード成否を **参照同一性** で判定する（`results[n].value !== fallback`）。`loadScheduleData` / `loadTimeSchedule` は失敗時に**引数のオブジェクトをそのまま返す**ため、件数チェックも truthy チェックも常に真になる。
+4. `readOnlyMode` + `assertWritable()` を11ハンドラの入口に、`_saveSchedule` / `_saveScheduleDay` の2本に全14箇所の schedule 保存を集約。
+5. 時間割に無く当月受講者0名のクラスを表示側で自動的に隠す（`isClassInTimeSchedule`）。月フィルタは実装しない。
+
+**Reason**: 時間割（曜日単位・軽い）と名簿（全6曜日・重い）を**逐次 `setDoc`** していたため、①成功→②失敗で時間割にだけ残る。実際にユーザーが登録した「ブレイキン　ミュージカリティ SHIN」がこれで消え、削除された（`calendar_202609` の 9/29 に休講キーだけが残存）。全曜日一括上書きのため、古い名簿を持つ別タブの操作でクラスごと消える経路もあった。調査中にも `timeSchedule/火曜日` が7→6件に変化し「ブレイキン入門 AYANO / HARUHIKO」の非alias が消失している。
+
+**Impact**: `new-app/js/app.js`（+430行）, `firebase-service.js`, `utils.js`, `views/{attendance,home,schedule,customers}.js`, `csv-export.js`, `app.html`, `.gitignore`, `scripts/auto-commit.sh`。commit `80f7e1d` / `9a64358` / `9f252fa`、`app.js?v=118`。
+
+**Pattern**: failure → success — **「失敗時にフォールバックを返す」ローダーの成否は、返り値の中身では絶対に判定できない**。件数・truthy・キー数はすべて素通りする。判定は `!==` による参照比較だけが効く。同型のローダーを追加するときは JSDoc に「失敗時は引数と同一参照を返す」と明記すること。
+
+**追補（同日・PII）**: バックアップ JSON（顧客131名の氏名・住所・電話・生年月日）を置こうとした時点で、リポジトリが **PUBLIC** かつ `Stop` フックの `auto-commit.sh` が `git add -A` する構成のため、**無人で個人情報が公開される経路**が成立していた。`.gitignore` へ `/backups/` 等を追加し、`auto-commit.sh` に**内容ベース**のガード（`memberNumber` / `phone1` / `birthDate` 等を含む JSON/CSV/HTML を検出して中止）を追加。名前パターンだけのガードは無害な名前のダンプを通す。
+
+**追補（同日・データ）**: 名簿0名の4クラスを復旧する際、当初リストにあった `小石原都美`（4クラス）は **2026-08 から大橋校へ移動**していることが attendance から判明し対象外にした。復旧対象は「当月 attendance に出席記録がある人」で機械的に決めるのが正しい。`モリミツキ` は7月フル出席・8月も継続しているが **customers に未登録**で、出席が1か月途切れると `cleanupAutoAddedStudents` の条件C（顧客無し＋参照月マーク無し）で無言削除される。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。
