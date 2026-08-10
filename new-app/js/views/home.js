@@ -126,8 +126,10 @@ export function renderDashboard(app) {
               ${classes.map(cls => {
                 const loc = cls.location || cls.venue || '';
                 const tsH = app.timeScheduleData || timeSchedule;
-                const te = (tsH[day] || []).find(t => t.name === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
-                  || (tsH[day] || []).find(t => t.name === cls.name && !t.alias);
+                // 時間割の照合は scheduleName を優先する（attendance.js と同じ理由。
+                // 表示名を変更したクラスは name が名簿名と一致しなくなり時刻が空欄になる）
+                const te = (tsH[day] || []).find(t => (t.scheduleName || t.name) === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+                  || (tsH[day] || []).find(t => (t.scheduleName || t.name) === cls.name && !t.alias);
                 const time = te ? te.time : '';
                 // 出席名簿と同じロジックで当月の対象者数を計算
                 const { total: studentCount } = getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth);

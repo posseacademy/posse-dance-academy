@@ -2,9 +2,9 @@
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
 import * as db from './firebase-service.js?v=9';
 import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation } from './utils.js?v=18';
-import { renderDashboard } from './views/home.js?v=28';
+import { renderDashboard } from './views/home.js?v=29';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=20';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=50';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=51';
 import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=27';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=21';
 
@@ -1129,6 +1129,21 @@ class DanceStudioApp {
                 // 出席キーが「曜日_場所_クラス名_姓名」のため、改名すると過去の記録が孤児化する。
                 target.location = location;
                 expectName = target.name;
+                // 時間割の表示名を変えたときは、名簿名との対応を scheduleName に固定する。
+                // これが無いと次回の編集で old.name（＝新しい名前）から名簿を引けなくなり、
+                // 連動が静かに切れる。さらに isClassInTimeSchedule も一致しなくなるため、
+                // 当月受講者0名のクラスは出席名簿・HOME から消える。
+                // 元から scheduleName を持つクラスは merge で保持されるのでここは通らない。
+                if (target.name !== fullName) {
+                    this.timeScheduleData[day][this.editingLessonIndex].scheduleName = target.name;
+                }
+                // 対になる alias エントリの time を同期する。
+                // 出席名簿・HOME は会場表記の都合で alias 側の time を読む
+                // （非alias の venue「天神BUZZ校 2スタジオ」は名簿の場所「天神」と一致しないため）。
+                // 同期しないと時刻を変更しても週間時間割だけが変わり、両画面は旧時刻のまま食い違う。
+                // venue は絶対に同期しない。alias の venue は名簿の場所表記で、これが照合の鍵になっている。
+                const aliasEntry = this.timeScheduleData[day].find(l => l.alias && l.name === target.name);
+                if (aliasEntry) aliasEntry.time = time;
             }
             // 名簿に対応クラスが無い場合（練習会など）は検証をスキップする
         } else {

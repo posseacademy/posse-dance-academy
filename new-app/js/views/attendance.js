@@ -128,10 +128,13 @@ export function renderAttendanceRecord(app) {
         const locA = effectiveLocation(a, app.selectedMonth);
         const locB = effectiveLocation(b, app.selectedMonth);
         const tsData = app.timeScheduleData || timeSchedule;
-        const tA = (tsData[currentDay] || []).find(t => t.name === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
-          || (tsData[currentDay] || []).find(t => t.name === a.name);
-        const tB = (tsData[currentDay] || []).find(t => t.name === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
-          || (tsData[currentDay] || []).find(t => t.name === b.name);
+        // 時間割の照合は scheduleName を優先する。時間割の表示名を変更したクラスは
+        // name が名簿名と一致しなくなるため、name だけで引くと時刻が取れず 9999 扱いで
+        // 末尾に飛ぶ（alias を持たないクラスで必ず起きる）。
+        const tA = (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
+          || (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === a.name);
+        const tB = (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
+          || (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === b.name);
         const timeA = tA ? tA.time.split('-')[0].replace(':', '') : '9999';
         const timeB = tB ? tB.time.split('-')[0].replace(':', '') : '9999';
         return timeA.localeCompare(timeB);
@@ -139,8 +142,8 @@ export function renderAttendanceRecord(app) {
         // 場所変更履歴を考慮した実効場所（過去月は旧場所、現/未来月は新場所）
         const effLoc = effectiveLocation(cls, app.selectedMonth);
         const tsData2 = app.timeScheduleData || timeSchedule;
-        const timeEntry = (tsData2[currentDay] || []).find(t => t.name === cls.name && (t.venue === effLoc || t.venue === effLoc + '校' || t.venue?.replace('校','') === effLoc))
-          || (tsData2[currentDay] || []).find(t => t.name === cls.name);
+        const timeEntry = (tsData2[currentDay] || []).find(t => (t.scheduleName || t.name) === cls.name && (t.venue === effLoc || t.venue === effLoc + '校' || t.venue?.replace('校','') === effLoc))
+          || (tsData2[currentDay] || []).find(t => (t.scheduleName || t.name) === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
         <div class="content-card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;">
