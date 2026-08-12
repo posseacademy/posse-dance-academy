@@ -149,6 +149,27 @@
 
 ---
 
+## 2026-08-12: Auto Mode 既定化（8/14）に備えて permissions に恒久境界を張る
+
+**ユーザー意図 (User Intent)**: 統括 Clude開発 発行の受信ダイジェスト `HANDOFF_AutoMode既定化とv3.5.1反映_2026-08-12.md` に従い、8/14 期限の `/upgrade-project platform` を実行すること。判断が分かれた3論点はいずれもユーザーが推奨案を選択した — ①外部公開は `deny` ではなく **`ask`**（deploy スキルは従来どおり動かし、push の直前で人間に聞く）②秘匿は `deny` / PII バックアップは `ask`（`data-recovery` の復旧経路を殺さない）③削除・履歴改変は短縮形＋履歴改変系まで網羅。
+
+**Decision**:
+1. `.claude/settings.json` の `deny` を 5件 → 20件、`ask` を新設して 8件。`allow` は**一字も触らない**（評価順が `deny` → `ask` → `allow` なので、`allow` に `Bash(git push *)` が残っていても `ask` が先に効く）。`git push --force` 系は `deny`、通常の `git push` は `ask`。
+2. 常設委譲に明示起動パスを併記（`@code-reviewer` を 0件 → 4件、スキル一覧に「起動」列、ループ表に起動列、Dynamic Workflows 候補に依頼文）。`PROACTIVELY` マーカーは**1件も消していない**（3件のまま）。
+3. CLAUDE.md「委譲の上限」の対象外を、既存の実名3件を残したまま**5カテゴリの実名リスト**へ拡張。
+4. CLAUDE.md に「権限モードのトラブルシューティング」節を新設（`Shift+Tab` / `--permission-mode` / ユーザーレベル `defaultMode`。**いずれもプロジェクト設定には書かない**ことを明記）。
+5. `commands/deploy.md` の `/project:verify` を `/verify` へ是正（v2.1 以前の旧形式）。
+
+**Reason**: 2026-08-14 から Auto Mode が Pro/Max/Team の新規セッション既定になり、`deny` と明示 `ask` が**分類器より前に評価される唯一の恒久境界**になる。本プロジェクトは PUBLIC リポジトリに顧客131名の個人情報を扱うシステムを置き、`Stop` フックが毎応答 `git add -A` する。2026-08-10 に入れた `.gitignore` と `auto-commit.sh` の二重防御は**どちらも「コミットさせない」層**で、「読ませない・送らせない」層は `.env` 2件しかなかった。加えて `allow` の `Bash(git push *)` は `auto-commit.sh:7`「push はしない（2026-07-29 ユーザー決定）」と食い違っていた。
+
+**Impact**: `.claude/settings.json`, `CLAUDE.md`, `.claude/agents/code-reviewer.md`, `.claude/commands/deploy.md`, 本ファイル。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。
+
+**検証**: JSON 妥当性 OK。`PROACTIVELY` は編集前後とも 3件（`agents/code-reviewer.md:3` / `CLAUDE.md` / 本ファイル）。`@code-reviewer` 0→4件。`rm -f` の試行は実際に遮断された。なお `claude auto-mode config` が表示するのは**分類器の組込みルール**であり、プロジェクトの `deny`/`ask` はその出力には現れない（grep で 0件）— 実効性の確認は実操作で行うこと。
+
+**Pattern**: success — **`.gitignore` とフックのガードは「コミットさせない」層にしかならない。「読ませない・送らせない」層は `permissions` の `deny`/`ask` にしか置けない**。両者は別レイヤーなので、片方があることをもう片方の代替と見なさない。また、**`allow` と実運用の食い違いは `allow` を削らずに `ask` を足すことで解消できる**（`deny` → `ask` → `allow` の評価順）。設定を消す前に、優先順位で上書きできないかを先に考える。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。

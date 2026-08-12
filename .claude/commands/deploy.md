@@ -13,7 +13,7 @@ description: キャッシュバスティングを更新し、GitHub Pagesにデ�
 1. 変更したJSファイルの親importの `?v=N` を `?v=N+1` に更新
 2. app.jsを変更した場合は app.html の `app.js?v=N` も更新
 3. `git add new-app/...` → コミット → `git push origin main`
-4. `/project:verify` でデプロイ反映を確認
+4. `/verify` でデプロイ反映を確認（旧形式の `/project:verify` は廃止）
 
 ## Gotchas（よくある失敗パターン）
 - **キャッシュバスティング忘れ**: pushしても変更が反映されない。必ず`?v=N+1`を更新する

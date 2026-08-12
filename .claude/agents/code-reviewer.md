@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: コード変更の品質レビューを行う。PRレビュー、実装確認、バグチェック時に PROACTIVELY 使用。特に Firestore データ操作（schedule / attendance / customers）とキャッシュバスティング更新の漏れを重点的にチェックする。読み取り専用で安全。
+description: コード変更の品質レビューを行う。PRレビュー、実装確認、バグチェック時に PROACTIVELY 使用。特に Firestore データ操作（schedule / attendance / customers）とキャッシュバスティング更新の漏れを重点的にチェックする。読み取り専用で安全。自動起動しないときは `@code-reviewer` で明示指名する。
 tools: Read, Grep, Glob, Bash
 model: claude-opus-5
 permissionMode: plan

@@ -96,30 +96,36 @@ git push origin main
 
 - **`.claude/skills/`** が公式推奨の置き場所（`SKILL.md` 形式、Gotchas 付き）
 - **`.claude/commands/`** は後方互換のため残置（v2.1 移行前の旧形式）
-- **`.claude/agents/code-reviewer`** が `PROACTIVELY` で起動し、Firestore 操作・キャッシュバスティング・schedule 全月影響を重点チェック
+- **`.claude/agents/code-reviewer`** が `PROACTIVELY` で起動し、Firestore 操作・キャッシュバスティング・schedule 全月影響を重点チェック。自動起動しないときは **`@code-reviewer` で明示指名**する
+
+> **明示起動パス（2026-08-12 追加）**: Opus 5 では明示指名のない自動委譲が抑制される場合があるため（GitHub issue #80988・挙動自体は未検証）、常設の委譲にはスラッシュコマンド／`@エージェント名` を併記してある。トリガー例で発火しなかったら、下表の「起動」列を直接打つ。
 
 スキル一覧:
 
-| スキル | 用途 | トリガー例 |
-|--------|------|----------|
-| `deploy` | new-app/ の変更を本番に反映 | 「デプロイして」「pushして」 |
-| `verify` | 本番反映状態を確認 | 「反映されてる？」「verify して」 |
-| `versions` | キャッシュバスティング `?v=N` 一覧 | 「バージョン確認」「versions 出して」 |
-| `firestore-backup` | 修正前に schedule/attendance/customers をダンプ | 「データを変更する前に」「Firestore を修正」 |
+| スキル | 起動 | 用途 | トリガー例 |
+|--------|------|------|----------|
+| `deploy` | `/deploy` | new-app/ の変更を本番に反映 | 「デプロイして」「pushして」 |
+| `verify` | `/verify` | 本番反映状態を確認 | 「反映されてる？」「verify して」 |
+| `versions` | `/versions` | キャッシュバスティング `?v=N` 一覧 | 「バージョン確認」「versions 出して」 |
+| `firestore-backup` | `/firestore-backup` | 修正前に schedule/attendance/customers をダンプ | 「データを変更する前に」「Firestore を修正」 |
+| `data-recovery` | `/data-recovery` | 消えたデータを attendance / schedule から復元 | 「データが消えた」「復元して」 |
+| `firestore-inspect` | `/firestore-inspect` | Firestore の中身を調査・整合性を検証 | 「データを確認して」「売上が合わない」 |
+
+エージェント: `@code-reviewer`（`.claude/agents/code-reviewer.md`）
 
 ## 推奨ループ（Recurring Workflows）
 
-| ループ | 推奨頻度 | 機構 | 目的 |
-|--------|---------|------|------|
-| `deploy-verify` | push 後 5min | `/loop 5m /verify` | GitHub Pages 反映確認 |
-| `attendance-snapshot` | 月初 1回 | `routines`（schedule trigger） | 前月 attendance を /tmp/claude/ にダンプ（バックアップ） |
+| ループ | 推奨頻度 | 機構 | 起動 | 目的 |
+|--------|---------|------|------|------|
+| `deploy-verify` | push 後 5min | `/loop` | `/loop 5m /verify` | GitHub Pages 反映確認 |
+| `attendance-snapshot` | 月初 1回 | `routines`（schedule trigger） | `/schedule`（登録）／単発は `/firestore-backup` | 前月 attendance を /tmp/claude/ にダンプ（バックアップ） |
 
 ループは **3〜5本以内** に抑える（resource exhaustion 回避）。
 
 ## Dynamic Workflows 活用候補
-独立した work-list がある一括処理のみ有効（逐次タスクには不要。並列＝トークン増に留意）:
-- 全 `attendance_YYYYMM` の整合性一括監査（月別ドキュメントを並列処理し、キー形式・場所不一致・`_plan` 欠落を検出）
-- 全 `customers` のプラン/料金整合チェック（顧客×プランを並列検証）
+独立した work-list がある一括処理のみ有効（逐次タスクには不要。並列＝トークン増に留意）。**自動では起動しない。実行するときは下記の依頼文で明示的に指示する**:
+- 全 `attendance_YYYYMM` の整合性一括監査（月別ドキュメントを並列処理し、キー形式・場所不一致・`_plan` 欠落を検出） — 依頼文「**全 attendance を workflow で一括監査して**」
+- 全 `customers` のプラン/料金整合チェック（顧客×プランを並列検証） — 依頼文「**全 customers のプラン整合を workflow で検証して**」
 
 ## 非エンジニア向け技術用語対応表
 
@@ -147,4 +153,28 @@ git push origin main
 - **スコープ規律**: 頼まれた範囲を頼まれた粒度で完遂する。懸念は1文で述べて指示どおり進める。完了報告は本当に終わってから
 - **委譲の上限**: サブエージェントは大きく独立した並列可能なトラックに限る。数回のツール呼び出しで終わる作業は自分で完遂する。自分の出力をもう一度確かめるためだけの委譲はしない。**ただし `code-reviewer` の PROACTIVE 起動（レビューゲート）と「Dynamic Workflows 活用候補」の一括監査2件は本プロジェクトの設計であり、この制限の対象外**
 - **訂正の作法**: ユーザーの判断が変わる誤りだけを、簡潔に訂正して続行する
+
+### 「委譲の上限」の対象外（保護ロール・2026-08-12 拡張）
+
+抑制の対象は「**自分の出力をもう一度確かめるためだけの、その場で足した委譲**」だけ。次の5カテゴリは **review / audit / gate・approval / fact-check を担う保護ロール**であり、規模にかかわらず実行する。判定に迷ったら「常設のルールが要求しているゲートか／自分の安心のためにその場で足した確認か」で決める。
+
+1. **常設の委譲** — `@code-reviewer` の PROACTIVE 起動（レビューゲート）、Dynamic Workflows 活用候補の一括監査2件
+2. **人間の承認ゲート** — `git push` と本番 Firestore 書き込みの手動実行（`settings.json` の `ask` / `scripts/auto-commit.sh` は push しない）、`.claude/rules/turn-ownership.md` §4 の停止
+3. **機械チェック** — `scripts/auto-commit.sh` の秘匿ガード・PII ガード、`/versions` の `?v=N` grep 差分
+4. **外部実態との照合** — `/verify` の本番 curl 比較、`firestore-backup` のバックアップ検証
+5. **自走サイクルの「検証」ステップ** — `deploy-verify` ループ（`/loop 5m /verify`）
+
+> 保護ロールであることは Opus への昇格を意味しない。`/verify` と `/versions` は保護ロールのまま `claude-sonnet-5` である。
+
+## 権限モードのトラブルシューティング（2026-08-12）
+
+2026-08-14 から Auto Mode が新規セッションの既定になる。`settings.json` の `deny` / `ask` は**分類器より前に評価される恒久境界**なので、Auto Mode でも必ず効く（評価順は `deny` → `ask` → `allow`）。
+
+確認が煩わしいときの戻し方 — **いずれもプロジェクト設定ファイルには書かない**（`defaultMode` は project / local settings では無視される）:
+
+- `Shift+Tab` … 権限モードを循環させる
+- `claude --permission-mode <mode>` … その起動だけモードを指定する
+- 個人の既定を変えるなら `~/.claude/settings.json` の `defaultMode`
+
+現在の実効ルールは `claude auto-mode config`、組込みルールは `claude auto-mode defaults` で確認できる。
 
