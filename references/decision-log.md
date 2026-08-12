@@ -170,6 +170,26 @@
 
 ---
 
+## 2026-08-12（第2版）: `alwaysThinkingEnabled` を削除し、gh 経由の外部送信を ask で塞ぐ
+
+**ユーザー意図 (User Intent)**: 統括の受信ダイジェスト第2版（`alwaysThinkingEnabled: true` の残存を名指し・スキル側に検査項目 P6 を追加済み）を受けて `/upgrade-project platform` を再実行すること。判断が分かれた2件はいずれもユーザーが推奨案を選択した — ①`alwaysThinkingEnabled` は**削除する** ②`gh gist create` と `gh api` の**2つとも `ask` に追加する**。
+
+**Decision**:
+1. `.claude/settings.json` から `"alwaysThinkingEnabled": true` を削除（P6）。
+2. `ask` に `Bash(gh gist create *)` と `Bash(gh api *)` を追加（8件 → 10件）。`allow` は**一字も触っていない**（23件のまま）。
+
+**Reason**:
+1. Opus 5 は thinking が既定 ON のため、このフィールドは効果を持たない旧世代の遺物。残っていると「設定済み」と誤読される。2026-06-01 に v2.2.3 適用で追加したもので、2026-07-29 の Opus 5 移行がモデルIDしか見ていなかったため生き残った。
+2. `settings.local.json` の `allow` に `Bash(gh *)` があり、`ask` 側は `gh pr create` / `gh release` / `gh repo edit` の3つだけだった。**`gh gist create`（顧客131名の PII を含むファイルを公開 gist へ上げる経路）と `gh api`（任意の POST/PATCH）は無確認で通過していた**。PUBLIC リポジトリを扱う本部署では観点④（外部への送信・公開）の実質的な穴。統括のダイジェストは「四境界は充足済み ✅」と判定していたが、`settings.local.json` の存在を見ていない。
+
+**Impact**: `.claude/settings.json`（+2 / -1）、本ファイル。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。
+
+**検証**: JSON 妥当性 OK。`alwaysThinkingEnabled` / `defaultMode` / `autoMode` の混入 0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:99`）・`@code-reviewer` 4件・モデルID 8箇所すべて編集前と同数、旧世代ID と haiku は 0件。`allow` 23件は不変。P1〜P5 は前回作業で充足済みのため今回の変更なし。
+
+**Pattern**: success — **統括の機械検証は `settings.json` しか見ておらず、`settings.local.json` の `allow` を見ていない。恒久境界の実効性は2ファイルを合わせて評価しないと判定できない**（`Bash(gh *)` のような広い allow は local 側にあった）。また、モデル移行の機械検証を**モデルIDの grep だけで済ませると、旧世代固有の設定フィールドが生き残る** — 移行時は「置換すべきID」と「削除すべきフィールド」を別々のチェック項目として持つこと。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。
