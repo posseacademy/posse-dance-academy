@@ -96,7 +96,7 @@ git push origin main
 
 - **`.claude/skills/`** が公式推奨の置き場所（`SKILL.md` 形式、Gotchas 付き）
 - **`.claude/commands/`** は後方互換のため残置（v2.1 移行前の旧形式）
-- **`.claude/agents/code-reviewer`** が `PROACTIVELY` で起動し、Firestore 操作・キャッシュバスティング・schedule 全月影響を重点チェック。自動起動しないときは **`@code-reviewer` で明示指名**する
+- **`.claude/agents/code-reviewer`** が `PROACTIVELY` で起動し、Firestore 操作・キャッシュバスティング・schedule 全月影響を重点チェック。自動起動しないときは **`@agent-code-reviewer` で明示指名**する
 
 > **明示起動パス（2026-08-12 追加）**: Opus 5 では明示指名のない自動委譲が抑制される場合があるため（GitHub issue #80988・挙動自体は未検証）、常設の委譲にはスラッシュコマンド／`@エージェント名` を併記してある。トリガー例で発火しなかったら、下表の「起動」列を直接打つ。
 
@@ -111,7 +111,7 @@ git push origin main
 | `data-recovery` | `/data-recovery` | 消えたデータを attendance / schedule から復元 | 「データが消えた」「復元して」 |
 | `firestore-inspect` | `/firestore-inspect` | Firestore の中身を調査・整合性を検証 | 「データを確認して」「売上が合わない」 |
 
-エージェント: `@code-reviewer`（`.claude/agents/code-reviewer.md`）
+エージェント: `@agent-code-reviewer`（`.claude/agents/code-reviewer.md`）
 
 ## 推奨ループ（Recurring Workflows）
 
@@ -158,13 +158,27 @@ git push origin main
 
 抑制の対象は「**自分の出力をもう一度確かめるためだけの、その場で足した委譲**」だけ。次の5カテゴリは **review / audit / gate・approval / fact-check を担う保護ロール**であり、規模にかかわらず実行する。判定に迷ったら「常設のルールが要求しているゲートか／自分の安心のためにその場で足した確認か」で決める。
 
-1. **常設の委譲** — `@code-reviewer` の PROACTIVE 起動（レビューゲート）、Dynamic Workflows 活用候補の一括監査2件
+1. **常設の委譲** — `@agent-code-reviewer` の PROACTIVE 起動（レビューゲート）、Dynamic Workflows 活用候補の一括監査2件
 2. **人間の承認ゲート** — `git push` と本番 Firestore 書き込みの手動実行（`settings.json` の `ask` / `scripts/auto-commit.sh` は push しない）、`.claude/rules/turn-ownership.md` §4 の停止
 3. **機械チェック** — `scripts/auto-commit.sh` の秘匿ガード・PII ガード、`/versions` の `?v=N` grep 差分
 4. **外部実態との照合** — `/verify` の本番 curl 比較、`firestore-backup` のバックアップ検証
 5. **自走サイクルの「検証」ステップ** — `deploy-verify` ループ（`/loop 5m /verify`）
 
 > 保護ロールであることは Opus への昇格を意味しない。`/verify` と `/versions` は保護ロールのまま `claude-sonnet-5` である。
+
+### 常設委譲の standing authorization（ユーザー承認済み・2026-09-01 記録）
+
+下表は **ユーザーが承認済みの standing request（恒常的な依頼）** である。セッションごとに確認を取り直す必要はなく、起動条件に合致したら実行する。「委譲は最小限に」のような裁量形の指示は、ここで名指しされた委譲には適用されない。
+
+| 委譲 | 起動条件 | 明示起動パス | 承認日 |
+|------|---------|------------|--------|
+| `code-reviewer` エージェント | `new-app/` のコード変更後のレビュー。特に Firestore 操作・キャッシュバスティング・`schedule` 全月影響を含む変更 | `@agent-code-reviewer` | 2026-08-12（5カテゴリ実名リストとして承認）／2026-09-01 に standing request として記録 |
+| 全 `attendance_YYYYMM` の整合性一括監査（Dynamic Workflow） | ユーザーが依頼文を出したとき | 「全 attendance を workflow で一括監査して」 | 同上 |
+| 全 `customers` のプラン/料金整合チェック（Dynamic Workflow） | ユーザーが依頼文を出したとき | 「全 customers のプラン整合を workflow で検証して」 | 同上 |
+
+出典: `references/decision-log.md` 2026-07-29 追補（保護対象として実名明示の初出）／2026-08-12（ユーザーが推奨案を選択して承認）。**承認記録のない委譲はこの表に書かない** — `deploy-verify` ループと `attendance-snapshot` は承認記録が無いため対象外（前者は上記5カテゴリの5番で保護済み）。
+
+**無人経路の品質ゲート**: スケジュールタスク・routines・background 実行では常設委譲が発火しないとの報告があるため、無人時のゲートは `Stop` フックの `scripts/auto-commit.sh`（秘匿ファイルガード・PII ガード）が担う。`SessionStart` フックは注入経路として無効なので使わない。
 
 ## 権限モードのトラブルシューティング（2026-08-12）
 

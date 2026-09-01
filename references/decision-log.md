@@ -190,6 +190,28 @@
 
 ---
 
+## 2026-09-01: standing authorization を実名記録し、deny/ask の残穴2件を塞ぐ（v3.6.0）
+
+**ユーザー意図 (User Intent)**: 統括 Clude開発 発行の受信ダイジェスト `HANDOFF_v3.6.0基準更新_2026-09-01.md` に従い `/upgrade-project platform` を実行すること。判断が分かれた3件はいずれもユーザーが推奨案を選択した — ①standing-authorization ブロックは **decision-log に承認記録がある2件のみ**（`deploy-verify` / `attendance-snapshot` は承認記録が無いため載せない）②`Read(./secrets/**)` を deny に追加する ③`gh secret set` / `gh workflow run` / `gh repo create` の3つを ask に追加する。
+
+**Decision**:
+1. CLAUDE.md に「**常設委譲の standing authorization（ユーザー承認済み・2026-09-01 記録）**」節を新設。`code-reviewer` エージェントと Dynamic Workflows 一括監査2件を、実名＋起動条件＋明示起動パス＋承認日の表で記録した。既存の「「委譲の上限」の対象外（5カテゴリ）」は**削除せず併存**させる。
+2. `deny` に `Read(./secrets/**)` を追加（20件 → 21件）。`ask` に `Bash(gh secret set *)` / `Bash(gh workflow run *)` / `Bash(gh repo create *)` を追加（10件 → 13件）。**`allow` は一字も触っていない**（23件のまま）。
+
+**Reason**:
+1. #80988 の続報（2026-09-01 時点も open・v2.1.251 で再現報告）で挙動が精密化し、抑制されるのは**裁量形の委譲指示**で、**エージェント名＋起動条件を名指しした指示は「ユーザーの要求」として通る**ことが分かった。既存の5カテゴリは「規則の側（何が対象外か）」を書いたもので、「ユーザーが恒常的に依頼している」という**承認の側**の記録が無かった。両者は別レイヤーなので置換せず併存させる。
+2. 秘匿 Read の deny は全てファイル名パターン（`./**/*secret*` 等）で、`secrets/api.json` のように**ディレクトリ名だけが秘匿を示す**ファイルが素通りしていた。また `settings.local.json` の `Bash(gh *)` に対し ask 側は5つ（`pr create` / `release` / `repo edit` / `gist create` / `api`）で、PUBLIC リポジトリでの公開・実行経路である `repo create --public` と `workflow run`、秘密の書き込み `secret set` が無確認で通っていた。
+
+**Impact**: `.claude/settings.json`（+4）、`CLAUDE.md`（standing authorization 節を新設）、本ファイル。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。
+
+**充足済みのため変更なし**: P2（`defaultMode` 0件）・P4（5カテゴリ実名リスト）・P5（opus-5 × 6 / sonnet-5 × 2）・P6（`alwaysThinkingEnabled` 0件）・P8 の CLI 制約4項目（Todo/Task 依存 0件・`env` ブロック無し・`sandbox.ripgrep` 無し・ワイルドカード前置 allow 無し）。P7 の無人経路ゲートは `Stop` フックの `auto-commit.sh`（秘匿・PII ガード）が既に担っており、`SessionStart` フックは未使用。受信ダイジェスト要点1（Sonnet 5 値上げ中止の事実訂正）は、本プロジェクトに価格・コスト試算の記述が 0件のため該当なし。
+
+**検証**: JSON 妥当性 OK（allow 23 / deny 21 / ask 13）。ベースライン突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:99`）不変、モデルID 8箇所不変、旧世代ID・haiku 0件、`alwaysThinkingEnabled` / `defaultMode` / `autoMode` 0件。`@agent-code-reviewer` は 4件 → 5件（新設ブロックで1件増）、裸の `@code-reviewer` は 0件。
+
+**Pattern**: success — **「規則の側」と「承認の側」は別レイヤーであり、片方があることをもう片方の代替と見なさない**。「委譲の上限の対象外」は Claude に規則を教えるが、モデル側の注入文に対しては「ユーザーが実際にそう依頼している」という記録のほうが効く。また、**standing authorization に書く承認日は必ず実在の承認に紐づける** — 記録が無い委譲（`deploy-verify` / `attendance-snapshot`）を「たぶん承認されている」で書き足すと、承認の捏造そのものになる。書けないものは載せない。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。
