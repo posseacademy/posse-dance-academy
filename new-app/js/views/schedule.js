@@ -106,11 +106,16 @@ export function renderTimeSchedule(app) {
           <span style="font-size:0.85rem;font-weight:600;min-width:5.5rem;text-align:center;">${_month || ''} の時間割</span>
           <button class="btn btn-sm" style="background:transparent;border:none;padding:0.25rem 0.5rem;" onclick="window.app.changeMonth(1)" title="次の月">▶</button>
         </div>
+        <button class="btn btn-secondary btn-sm" onclick="window.app.toggleScheduleHelp()" style="white-space:nowrap;" title="レッスンの追加・差し替え・終了のしかた">
+          ？ 使い方
+        </button>
         <button class="btn btn-primary btn-sm" onclick="window.app.showLessonForm('月曜日')" style="white-space:nowrap;">
           ＋ レッスン追加
         </button>
       </div>
     </div>
+
+    ${app.showScheduleHelp ? renderScheduleHelp() : ''}
     ${_hasHidden ? `<div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:0.5rem 0.75rem;border-radius:4px;margin-bottom:0.75rem;font-size:0.8rem;color:#92400e;">
       この月に開催されないレッスンは表示していません。編集・削除するには ◀ ▶ で開催されている月に移動してください。
     </div>` : ''}
@@ -202,6 +207,90 @@ export function renderTimeSchedule(app) {
             }).join('')}
           </div>`;
         }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * スケジュール設定マニュアル（画面内ヘルプ）
+ *
+ * 運用担当者が複数いるため、口頭伝達や別ファイルではなく操作画面の中に置く。
+ * 特に「差し替えは削除ボタンではなく最終開催月」は、間違えると
+ * 過去の出席記録が見えなくなる（名簿ごと削除）か、消したはずのクラスが
+ * 翌月も出席名簿に残る（名簿に生徒がいるため）ので、最初に読ませる。
+ */
+function renderScheduleHelp() {
+  const step = (n, title, body) => `
+    <div style="display:flex;gap:0.75rem;margin-bottom:1rem;">
+      <div style="flex-shrink:0;width:1.75rem;height:1.75rem;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;">${n}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.2rem;">${title}</div>
+        <div style="font-size:0.82rem;color:var(--text-secondary,#4b5563);line-height:1.7;">${body}</div>
+      </div>
+    </div>`;
+
+  return `
+    <div class="content-card" style="margin-bottom:1rem;border:2px solid #111;">
+      <div class="card-header" style="margin-bottom:1rem;padding-bottom:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+        <h3 class="card-title">スケジュールの設定方法</h3>
+        <button class="btn btn-secondary btn-sm" onclick="window.app.toggleScheduleHelp()">閉じる</button>
+      </div>
+
+      <div style="background:#f0f9ff;border-left:4px solid #0284c7;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1.25rem;font-size:0.85rem;line-height:1.7;">
+        時間割に登録した内容は、<b>月間スケジュール・出席名簿・HOME のレッスン一覧</b>に自動で反映されます。
+        それぞれの画面で別々に登録する必要はありません。
+      </div>
+
+      <h4 style="font-size:0.9rem;margin:0 0 0.75rem;padding:0.35rem 0.7rem;background:#111;color:#fff;border-radius:4px;display:inline-block;">A. 新しいレッスンを追加する</h4>
+      ${step(1, 'はじめる月を表示する', '画面上の <b>◀ ▶</b> で、そのレッスンを<b>始める月</b>を表示します。10月から始めるなら 2026-10 を表示してください。')}
+      ${step(2, '「＋ レッスン追加」を押す', '曜日・スタジオ・開始/終了時間・レッスン名・講師名を入れます。')}
+      ${step(3, '開始月を確認する', '<b>開始月</b>には、いま表示している月が自動で入ります。そのままで構いません。<br><span style="color:#b45309;">※ 過去にもやっていたクラスを登録し直すときだけ、開始月を空欄にしてください。</span>')}
+      ${step(4, '保存する', '出席名簿に空のクラスができ、「生徒を追加」できるようになります。')}
+
+      <h4 style="font-size:0.9rem;margin:1.5rem 0 0.75rem;padding:0.35rem 0.7rem;background:#111;color:#fff;border-radius:4px;display:inline-block;">B. レッスンを差し替える・終わりにする</h4>
+
+      <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:0.75rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.85rem;line-height:1.7;">
+        <b>⚠️ 「削除」ボタンは使わないでください。</b><br>
+        削除しても、名簿に生徒が残っているレッスンは<b>翌月以降も出席名簿に出続けます</b>。
+        さらに削除時に聞かれる「名簿からも完全に削除しますか？」で「OK」を選ぶと、
+        <b>過去の出席記録も CSV も見えなくなります</b>。
+      </div>
+
+      ${step(1, '終わりにするレッスンをクリックする', '週間時間割の色つきブロックをクリックすると編集画面が開きます。')}
+      ${step(2, '「最終開催月」に最後に開催する月を入れる', '8月いっぱいで終わりなら <b>2026年08月</b> と入れます。<b>その月までは開催</b>され、翌月から消えます。')}
+      ${step(3, '保存する', '翌月の画面からレッスンが消えます。生徒ひとりずつを退会にする必要は<b>ありません</b>。')}
+      ${step(4, '差し替えなら、続けて新しいレッスンを追加する', '<b>◀ ▶</b> で翌月を表示してから「＋ レッスン追加」。上の A の手順どおりです。')}
+
+      <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:0.75rem 1rem;border-radius:4px;margin:1rem 0 1.5rem;font-size:0.85rem;line-height:1.7;">
+        <b>この方法だと過去は一切変わりません。</b><br>
+        8月までの出席名簿・出席記録・CSV は、そのレッスンも生徒もそのまま残ります。
+        月を戻せばいつでも見られます。消えるのは<b>翌月から先の表示だけ</b>です。
+      </div>
+
+      <h4 style="font-size:0.9rem;margin:1.5rem 0 0.75rem;padding:0.35rem 0.7rem;background:#111;color:#fff;border-radius:4px;display:inline-block;">C. やってはいけないこと</h4>
+      <ul style="font-size:0.83rem;line-height:1.9;padding-left:1.2rem;margin:0 0 1.5rem;color:var(--text-secondary,#4b5563);">
+        <li><b>レッスン名・講師名を後から書き換えない</b><br>
+            出席記録は「曜日・場所・クラス名・生徒名」で保存されているため、名前を変えると過去の記録とのつながりが切れます。
+            名前を変えたいときは <b>B の手順で終わりにして、新しい名前で追加</b>してください。</li>
+        <li><b>「名簿からも完全に削除」を選ばない</b><br>
+            過去の記録ごと消えます。</li>
+        <li><b>休講の設定に注意</b><br>
+            休講はレッスン名と会場で紐づいています。名前が1文字でも違うと、前のレッスンに入れた休講設定は引き継がれません。
+            新しいレッスンには月間スケジュールから入れ直してください。</li>
+      </ul>
+
+      <h4 style="font-size:0.9rem;margin:1.5rem 0 0.75rem;padding:0.35rem 0.7rem;background:#111;color:#fff;border-radius:4px;display:inline-block;">D. 困ったとき</h4>
+      <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+        <tr><th style="border:1px solid #ddd;padding:0.4rem 0.6rem;background:#f9fafb;text-align:left;width:38%;">起きたこと</th><th style="border:1px solid #ddd;padding:0.4rem 0.6rem;background:#f9fafb;text-align:left;">どうするか</th></tr>
+        <tr><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">登録したはずのレッスンが見当たらない</td><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;"><b>◀ ▶</b> で月を動かしてください。その月に開催されないレッスンは表示されません。黄色い帯が出ているときは、隠れているレッスンがあります。</td></tr>
+        <tr><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">終わりにしたレッスンを直したい／戻したい</td><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">開催していた月（例: 8月）に戻ればクリックできます。最終開催月を消せば元どおり続きます。</td></tr>
+        <tr><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">出席名簿にクラスが出ない</td><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">開始月がその月より後になっていないか確認してください。</td></tr>
+        <tr><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">保存できない・警告が出る</td><td style="border:1px solid #ddd;padding:0.4rem 0.6rem;">画面上部に赤い警告が出ているときはデータを読み込めていません。<b>保存せずに</b>ページを再読み込み（Cmd+Shift+R）してください。</td></tr>
+      </table>
+
+      <div style="margin-top:1.25rem;padding-top:0.75rem;border-top:1px solid var(--border-color,#e5e7eb);font-size:0.78rem;color:var(--text-secondary,#6b7280);">
+        開始月・最終開催月を空欄にしたレッスンは、これまでどおり全ての月に表示されます。以前から登録されているレッスンは空欄のままなので、触る必要はありません。
       </div>
     </div>
   `;

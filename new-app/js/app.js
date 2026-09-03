@@ -5,7 +5,7 @@ import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, 
 import { renderDashboard } from './views/home.js?v=30';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=21';
 import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=52';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=28';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=29';
 import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=22';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
@@ -195,6 +195,7 @@ class DanceStudioApp {
         // ローカル時刻で組み立てる。toISOString() は UTC なので、JST では
         // 毎月1日の 09:00 前に「前月」を選んでしまう（月初の作業で前月の名簿を触る事故になる）。
         this.selectedMonth = this.currentMonthLocal();
+        this.showScheduleHelp = false;   // スケジュール設定マニュアルの開閉
         this.selectedDay = '月曜日';
         this.attendanceData = {};
         this.eventsData = {};
@@ -1042,6 +1043,12 @@ class DanceStudioApp {
         if (venue.includes('千早')) return '#8b5cf6';
         if (venue.includes('九産大前')) return '#f59e0b';
         return '#6b7280';
+    }
+
+    // スケジュール設定マニュアルの開閉。運用担当が複数いるため画面内に置いている
+    toggleScheduleHelp() {
+        this.showScheduleHelp = !this.showScheduleHelp;
+        this.render();
     }
 
     showLessonForm(day, index = null) {
