@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule, isClassOutOfPeriod } from '../utils.js?v=19';
+import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn } from '../utils.js?v=19';
 
 /**
  * Main attendance wrapper with subtabs
@@ -85,10 +85,10 @@ export function renderAttendanceRecord(app) {
   const schedule = (app.scheduleData[currentDay] || []).filter(cls => {
     if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
     if (isClassInTimeSchedule(cls, _tsDay, app.selectedMonth)) return true;
-    // 開催期間を入れて終了させたクラスは、名簿に生徒が残っていても翌月から隠す
+    // 最終開催月を入れて終了させたクラスは、名簿に生徒が残っていても翌月から隠す
     // （時間割から消えただけのクラスと違い、終了は明示的な操作なので受講者数で覆さない）
-    if (isClassOutOfPeriod(cls, _tsDay, app.selectedMonth)) {
-      console.info(`[出席名簿] 非表示: ${currentDay}/${cls.name}（${app.selectedMonth} は開催期間外）`);
+    if (isClassEnded(cls, _tsDay, app.selectedMonth)) {
+      console.info(`[出席名簿] 非表示: ${currentDay}/${cls.name}（${app.selectedMonth} は最終開催月より後）`);
       return false;
     }
     const { total } = getClassStudentsForMonth(cls, currentDay, app.attendanceData, app.customers, app.selectedMonth);
@@ -137,10 +137,15 @@ export function renderAttendanceRecord(app) {
         // 時間割の照合は scheduleName を優先する。時間割の表示名を変更したクラスは
         // name が名簿名と一致しなくなるため、name だけで引くと時刻が取れず 9999 扱いで
         // 末尾に飛ぶ（alias を持たないクラスで必ず起きる）。
-        const tA = (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
-          || (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === a.name);
-        const tB = (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
-          || (tsData[currentDay] || []).find(t => (t.scheduleName || t.name) === b.name);
+        // 開催期間中のエントリを優先して引く。同じ名簿名で「旧クラス(〜8月)」と
+        // 「新クラス(9月〜)」が並ぶ差し替え期に、配列順で先にある旧エントリの時刻を
+        // 拾って並び順が狂うのを防ぐ。
+        const _actA = (tsData[currentDay] || []).filter(t => isLessonActiveIn(t, app.selectedMonth));
+        const _actB = _actA;
+        const tA = _actA.find(t => (t.scheduleName || t.name) === a.name && (t.venue === locA || t.venue === locA + '校' || t.venue?.replace('校','') === locA))
+          || _actA.find(t => (t.scheduleName || t.name) === a.name);
+        const tB = _actB.find(t => (t.scheduleName || t.name) === b.name && (t.venue === locB || t.venue === locB + '校' || t.venue?.replace('校','') === locB))
+          || _actB.find(t => (t.scheduleName || t.name) === b.name);
         const timeA = tA ? tA.time.split('-')[0].replace(':', '') : '9999';
         const timeB = tB ? tB.time.split('-')[0].replace(':', '') : '9999';
         return timeA.localeCompare(timeB);
@@ -148,8 +153,9 @@ export function renderAttendanceRecord(app) {
         // 場所変更履歴を考慮した実効場所（過去月は旧場所、現/未来月は新場所）
         const effLoc = effectiveLocation(cls, app.selectedMonth);
         const tsData2 = app.timeScheduleData || timeSchedule;
-        const timeEntry = (tsData2[currentDay] || []).find(t => (t.scheduleName || t.name) === cls.name && (t.venue === effLoc || t.venue === effLoc + '校' || t.venue?.replace('校','') === effLoc))
-          || (tsData2[currentDay] || []).find(t => (t.scheduleName || t.name) === cls.name);
+        const _act = (tsData2[currentDay] || []).filter(t => isLessonActiveIn(t, app.selectedMonth));
+        const timeEntry = _act.find(t => (t.scheduleName || t.name) === cls.name && (t.venue === effLoc || t.venue === effLoc + '校' || t.venue?.replace('校','') === effLoc))
+          || _act.find(t => (t.scheduleName || t.name) === cls.name);
         const timeStr = timeEntry ? timeEntry.time : '';
         const classHTML = `
         <div class="content-card" style="margin-bottom:0;display:flex;flex-direction:column;height:100%;">

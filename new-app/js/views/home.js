@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=16';
-import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule, isClassOutOfPeriod } from '../utils.js?v=19';
+import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn } from '../utils.js?v=19';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -115,8 +115,8 @@ export function renderDashboard(app) {
             const classes = (app.scheduleData[day] || []).filter(cls => {
               if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
               if (isClassInTimeSchedule(cls, _tsDay, app.selectedMonth)) return true;
-              // 出席名簿と同じ基準（開催期間で終了させたクラスは受講者数で覆さない）
-              if (isClassOutOfPeriod(cls, _tsDay, app.selectedMonth)) return false;
+              // 出席名簿と同じ基準（終了させたクラスは受講者数で覆さない）
+              if (isClassEnded(cls, _tsDay, app.selectedMonth)) return false;
               return getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth).total > 0;
             });
             if (!classes.length) return '';
@@ -130,8 +130,10 @@ export function renderDashboard(app) {
                 const tsH = app.timeScheduleData || timeSchedule;
                 // 時間割の照合は scheduleName を優先する（attendance.js と同じ理由。
                 // 表示名を変更したクラスは name が名簿名と一致しなくなり時刻が空欄になる）
-                const te = (tsH[day] || []).find(t => (t.scheduleName || t.name) === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
-                  || (tsH[day] || []).find(t => (t.scheduleName || t.name) === cls.name && !t.alias);
+                // 出席名簿と同じく、開催期間中のエントリを優先する（差し替え期の時刻混線を防ぐ）
+                const _actH = (tsH[day] || []).filter(t => isLessonActiveIn(t, app.selectedMonth));
+                const te = _actH.find(t => (t.scheduleName || t.name) === cls.name && (t.venue === loc || t.venue === loc + '校' || t.venue?.replace('校','') === loc))
+                  || _actH.find(t => (t.scheduleName || t.name) === cls.name && !t.alias);
                 const time = te ? te.time : '';
                 // 出席名簿と同じロジックで当月の対象者数を計算
                 const { total: studentCount } = getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth);

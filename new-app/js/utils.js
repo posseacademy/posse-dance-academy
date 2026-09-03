@@ -110,27 +110,34 @@ export function isLessonActiveIn(lesson, month) {
 }
 
 /**
- * そのクラスが「開催期間を明示したうえで、その月は期間外」か
+ * そのクラスが「最終開催月を過ぎて終了した」か
  *
  * isClassInTimeSchedule が false のとき、呼び出し側は
  * 「時間割から消えただけ（過去月の参照用に受講者がいれば表示）」と扱う。
- * だが開始月・最終開催月を入れて終了させたクラスは、名簿に生徒が残っていても
+ * だが最終開催月を入れて終了させたクラスは、名簿に生徒が残っていても
  * 翌月から消えてほしい。両者を区別しないと、差し替えのたびに
  * 生徒ひとりずつに退会月を入れて回る必要が出る。
  *
- * 期間を1つも持たないクラス（2026-09 以前の既存データ）では常に false を返すので、
- * 従来の「受講者がいれば表示」の挙動はそのまま残る。
+ * **意図的に activeThrough（終了側）しか見ない。** activeFrom より前の月まで隠すと、
+ * 時間割から一度消えたクラスを登録し直したときに（新規フォームの開始月は
+ * 当月が既定なので必ずそうなる）、そのクラスの過去の出席記録が
+ * 出席名簿から丸ごと見えなくなる。開始前の月は従来どおり
+ * 「受講者がいれば表示」に委ねる — 新設クラスに過去の受講者はいないので
+ * それで過去月には出ない。
+ *
+ * 最終開催月を持たないクラス（2026-09 以前の既存データ）では常に false を返すので、
+ * 従来の挙動はそのまま残る。
  * @param {Object} cls - schedule のクラス
  * @param {Array} dayLessons - timeSchedule[曜日]
  * @param {string} month - 'YYYY-MM'
  * @returns {boolean} true なら受講者がいても隠す
  */
-export function isClassOutOfPeriod(cls, dayLessons, month) {
+export function isClassEnded(cls, dayLessons, month) {
     if (!cls || !Array.isArray(dayLessons) || !month) return false;
     const entries = dayLessons.filter(l => (l.scheduleName || l.name) === cls.name);
-    if (!entries.length) return false;                                  // 時間割に無い＝従来どおり
-    if (!entries.some(l => l.activeFrom || l.activeThrough)) return false;  // 期間の指定が無い
-    return entries.every(l => !isLessonActiveIn(l, month));
+    if (!entries.length) return false;                          // 時間割に無い＝従来どおり
+    if (!entries.some(l => l.activeThrough)) return false;      // 最終開催月の指定が無い
+    return entries.every(l => l.activeThrough && month > l.activeThrough);
 }
 
 /**

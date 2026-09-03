@@ -1,7 +1,7 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
 import * as db from './firebase-service.js?v=9';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation } from './utils.js?v=19';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation, isClassEnded } from './utils.js?v=19';
 import { renderDashboard } from './views/home.js?v=30';
 import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=21';
 import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=52';
@@ -997,7 +997,15 @@ class DanceStudioApp {
         for (const day of Object.keys(this.scheduleData)) {
             const classes = this.scheduleData[day];
             if (!Array.isArray(classes)) continue;
+            const tsDay = (this.timeScheduleData || {})[day];
             for (const cls of classes) {
+                // 最終開催月を過ぎたクラスには当月の _plan を作らない。
+                // 表示側（出席名簿・HOME）は isClassEnded で隠すが、書き込み側に同じ条件が
+                // 無いと、隠したクラスのキーが attendance_YYYYMM に新規作成される。
+                // それを getClassStudentsForMonth の attendance スキャンが pastRegulars として
+                // 拾い直すため、終了したはずのクラスが幽霊として復活する。
+                // migrateOrphanRegulars（2026-04・退会者の自動復活）と同型の事故になる。
+                if (isClassEnded(cls, tsDay, this.selectedMonth)) continue;
                 for (const student of (cls.students || [])) {
                     if (!isRegularPlan(student.plan)) continue;
                     if (!isStudentEnrolledIn(student, this.selectedMonth)) continue;
@@ -1452,11 +1460,11 @@ class DanceStudioApp {
     }
 
     handleExportAttendanceMonthly() {
-        exportAttendanceMonthlyCSV(this.scheduleData, this.attendanceData, this.selectedMonth, this.customers);
+        exportAttendanceMonthlyCSV(this.scheduleData, this.attendanceData, this.selectedMonth, this.customers, this.timeScheduleData);
     }
 
     async handleExportAttendanceYearly() {
-        await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, db.loadAttendance, this.customers);
+        await exportAttendanceYearlyCSV(this.scheduleData, this.selectedMonth, db.loadAttendance, this.customers, this.timeScheduleData);
     }
 
     // ===== CALENDAR =====

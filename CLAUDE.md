@@ -36,11 +36,11 @@ new-app/
 ## キャッシュバスティング（必須）
 GitHub Pagesはキャッシュが強い。JS/CSSを修正したら必ず `?v=N` を `?v=N+1` に更新すること。
 
-**現在のバージョン (2026-08-10):**
-- `app.html`: `style.css?v=25`, `app.js?v=119`
-- `app.js`: `config.js?v=16`, `utils.js?v=18`, `firebase-service.js?v=9`
-- `app.js`: `home.js?v=29`, `customers.js?v=20`, `attendance.js?v=51`, `schedule.js?v=27`
-- `app.js`: `csv-export.js?v=21`
+**現在のバージョン (2026-09-03):**
+- `app.html`: `style.css?v=25`, `app.js?v=120`
+- `app.js`: `config.js?v=16`, `utils.js?v=19`, `firebase-service.js?v=9`
+- `app.js`: `home.js?v=30`, `customers.js?v=21`, `attendance.js?v=52`, `schedule.js?v=28`
+- `app.js`: `csv-export.js?v=22`
 
 **手順:** ファイル修正 → 親ファイルの `?v=N+1` 更新 → コミット → push
 
@@ -66,6 +66,7 @@ git push origin main
 - ビジター/初回プランの生徒は `attendance_YYYYMM` に出席データがある月のみ表示（翌月非引き継ぎ）
 - 削除時: レギュラーは schedule + attendance 両方削除、ビジター/初回は attendance のみ削除
 - `isRegularPlan()`: 1〜4クラス、1.5hクラスがレギュラー扱い
+- レッスンの開催期間（2026-09 追加）: 時間割エントリの `activeFrom` / `activeThrough`（ともに `YYYY-MM`・**包含**）。名簿も時間割も全月共通のため、月をまたぐ差し替えはこの2つで表現する。`isLessonActiveIn()` が判定し、`isClassEnded()`（**終了側のみ**）が「最終開催月を過ぎたクラスは受講者が残っていても隠す」を担う。開始前を隠さないのは、時間割から消えたクラスを再登録したときに過去の出席記録まで隠れるため
 
 ## 過去のバグ（再発防止）
 - `defaultSchedule` 上書き: Firestoreデータを上書き → `Promise.allSettled` で解決済み

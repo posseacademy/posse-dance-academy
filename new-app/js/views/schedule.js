@@ -37,6 +37,11 @@ export function renderTimeSchedule(app) {
       if (end > maxTime) maxTime = end;
     });
   });
+  // その月に開催されるレッスンが1つも無いと minTime/maxTime が初期値のままになり、
+  // totalHeight が負値（-2880px）の div が出る。月フィルタを入れる前は
+  // 「全曜日の時間割が空」でしか起きなかったが、月移動だけで到達できるようになった。
+  if (maxTime === 0) { minTime = 9 * 60; maxTime = 22 * 60; }
+
   // Round to full hours
   const startHour = Math.floor(minTime / 60);
   const endHour = Math.ceil(maxTime / 60);
@@ -83,16 +88,32 @@ export function renderTimeSchedule(app) {
   const mobileDayData = dayColumns.find(d => d.day === mobileDay) || dayColumns[0];
   const dayColors2 = {'月曜日':'#3b82f6','火曜日':'#ef4444','水曜日':'#10b981','木曜日':'#f59e0b','金曜日':'#8b5cf6'};
 
+  // このグリッドは _month（＝ app.selectedMonth）で暗黙にフィルタされている。
+  // 月を出さないと、最終開催月を過ぎたレッスンが消えた理由が分からず、
+  // 編集・削除するために戻る手段（＝月を戻す操作）も画面に無い状態になる。
+  const _hasHidden = daysOfWeek.some(day =>
+    (ts[day] || []).some(c => !c.alias && c.time && !isLessonActiveIn(c, _month)));
+
   return `
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
       <div>
         <h2>スケジュール</h2>
         <p class="subtitle">週間時間割</p>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="window.app.showLessonForm('月曜日')" style="white-space:nowrap;">
-        ＋ レッスン追加
-      </button>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div style="display:flex;align-items:center;gap:0.25rem;background:var(--bg-secondary,#f3f4f6);border-radius:6px;padding:0.15rem;">
+          <button class="btn btn-sm" style="background:transparent;border:none;padding:0.25rem 0.5rem;" onclick="window.app.changeMonth(-1)" title="前の月">◀</button>
+          <span style="font-size:0.85rem;font-weight:600;min-width:5.5rem;text-align:center;">${_month || ''} の時間割</span>
+          <button class="btn btn-sm" style="background:transparent;border:none;padding:0.25rem 0.5rem;" onclick="window.app.changeMonth(1)" title="次の月">▶</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="window.app.showLessonForm('月曜日')" style="white-space:nowrap;">
+          ＋ レッスン追加
+        </button>
+      </div>
     </div>
+    ${_hasHidden ? `<div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:0.5rem 0.75rem;border-radius:4px;margin-bottom:0.75rem;font-size:0.8rem;color:#92400e;">
+      この月に開催されないレッスンは表示していません。編集・削除するには ◀ ▶ で開催されている月に移動してください。
+    </div>` : ''}
 
     ${app.editingLessonDay !== null ? renderLessonForm(app) : ''}
 
@@ -256,7 +277,7 @@ function renderLessonForm(app) {
         <div>
           <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">開始月</label>
           <input type="month" id="lessonActiveFrom" class="input" value="${activeFrom}" style="margin-top:0.25rem;">
-          <div style="font-size:0.7rem;color:#6b7280;margin-top:0.2rem;">この月から時間割・出席名簿・HOME に出ます。空欄なら全ての月に出ます</div>
+          <div style="font-size:0.7rem;color:#6b7280;margin-top:0.2rem;">この月から時間割・出席名簿・HOME に出ます。空欄なら全ての月に出ます${existing ? '' : '<br><b>過去に開催していたクラスを登録し直すときは空欄にしてください</b>'}</div>
         </div>
         <div>
           <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">最終開催月（任意）</label>

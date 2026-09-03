@@ -1,7 +1,7 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
-import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=19';
+import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth, isClassEnded } from './utils.js?v=19';
 
 /**
  * CSVファイルをダウンロード
@@ -124,12 +124,16 @@ export function exportCustomersCSV(customers, scheduleData) {
 /**
  * 出席名簿 月別CSV書き出し
  */
-export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selectedMonth, customers) {
+export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selectedMonth, customers, timeScheduleData) {
     const header = ['曜日', '場所', 'クラス名', '生徒名', 'プラン', 'W1', 'W2', 'W3', 'W4', 'W5', '出席率'];
     const rows = [header];
     const days = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日'];
     days.forEach(day => {
-        const classes = scheduleData[day] || [];
+        // 開催期間で終了させたクラスは画面（出席名簿・HOME）から消えるので CSV からも外す。
+        // 2026-06-19 の教訓「同じ事実を出す画面・帳票は同一ロジックから派生させる」。
+        // timeScheduleData を渡さない呼び出しでは isClassEnded が false を返すため従来どおり。
+        const classes = (scheduleData[day] || []).filter(cls =>
+            !isClassEnded(cls, (timeScheduleData || {})[day], selectedMonth));
         classes.forEach(cls => {
             const effLoc = effectiveLocation(cls, selectedMonth);
             // 画面（出席名簿）・HOME と同一ロジックで生徒を集約:
@@ -162,7 +166,7 @@ export function exportAttendanceMonthlyCSV(scheduleData, attendanceData, selecte
 /**
  * 出席名簿 年間CSV書き出し
  */
-export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, loadAttendance, customers) {
+export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, loadAttendance, customers, timeScheduleData) {
     const year = selectedMonth.slice(0, 4);
     const header = ['月', '曜日', '場所', 'クラス名', '生徒名', 'プラン', 'W1', 'W2', 'W3', 'W4', 'W5', '出席率'];
     const rows = [header];
@@ -175,7 +179,9 @@ export async function exportAttendanceYearlyCSV(scheduleData, selectedMonth, loa
         } catch { attData = {}; }
         if (!attData || Object.keys(attData).length === 0) continue;
         days.forEach(day => {
-            const classes = scheduleData[day] || [];
+            // 月別CSVと同じく、その月に開催期間外のクラスは出さない
+            const classes = (scheduleData[day] || []).filter(cls =>
+                !isClassEnded(cls, (timeScheduleData || {})[day], monthStr));
             classes.forEach(cls => {
                 const effLoc = effectiveLocation(cls, monthStr);
                 // 月別CSVと同一: 画面・HOME と揃えてビジター/体験/過去在籍も網羅
