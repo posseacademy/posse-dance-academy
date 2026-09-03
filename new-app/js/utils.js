@@ -83,9 +83,54 @@ export function effectiveLocation(cls, month) {
  * @param {Array} dayLessons - timeSchedule[曜日]（alias を除外しない生の配列）
  * @returns {boolean} 判定できない場合は true（表示側に倒す）
  */
-export function isClassInTimeSchedule(cls, dayLessons) {
+export function isClassInTimeSchedule(cls, dayLessons, month) {
     if (!cls || !Array.isArray(dayLessons)) return true;
-    return dayLessons.some(l => (l.scheduleName || l.name) === cls.name);
+    return dayLessons.some(l => (l.scheduleName || l.name) === cls.name && isLessonActiveIn(l, month));
+}
+
+/**
+ * 時間割エントリがその月に開催されるか
+ * - activeFrom:    この月から開催（包含）
+ * - activeThrough: この月まで開催（包含）
+ * 両方とも無いエントリは常時開催として扱う（2026-09 以前に登録した既存データの後方互換）。
+ * month を渡さない呼び出しは期間を見ない（従来動作）。
+ *
+ * 意図的に leftAt（生徒の退会月・排他）と別セマンティクスにしている。
+ * activeThrough は「最後に開催する月」を業務どおりそのまま入れられるよう包含にした。
+ * 名前を leftAt 系に寄せると >= と > を取り違える（2026-05-23 の off-by-one と同じ事故）。
+ * @param {Object} lesson - timeSchedule のエントリ
+ * @param {string} month - 'YYYY-MM'
+ */
+export function isLessonActiveIn(lesson, month) {
+    if (!lesson) return false;
+    if (!month) return true;
+    if (lesson.activeFrom && month < lesson.activeFrom) return false;
+    if (lesson.activeThrough && month > lesson.activeThrough) return false;
+    return true;
+}
+
+/**
+ * そのクラスが「開催期間を明示したうえで、その月は期間外」か
+ *
+ * isClassInTimeSchedule が false のとき、呼び出し側は
+ * 「時間割から消えただけ（過去月の参照用に受講者がいれば表示）」と扱う。
+ * だが開始月・最終開催月を入れて終了させたクラスは、名簿に生徒が残っていても
+ * 翌月から消えてほしい。両者を区別しないと、差し替えのたびに
+ * 生徒ひとりずつに退会月を入れて回る必要が出る。
+ *
+ * 期間を1つも持たないクラス（2026-09 以前の既存データ）では常に false を返すので、
+ * 従来の「受講者がいれば表示」の挙動はそのまま残る。
+ * @param {Object} cls - schedule のクラス
+ * @param {Array} dayLessons - timeSchedule[曜日]
+ * @param {string} month - 'YYYY-MM'
+ * @returns {boolean} true なら受講者がいても隠す
+ */
+export function isClassOutOfPeriod(cls, dayLessons, month) {
+    if (!cls || !Array.isArray(dayLessons) || !month) return false;
+    const entries = dayLessons.filter(l => (l.scheduleName || l.name) === cls.name);
+    if (!entries.length) return false;                                  // 時間割に無い＝従来どおり
+    if (!entries.some(l => l.activeFrom || l.activeThrough)) return false;  // 期間の指定が無い
+    return entries.every(l => !isLessonActiveIn(l, month));
 }
 
 /**

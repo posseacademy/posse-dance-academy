@@ -1,12 +1,12 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
 import * as db from './firebase-service.js?v=9';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation } from './utils.js?v=18';
-import { renderDashboard } from './views/home.js?v=29';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=20';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=51';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=27';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=21';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation } from './utils.js?v=19';
+import { renderDashboard } from './views/home.js?v=30';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=21';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=52';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=28';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=22';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -1094,9 +1094,17 @@ class DanceStudioApp {
         const venue = document.getElementById('lessonVenue')?.value;
         const lessonName = document.getElementById('lessonName')?.value?.trim();
         const instructor = document.getElementById('lessonInstructor')?.value?.trim();
+        // 開催期間。空欄は「期間の指定なし＝常時開催」を意味するので、
+        // 値が無いときはフィールドごと持たせない（Firestore は undefined を書けない）。
+        const activeFrom = document.getElementById('lessonActiveFrom')?.value || '';
+        const activeThrough = document.getElementById('lessonActiveThrough')?.value || '';
 
         if (!day || !timeStart || !timeEnd || !venue || !lessonName || !instructor) {
             alert('全ての項目を入力してください');
+            return;
+        }
+        if (activeFrom && activeThrough && activeThrough < activeFrom) {
+            alert('最終開催月が開始月より前になっています。\n開始月: ' + activeFrom + ' / 最終開催月: ' + activeThrough);
             return;
         }
 
@@ -1110,6 +1118,8 @@ class DanceStudioApp {
         const time = `${timeStart}-${timeEnd}`;
         const color = this.getVenueColor(venue);
         const lessonData = { time, venue, name: fullName, color };
+        if (activeFrom) lessonData.activeFrom = activeFrom;
+        if (activeThrough) lessonData.activeThrough = activeThrough;
         const location = this.venueToLocation(venue);
 
         if (!this.timeScheduleData[day]) this.timeScheduleData[day] = [];
@@ -1121,7 +1131,12 @@ class DanceStudioApp {
             const old = this.timeScheduleData[day][this.editingLessonIndex];
             // マージで更新する。全置換すると alias / scheduleName が落ち、
             // alias が消えると週間時間割とカレンダーに二重表示される。
-            this.timeScheduleData[day][this.editingLessonIndex] = { ...old, ...lessonData };
+            const merged = { ...old, ...lessonData };
+            // 期間はマージでは消えない（空欄が undefined でスプレッドに載らないため）。
+            // 「最終開催月を消して継続に戻す」操作が効かなくなるので、明示的に落とす。
+            if (!activeFrom) delete merged.activeFrom;
+            if (!activeThrough) delete merged.activeThrough;
+            this.timeScheduleData[day][this.editingLessonIndex] = merged;
 
             const target = this.findScheduleClass(day, old);
             if (target) {
@@ -1143,7 +1158,14 @@ class DanceStudioApp {
                 // 同期しないと時刻を変更しても週間時間割だけが変わり、両画面は旧時刻のまま食い違う。
                 // venue は絶対に同期しない。alias の venue は名簿の場所表記で、これが照合の鍵になっている。
                 const aliasEntry = this.timeScheduleData[day].find(l => l.alias && l.name === target.name);
-                if (aliasEntry) aliasEntry.time = time;
+                if (aliasEntry) {
+                    aliasEntry.time = time;
+                    // 開催期間も alias に同期する。isClassInTimeSchedule は
+                    // 非alias と alias の「どちらか1つでも」名前が一致すれば表示と判定するため、
+                    // alias に期間が無いと最終開催月を過ぎても名簿・HOME に出続ける。
+                    if (activeFrom) aliasEntry.activeFrom = activeFrom; else delete aliasEntry.activeFrom;
+                    if (activeThrough) aliasEntry.activeThrough = activeThrough; else delete aliasEntry.activeThrough;
+                }
             }
             // 名簿に対応クラスが無い場合（練習会など）は検証をスキップする
         } else {

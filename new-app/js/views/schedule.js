@@ -2,6 +2,7 @@
 // ES module for schedule display and management
 
 import { timeSchedule } from '../config.js?v=16';
+import { isLessonActiveIn } from '../utils.js?v=19';
 
 /**
  * Weekly time grid view
@@ -21,10 +22,14 @@ export function renderTimeSchedule(app) {
   // Use app's editable timeScheduleData (loaded from Firestore or config fallback)
   const ts = app.timeScheduleData || timeSchedule;
 
+  // 開催期間外のレッスンは選択中の月のグリッドに出さない。
+  // 期間を持たない既存エントリは常時開催として通る（isLessonActiveIn の既定）。
+  const _month = app.selectedMonth;
+
   // Determine time range from actual classes
   let minTime = 24 * 60, maxTime = 0;
   daysOfWeek.forEach(day => {
-    (ts[day] || []).filter(c => !c.alias && c.time).forEach(cls => {
+    (ts[day] || []).filter(c => !c.alias && c.time && isLessonActiveIn(c, _month)).forEach(cls => {
       const parts = cls.time.split('-');
       const start = timeToMinutes(parts[0].replace('〜', '').trim());
       const end = parts[1] ? timeToMinutes(parts[1].trim()) : start + 60;
@@ -48,7 +53,7 @@ export function renderTimeSchedule(app) {
 
   // Build class blocks per day with column assignment for overlaps
   const dayColumns = daysOfWeek.map((day, di) => {
-    const classes = (ts[day] || []).filter(c => !c.alias && c.time);
+    const classes = (ts[day] || []).filter(c => !c.alias && c.time && isLessonActiveIn(c, _month));
     // allLessons は絶対にフィルタしないこと。
     // origIndex は saveLessonForm / deleteLesson / renderLessonForm が
     // timeScheduleData[day] の「生のインデックス」として使うため、
@@ -192,6 +197,10 @@ function renderLessonForm(app) {
 
   // Parse existing data
   let timeStart = '', timeEnd = '', venue = '', lessonName = '', instructor = '';
+  // 開催期間。新規は「選択中の月から」を既定にする（過去月の名簿に空のクラスを出さないため）。
+  // 既存エントリは持っていれば表示し、無ければ空＝常時開催のまま据え置く。
+  let activeFrom = existing ? (existing.activeFrom || '') : (app.selectedMonth || '');
+  let activeThrough = existing ? (existing.activeThrough || '') : '';
   if (existing) {
     const parts = existing.time.split('-');
     timeStart = parts[0]?.replace('〜', '').trim() || '';
@@ -244,6 +253,16 @@ function renderLessonForm(app) {
           <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">講師名</label>
           <input type="text" id="lessonInstructor" class="input" value="${instructor}" placeholder="例: SOYA" style="margin-top:0.25rem;">
         </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">開始月</label>
+          <input type="month" id="lessonActiveFrom" class="input" value="${activeFrom}" style="margin-top:0.25rem;">
+          <div style="font-size:0.7rem;color:#6b7280;margin-top:0.2rem;">この月から時間割・出席名簿・HOME に出ます。空欄なら全ての月に出ます</div>
+        </div>
+        <div>
+          <label style="font-size:0.75rem;font-weight:600;color:#6b7280;">最終開催月（任意）</label>
+          <input type="month" id="lessonActiveThrough" class="input" value="${activeThrough}" style="margin-top:0.25rem;">
+          <div style="font-size:0.7rem;color:#6b7280;margin-top:0.2rem;">差し替え・終了するときに入れます。<b>その月まで</b>開催され、翌月から消えます</div>
+        </div>
       </div>
       <div style="display:flex;gap:0.5rem;margin-top:1rem;justify-content:flex-end;">
         ${existing ? `<button class="btn btn-sm" style="background:#ef4444;color:white;" onclick="window.app.deleteLesson('${day}', ${idx})">削除</button>` : ''}
@@ -276,8 +295,12 @@ function getLessonsForDate(date, calendarData, app) {
   }
 
   const cancelled = override.cancelledLessons || [];
+  // その日が属する月で開催期間を判定する（app.selectedMonth ではなく date 由来）。
+  // カレンダーは月末に翌月の日を並べることがあり、選択月で判定すると
+  // 「差し替え前後の月をまたぐ週」で誤ったレッスンが出る。
+  const _dateMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   const regularLessons = (ts[dayOfWeek] || [])
-    .filter(cls => !cls.alias)
+    .filter(cls => !cls.alias && isLessonActiveIn(cls, _dateMonth))
     .map(cls => ({ ...cls, cancelled: cancelled.includes(`${cls.name}__${cls.venue}`) }));
 
   return {

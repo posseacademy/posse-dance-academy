@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=16';
-import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule } from '../utils.js?v=18';
+import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule, isClassOutOfPeriod } from '../utils.js?v=19';
 
 export function renderDashboard(app) {
   // Calculate customer statistics
@@ -114,7 +114,9 @@ export function renderDashboard(app) {
             const _tsDay = (app.timeScheduleData || timeSchedule)[day];
             const classes = (app.scheduleData[day] || []).filter(cls => {
               if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
-              if (isClassInTimeSchedule(cls, _tsDay)) return true;
+              if (isClassInTimeSchedule(cls, _tsDay, app.selectedMonth)) return true;
+              // 出席名簿と同じ基準（開催期間で終了させたクラスは受講者数で覆さない）
+              if (isClassOutOfPeriod(cls, _tsDay, app.selectedMonth)) return false;
               return getClassStudentsForMonth(cls, day, app.attendanceData, app.customers, app.selectedMonth).total > 0;
             });
             if (!classes.length) return '';

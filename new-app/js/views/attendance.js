@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule } from '../utils.js?v=18';
+import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule, isClassOutOfPeriod } from '../utils.js?v=19';
 
 /**
  * Main attendance wrapper with subtabs
@@ -84,7 +84,13 @@ export function renderAttendanceRecord(app) {
   const _tsDay = (app.timeScheduleData || timeSchedule)[currentDay];
   const schedule = (app.scheduleData[currentDay] || []).filter(cls => {
     if (app.timeScheduleLoaded !== true) return true;   // 未確定(undefined)も表示側に倒す
-    if (isClassInTimeSchedule(cls, _tsDay)) return true;
+    if (isClassInTimeSchedule(cls, _tsDay, app.selectedMonth)) return true;
+    // 開催期間を入れて終了させたクラスは、名簿に生徒が残っていても翌月から隠す
+    // （時間割から消えただけのクラスと違い、終了は明示的な操作なので受講者数で覆さない）
+    if (isClassOutOfPeriod(cls, _tsDay, app.selectedMonth)) {
+      console.info(`[出席名簿] 非表示: ${currentDay}/${cls.name}（${app.selectedMonth} は開催期間外）`);
+      return false;
+    }
     const { total } = getClassStudentsForMonth(cls, currentDay, app.attendanceData, app.customers, app.selectedMonth);
     if (total === 0) {
       console.info(`[出席名簿] 非表示: ${currentDay}/${cls.name}（時間割に無く、${app.selectedMonth} の受講者が0名）`);

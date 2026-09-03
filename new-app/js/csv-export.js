@@ -1,7 +1,7 @@
 // POSSE Dance Academy - CSV Export Module
 // UTF-8 BOM付きCSVファイルのダウンロード
 
-import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=18';
+import { getCustomerClasses, effectiveLocation, getClassStudentsForMonth } from './utils.js?v=19';
 
 /**
  * CSVファイルをダウンロード
