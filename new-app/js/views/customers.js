@@ -1,7 +1,7 @@
 // POSSE Dance Academy - Customers View Module
 // ES module for customer management page rendering
 
-import { calculateAge, getCustomerClasses } from '../utils.js?v=19';
+import { calculateAge, getCustomerClasses } from '../utils.js?v=20';
 
 /**
  * Main customer list page

@@ -2,7 +2,7 @@
 // ES module for attendance recording and tracking
 
 import { timeSchedule, planOrder } from '../config.js?v=16';
-import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn } from '../utils.js?v=19';
+import { getAttendanceRate, effectiveLocation, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn, escapeAttr } from '../utils.js?v=20';
 
 /**
  * Main attendance wrapper with subtabs
@@ -231,7 +231,7 @@ export function renderAttendanceRecord(app) {
                           return `
                             <td class="att-td-week">
                               <button class="att-cell ${cellClass}"
-                                      onclick="window.app.cycleAttendance('${classId}', '${week}')"
+                                      data-att-class="${escapeAttr(classId)}" data-att-week="${week}"
                                       title="${current === '' ? 'クリックで出席記録' : current === '○' ? '出席 → ×に変更' : current === '×' ? '欠席 → 休講に変更' : '休講 → 空白に変更'}">
                                 ${label}
                               </button>
@@ -243,10 +243,10 @@ export function renderAttendanceRecord(app) {
                           <div class="student-actions">
                             <button class="student-action-btn student-menu-btn"
                                     data-menu-day="${currentDay}"
-                                    data-menu-location="${effLoc}"
-                                    data-menu-class="${cls.name}"
-                                    data-menu-lastname="${student.lastName}"
-                                    data-menu-firstname="${student.firstName}"
+                                    data-menu-location="${escapeAttr(effLoc)}"
+                                    data-menu-class="${escapeAttr(cls.name)}"
+                                    data-menu-lastname="${escapeAttr(student.lastName)}"
+                                    data-menu-firstname="${escapeAttr(student.firstName)}"
                                     title="メニュー">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </button>
@@ -350,8 +350,8 @@ export function renderAddStudentForm(app, day, location, className) {
     return `
       <button class="add-student-trigger add-student-btn"
               data-add-day="${day}"
-              data-add-location="${location}"
-              data-add-class="${className}">
+              data-add-location="${escapeAttr(location)}"
+              data-add-class="${escapeAttr(className)}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         生徒を追加
       </button>
@@ -427,7 +427,6 @@ export function renderEventRecord(app) {
   const showAddForm = app.showAddEventForm || false;
   const addingParticipantTo = app.addingParticipantToEvent || null;
 
-  const escapeAttr = (str) => String(str).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
   const formatCurrency = (n) => `¥${Number(n).toLocaleString('ja-JP')}`;
 
   let totalRevenue = 0;

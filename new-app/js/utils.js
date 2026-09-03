@@ -83,6 +83,24 @@ export function effectiveLocation(cls, month) {
  * @param {Array} dayLessons - timeSchedule[曜日]（alias を除外しない生の配列）
  * @returns {boolean} 判定できない場合は true（表示側に倒す）
  */
+/**
+ * HTML 属性値に埋め込む文字列をエスケープする
+ *
+ * クラス名には `Breakin' ミュージカリティ&スタイル SHIN` のように
+ * アポストロフィやアンパサンドが入る。これを onclick="...('${classId}')" の
+ * ような JS 文字列リテラルへ素で埋めると、アポストロフィがリテラルを途中で閉じて
+ * 構文エラーになり、**ボタンが無反応になる**（2026-09-03 に出席○×が押せない不具合として実発生）。
+ * & を先に変換すること（後回しにすると &#39; の & を二重変換してしまう）。
+ * @param {string} str
+ * @returns {string}
+ */
+export function escapeAttr(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/'/g, '&#39;')
+        .replace(/"/g, '&quot;');
+}
+
 export function isClassInTimeSchedule(cls, dayLessons, month) {
     if (!cls || !Array.isArray(dayLessons)) return true;
     return dayLessons.some(l => (l.scheduleName || l.name) === cls.name && isLessonActiveIn(l, month));

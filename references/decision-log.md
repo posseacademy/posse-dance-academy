@@ -236,6 +236,22 @@
 
 ---
 
+## 2026-09-03（第2版）: クラス名のアポストロフィで出席○×が押せなくなる
+
+**症状**: ユーザーが新クラス `Breakin' ミュージカリティ&スタイル SHIN` を登録し生徒を追加したあと、出席名簿の ○/× セルをクリックしても**何も起きない**（エラーも警告も出ない）。
+
+**原因**: `attendance.js` の出席セルが `onclick="window.app.cycleAttendance('${classId}', '${week}')"` と、`classId`（＝`曜日_場所_クラス名_姓名`）を JS 文字列リテラルへ素で埋めていた。クラス名のアポストロフィがリテラルを途中で閉じ、`onclick` の中身が構文エラーになる。ブラウザは構文エラーのハンドラを黙って捨てるため、無反応になる。`readOnlyMode` なら `assertWritable()` が alert を出すので、そちらではないと切り分けられる。
+
+**Decision**: `onclick` を捨て、`data-att-class` / `data-att-week` 属性 ＋ `document` へのイベント委譲（`_attCellDelegationBound` で1回だけ登録）に変更。`utils.js` に `escapeAttr()`（`&` → `'` → `"` の順で変換）を新設し、`data-*` と `title` 属性に適用。
+
+**なぜ HTML エスケープだけでは直らないか**: `&#39;` を書いても、**ブラウザは属性値をデコードして `'` に戻してから JS として評価する**ため構文エラーは消えない。JS リテラルとしての `\'` エスケープと HTML 属性エスケープの二段が必要になり、順序を1つ間違えると壊れる。`data-*` 属性なら `getAttribute()` が文字列をそのまま返すので、この二段構造自体が要らなくなる。単体テストで「修正後も属性デコード後に構文エラーのまま」を検出したため、不完全な修正を出さずに済んだ。
+
+**Impact**: `new-app/js/utils.js`（`escapeAttr` 追加）, `views/attendance.js`, `views/schedule.js`（title）, `app.js`（イベント委譲）。`app.js?v=122` / `utils.js?v=20` / `attendance.js?v=53` / `schedule.js?v=30` / `home.js?v=31` / `customers.js?v=22` / `csv-export.js?v=23`。
+
+**Pattern**: failure → success — **ユーザー入力の文字列を `onclick` の JS 文字列リテラルに埋めない。`data-*` 属性とイベント委譲を使う。** この不具合は今回の開催期間実装とは無関係で以前から潜在していたが、クラス名に `'` を含めるまで表面化しなかった。既存クラス名が日本語と英数字だけだったため8ヶ月間気づかれていない。同種のリスクとして、`data-*` や `title` に `"` が入ると属性が途中で閉じて周囲の `onclick` ごと壊れる（こちらは `escapeAttr` で対処済み）。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。

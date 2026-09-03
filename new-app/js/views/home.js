@@ -1,5 +1,5 @@
 import { courseColors, timeSchedule } from '../config.js?v=16';
-import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn } from '../utils.js?v=19';
+import { isRegularPlan, getCustomerCountByCourse, getClassStudentsForMonth, isClassInTimeSchedule, isClassEnded, isLessonActiveIn } from '../utils.js?v=20';
 
 export function renderDashboard(app) {
   // Calculate customer statistics

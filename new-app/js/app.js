@@ -1,12 +1,12 @@
 // Imports
 import { planOrder, defaultSchedule, timeSchedule, getEmptyCustomer, courseColors } from './config.js?v=16';
 import * as db from './firebase-service.js?v=9';
-import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation, isClassEnded } from './utils.js?v=19';
-import { renderDashboard } from './views/home.js?v=30';
-import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=21';
-import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=52';
-import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=29';
-import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=22';
+import { calculateAge, sortStudentsByPlan, isRegularPlan, searchCustomerByName, exportCustomersCSV, getCustomerCourseKey, isStudentEnrolledIn, effectiveLocation, isClassEnded } from './utils.js?v=20';
+import { renderDashboard } from './views/home.js?v=31';
+import { renderCustomers, renderAddForm, renderCustomerRow } from './views/customers.js?v=22';
+import { renderAttendance, renderAttendanceRecord, renderPracticeSession, renderAddStudentForm, renderEventRecord } from './views/attendance.js?v=53';
+import { renderTimeSchedule, renderMonthlySchedule } from './views/schedule.js?v=30';
+import { exportCustomersCSV as exportCustomersCSVNew, exportAttendanceMonthlyCSV, exportAttendanceYearlyCSV } from './csv-export.js?v=23';
 
 // ===== プラン⇔コース 双方向マップ（デュアルライト用） =====
 const PLAN_TO_COURSE = {
@@ -2314,6 +2314,21 @@ class DanceStudioApp {
         ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', 'イベント'].forEach(day => {
             document.getElementById(`day-${day}`)?.addEventListener('click', () => { this.selectedDay = day; this.render(); });
         });
+
+        // 出席セル（○×休講）のクリック。
+        // onclick 属性に classId を埋めると、クラス名のアポストロフィ（例: Breakin'）が
+        // JS 文字列リテラルを途中で閉じて構文エラーになり、ボタンが無反応になる。
+        // HTML エスケープでは直らない（&#39; はブラウザが ' に戻してから JS として評価するため）。
+        // data 属性なら getAttribute が文字列をそのまま返すので、この問題が起きない。
+        // render() のたびに DOM が作り直されるため、document への委譲で1回だけ登録する。
+        if (!this._attCellDelegationBound) {
+            this._attCellDelegationBound = true;
+            document.addEventListener('click', (e) => {
+                const cell = e.target.closest?.('.att-cell[data-att-class]');
+                if (!cell) return;
+                this.toggleAttendance(cell.getAttribute('data-att-class'), cell.getAttribute('data-att-week'));
+            });
+        }
 
         // Attendance toggle buttons
         document.querySelectorAll('.attendance-btn').forEach(btn => {

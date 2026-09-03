@@ -2,7 +2,7 @@
 // ES module for schedule display and management
 
 import { timeSchedule } from '../config.js?v=16';
-import { isLessonActiveIn } from '../utils.js?v=19';
+import { isLessonActiveIn, escapeAttr } from '../utils.js?v=20';
 
 /**
  * Weekly time grid view
@@ -198,7 +198,7 @@ export function renderTimeSchedule(app) {
               const left = hasCol1 ? (b.col === 0 ? '1px' : '50%') : '2px';
               const right = hasCol1 ? (b.col === 0 ? '50%' : '1px') : '2px';
               return `
-              <div class="ts-block" style="position:absolute;top:${b.top}px;left:${left};right:${right};height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.2rem 0.3rem;font-size:0.65rem;line-height:1.25;overflow:hidden;cursor:pointer;margin:0 1px;" title="${b.cls.name}\n${b.cls.time}\n${b.cls.venue}" onclick="window.app.showLessonForm('${d.day}', ${b.origIndex})">
+              <div class="ts-block" style="position:absolute;top:${b.top}px;left:${left};right:${right};height:${b.height - 2}px;background:${getVenueColor(b.cls.venue)};color:white;border-radius:0.3rem;padding:0.2rem 0.3rem;font-size:0.65rem;line-height:1.25;overflow:hidden;cursor:pointer;margin:0 1px;" title="${escapeAttr(b.cls.name)}\n${escapeAttr(b.cls.time)}\n${escapeAttr(b.cls.venue)}" onclick="window.app.showLessonForm('${d.day}', ${b.origIndex})">
                 <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.shortName}</div>
                 ${b.height >= 60 ? `<div style="font-size:0.55rem;opacity:0.9;margin-top:1px;">${b.instructor}</div>` : ''}
                 <div style="font-size:0.55rem;opacity:0.85;margin-top:1px;">${b.cls.time}</div>
