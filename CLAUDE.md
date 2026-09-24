@@ -83,11 +83,11 @@ git push origin main
 
 応答・コミットメッセージ・コメントは日本語。設定は `.claude/settings.json` の `"language": "japanese"` を参照。
 
-## モデル運用方針（2026-07-28）
+## モデル運用方針（2026-07-28・2026-09-24 Opus 5.5 追従）
 
 創る=Opus / 運ぶ=Sonnet / Haiku=使用禁止。判断基準は「成果物が受け側に届く文章・判定なら Opus、材料集め・転記・操作なら Sonnet」。（業務的には Opus=判断や文章を任せる高性能モデル、Sonnet=確認や転記を任せる軽量モデル）
 
-| `claude-opus-5` | `claude-sonnet-5` |
+| `claude-opus-5-5` | `claude-sonnet-5` |
 |---|---|
 | settings.json / code-reviewer / deploy / firestore-backup / data-recovery / firestore-inspect | verify / versions |
 

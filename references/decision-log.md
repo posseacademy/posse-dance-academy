@@ -252,6 +252,31 @@
 
 ---
 
+## 2026-09-24: Claude Opus 5.5 へ追従（モデルID 6行と割当表を更新・effort は high のまま）
+
+**ユーザー意図 (User Intent)**: 「`Clude開発/works/opus55-rollout/00_汎用指示書.md` を読んで、このプロジェクトの Claude Opus 5.5 移行を実行してください」。汎用指示書が作業フォルダから部署を判定し（posse → `09_posse.md`）、生成層を Opus 5.5（2026-09-22 リリース）へ揃える。統括の README が記す社長の方針は「基本は Opus 最新版、劣化したら直近の安定版へ戻す」。判断が分かれた4件はユーザーが選択した — ①置換は設定6行＋CLAUDE.md 本文2行（任意だった見出しの更新も含めて「全部実行」）②`effortLevel` は **high を維持** ③`attendance-snapshot` は**どこにも登録していない** ④このリポジトリを Claude Code で使うのは**ユーザー本人だけ**。
+
+**Decision**:
+1. モデルIDを6行置換: `settings.json:3`・`agents/code-reviewer.md:5`・`skills/deploy/SKILL.md:4`・`skills/firestore-backup/SKILL.md:4`・`skills/data-recovery/SKILL.md:8`・`skills/firestore-inspect/SKILL.md:8` → `claude-opus-5-5`。`verify` / `versions` は `claude-sonnet-5` のまま（運ぶ層で、保護ロールでもある）。
+2. CLAUDE.md の現行方針を2行更新: 割当表の見出し（L90）を `claude-opus-5-5` に変え、節見出し（L86）に「・2026-09-24 Opus 5.5 追従」を足した。見出し「Opus 5 運用指示（2026-07-28）」と #80988 の説明文（「Opus 5 では…」）は来歴なので残す。
+3. `effortLevel: "high"` は書き換えない。
+4. 無人経路の途中停止対策は入れない。
+
+**Reason**:
+- Opus 5.5 でも3層構造（創る=Opus / 運ぶ=Sonnet / Haiku 禁止）は変わらず、移るのは生成層のIDだけ。Claude Code v2.1.280 以上が必須だが、`/usr/local/bin/claude`・`~/.npm-global/bin/claude` とも 2.1.281 で、このセッション自体も Opus 5.5 で起動しているので条件を満たす。
+- effort: Opus 5.5 は同じ effort 名でも Opus 5 より深く考える（既定は medium。公式「5.5 の medium ≧ 5 の high」）。それでも high を維持したのは、モデルと effort を同時に変えると、品質が変わったときに原因を切り分けられないため。本番の顧客データを扱う部署なので、まずは慎重側に置く。
+- routines: このアカウントのクラウド routines は0件（`RemoteTrigger list`）で、Desktop の定期タスク8件にも posse のものは無かった。CLAUDE.md のループ表にある `attendance-snapshot` は「推奨」であって、登録されてはいない。無人で Opus を呼ぶ経路が存在しないので、対策の対象も無い。
+
+**Impact**: `.claude/settings.json`, `.claude/agents/code-reviewer.md`, `.claude/skills/{deploy,firestore-backup,data-recovery,firestore-inspect}/SKILL.md`, `CLAUDE.md`（7ファイル・+8 -8）, 本ファイル。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。VS Code 拡張（2.1.220）から posse を開くと起動しなくなる（統括 README §0 の既知事項）。
+
+**検証**: 指示書 §5 の grep 2本（旧ID・`claude-opus-5-5-5`）はともに0件、§0 の棚卸し grep は 7→0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも変わらず、model 行は 8行（opus-5-5 ×6 / sonnet-5 ×2）。settings.json の JSON 妥当性 OK（allow 23 / deny 21 / ask 13・`effortLevel` high・Stop フック1本）。README「変えないもの」（五指示・Turn-ownership ガード・standing authorization・#80988 の説明・保護ロール5カテゴリ）と `auto-commit.sh` の秘匿ガード・PII ガードも残っている。P1〜P4・P6〜P9 は充足済みのため変更なし。
+
+**手順上の注記**: `/upgrade-project` は `disable-model-invocation: true` なのでモデルからは起動できない。SKILL.md のステップ0〜6（ベースライン → 資産の実名列挙 → 検査 → レポート → 承認 → 修正 → 突き合わせ）を手で実行した。着手前の `git fetch origin` は権限で止まったため、リモートとの差分は確認できていない（手元の origin/main は 9/3 の push 時点）。
+
+**Pattern**: success — **表に「推奨」として書かれていることと、実際に登録されていることは別**。無人経路に対策を入れる前に、routines（`RemoteTrigger list`）と Desktop の定期タスク一覧で実在を確かめる。もう1つ、**モデルと effort は同時に変えない** — 劣化したときに、どちらが原因か切り分けられなくなる。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。
