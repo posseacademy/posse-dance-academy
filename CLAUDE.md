@@ -165,7 +165,7 @@ git push origin main
 4. **外部実態との照合** — `/verify` の本番 curl 比較、`firestore-backup` のバックアップ検証
 5. **自走サイクルの「検証」ステップ** — `deploy-verify` ループ（`/loop 5m /verify`）
 
-> 保護ロールであることは Opus への昇格を意味しない。`/verify` と `/versions` は保護ロールのまま `claude-sonnet-5-5` である。
+> 保護ロールであることは Opus への昇格を意味しない。`/verify` と `/versions` は保護ロールのまま `claude-sonnet-5-5` である（frontmatter の指定。2026-09-29 に Desktop で Skill ツールから起動したときは、この指定が応答に反映されず、セッションのモデル・effort で動いた。直接の `/verify` 入力と端末 CLI は未確認 — decision-log 2026-09-29）。
 
 ### 常設委譲の standing authorization（ユーザー承認済み・2026-09-01 記録）
 
@@ -181,11 +181,11 @@ git push origin main
 
 **無人経路の品質ゲート**: スケジュールタスク・routines・background 実行では常設委譲が発火しないとの報告があるため、無人時のゲートは `Stop` フックの `scripts/auto-commit.sh`（秘匿ファイルガード・PII ガード）が担う。`SessionStart` フックは注入経路として無効なので使わない。
 
-## 権限モードのトラブルシューティング（2026-08-12）
+## 権限モードのトラブルシューティング（2026-08-12・2026-09-29 見直し）
 
-2026-08-14 から Auto Mode が新規セッションの既定になる。`settings.json` の `deny` / `ask` は**分類器より前に評価される恒久境界**なので、Auto Mode でも必ず効く（評価順は `deny` → `ask` → `allow`）。
+`permissions.defaultMode` がどの設定にも無いとき、Auto Mode が対話セッション（端末・VS Code）の開始モードになる（2026-08-14 に Pro/Max/Team、v2.1.283 で全プラン・全プロバイダ。`claude -p` は default のまま）。個人設定 `~/.claude/settings.json` に `defaultMode` があれば、そちらが開始モードになる。`settings.json` の `deny` / `ask` は**分類器より前に評価される恒久境界**なので、Auto Mode でも必ず効く（評価順は `deny` → `ask` → `allow`）。
 
-確認が煩わしいときの戻し方 — **いずれもプロジェクト設定ファイルには書かない**（`defaultMode` は project / local settings では無視される）:
+確認が煩わしいときの戻し方 — **いずれもプロジェクト設定ファイルには書かない**（project / local settings の `defaultMode` のうち `auto`・`bypassPermissions` は無視される。それ以外の値も、project の設定は VS Code 拡張の開始モードに使われない — v2.1.283）:
 
 - `Shift+Tab` … 権限モードを循環させる
 - `claude --permission-mode <mode>` … その起動だけモードを指定する

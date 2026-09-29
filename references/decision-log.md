@@ -290,18 +290,28 @@
 
 **Reason**:
 - CLI ゲート: Sonnet 5.5 は Claude Code v2.1.284 以上が必須。端末（`~/.npm-global/bin/claude`）・`/usr/local/bin/claude`・Desktop エンジンはいずれも 2.1.284 で、このセッションの記録も全件 2.1.284。VS Code 拡張は 2.1.220 のままだが、posse は 9/24 から `settings.json` の `claude-opus-5-5` によって 2.1.280 以上が要るので、今回の切替で状況は変わらない。他の利用者は 9/24 の記録どおり本人のみ。
-- effort を medium にした: Sonnet 5.5 では effort の値が再校正され、frontmatter で省くとセッションの effort を継承する（Desktop の既定は xhigh）。xhigh / max では、終わったあとに自分でレビューを重ね、レビュアーのサブエージェントまで起動することがある（公式）。2本とも `/loop 5m /verify` などで繰り返し走る、手順の決まった確認なので medium。`low` にしないのは、Sonnet 5.5 が low では実際のチェックを走らせずに「完了」と言うことがあるため（公式）で、この2本は確認そのものが役目。
-- 9/24 の教訓「モデルと effort は同時に変えない」とは衝突しないと判断した。effort を省略（継承）のまま残しても中身は変わる — 名前が同じでも Sonnet 5 と Sonnet 5.5 では思考量が違い、継承先の xhigh は上記の挙動が公式に書かれている段階だから。2本の出力は本番とローカルの `?v=N` の比較で、結果を直接確かめられる。9/24 に維持を決めた `effortLevel: high` は創る層の設定で、今回は触っていない。
+- effort を medium にした: Sonnet 5.5 では effort の値が再校正された。公式は、サブエージェントについて「frontmatter で省くとセッションの effort を継承する」と書いている（Desktop の既定は xhigh）。xhigh / max では、終わったあとに自分でレビューを重ね、レビュアーのサブエージェントまで起動することがある（公式）。2本とも `/loop 5m /verify` などで繰り返し走る、手順の決まった確認なので medium。`low` にしないのは、Sonnet 5.5 が low では実際のチェックを走らせずに「完了」と言うことがあるため（公式）で、この2本は確認そのものが役目。ただし、この指定が Desktop で実際の応答に効くかは確かめられていない（下記の検証）。
+- 9/24 の教訓「モデルと effort は同時に変えない」とは衝突しないと **Claude が判断した**。この論点は Q2 の選択肢に書いておらず、ユーザーが選んだのは effort の値（medium）まで。判断は完了報告で事後に伝えた。理由: effort を省略（継承）のまま残しても中身は変わる — 名前が同じでも Sonnet 5 と Sonnet 5.5 では思考量が違い、継承先の xhigh は上記の挙動が公式に書かれている段階だから。2本の出力は本番とローカルの `?v=N` の比較で、結果を直接確かめられる。9/24 に維持を決めた `effortLevel: high` は創る層の設定で、今回は触っていない。
 - 検索優先文・スコープ文は入れない: 2本とも調査・ファクトチェック系ではなく（ローカルと本番の `?v=N` の比較）、ファイルも書かない（`versions` は「自動更新はしない」）。
-- P1 の別件（`/upgrade-project platform` の検査で検出・記録のみ）: ①VidIQ の書き込み系（`vidiq_update_video`・`vidiq_update_video_thumbnail`・`vidiq_instagram_publish_reel`・`vidiq_video_upload`）が deny にも ask にも無い。基準に入ったのは 9/25 で、posse の 9/24 の検査より後。②個人設定（`~/.claude/settings.json`）の allow に `Bash(git *)` があり、`git -C <パス> push --force` の形だと posse の deny `Bash(git push --force *)` にも ask `Bash(git push *)` にも当たらず、確認なしで通る。どちらも根本の置き場所は個人設定で、統括 README の「社長判断の候補3」（2026-09-26 時点で未実施）に載っている。posse の project 設定で個別に塞ぐより、個人設定で全部署まとめて塞ぐのが筋。
+- P1 の別件（`/upgrade-project platform` の検査で検出・記録のみ）: ①VidIQ の書き込み系（`vidiq_update_video`・`vidiq_update_video_thumbnail`・`vidiq_instagram_publish_reel`・`vidiq_video_upload`）が deny にも ask にも無い。基準に入ったのは 9/25 で、posse の 9/24 の検査より後。②個人設定（`~/.claude/settings.json`）の allow に `Bash(git *)` があり、`git -C <パス> push --force` の形だと posse の deny `Bash(git push --force *)` にも ask `Bash(git push *)` にも当たらず、確認なしで通る（standards.md §5-2 の記述と AD の実行記録に基づく。posse では試していない。同じ形で個人設定の deny `Bash(git push *)` も抜ける）。どちらも根本の置き場所は個人設定で、統括 README の「社長判断の候補3」（2026-09-26 時点で未実施）に載っている。posse の project 設定で個別に塞ぐより、個人設定で全部署まとめて塞ぐのが筋。
 
 **Impact**: `.claude/skills/{verify,versions}/SKILL.md`, `CLAUDE.md`（3ファイル・+7 -5）, 本ファイル, auto-memory 2ファイル（git 管理外）。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。`settings.json` も不変（allow 23 / deny 21 / ask 13・`effortLevel` high）。
 
-**検証**: 指示書 §5 の grep 2本（`claude-sonnet-5([^-]|$)`・`claude-sonnet-5-5-5`）はともに0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも不変、model 行は 8行（opus-5-5 ×6 / sonnet-5-5 ×2）。無人経路なし（Desktop の定期タスク8件に posse のものは無く、routines 0件）。P2〜P4・P6〜P10 は充足済みのため変更なし。切替後の `/verify` は、スキルの手順（curl・grep）を `claude-sonnet-5-5` が実行したことをセッションの記録で確認した（エンジン 2.1.284 で Sonnet 5.5 が動く）。ローカル側は `style.css?v=25`・`app.js?v=122` で CLAUDE.md の記載と一致。ただし本番の取得（curl）はこのセッションの権限で2回とも拒否され、**本番との比較は未完了**（ユーザーが `/verify` を打って確かめる持ち越し）。
+**検証**: 指示書 §5 の grep 2本（`claude-sonnet-5([^-]|$)`・`claude-sonnet-5-5-5`）はともに0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも不変、model 行は 8行（opus-5-5 ×6 / sonnet-5-5 ×2）。無人経路なし（Desktop の定期タスク8件に posse のものは無く、routines 0件）。P2〜P4・P6〜P9 と P10 の①②③⑥は充足済みのため変更なし（⑤は `/doctor prompt-audit` を使っていないため該当なし）。P10④（CLAUDE.md の戻し方の見直し）は当初の検査で見落とし、レビュー後に直した（下記の訂正）。
 
-**手順上の注記**: `/upgrade-project` は手動起動専用なので、SKILL.md と standards.md の手順を手で実行した。`git fetch origin` は今回も権限で止まり、リモートとの差分は確認できていない（`git status` は clean で、手元の origin/main とは一致）。
+切替後の `/verify` は Skill ツールで起動した。記録上 `claude-sonnet-5-5` が現れるのは起動時のメタデータ（`toolUseResult.model` と `command_permissions`）の2件だけで、curl・grep を発行した応答は `claude-opus-5-5`・effort max のままだった（claude-desktop・2.1.284）。**Desktop で Skill ツールから起動したとき、frontmatter の `model`・`effort` は応答に反映されていない**。ユーザーが直接打つ `/verify` と端末 CLI での挙動は、記録が無く未確認。ローカル側は `style.css?v=25`・`app.js?v=122` で CLAUDE.md の記載と一致。本番の取得（curl）は2回とも拒否された。原因は個人設定（`~/.claude/settings.json`）の deny `Bash(curl *)` で、posse の allow `Bash(curl -s *posseacademy.github.io*)` より先に評価される（2026-08-10 のセッションでも同じ拒否が2件ある）。つまり **Claude が実行する `/verify`（`/loop 5m /verify` を含む）は本番を取得できず、保護ロール「外部実態との照合」は Claude からは動いていない**。
 
-**Pattern**: success — **effort の名前が同じでも、モデルが変われば中身が変わる**。「モデルと effort を同時に変えない」（9/24）は、同じ名前が同じ思考量を指すときの原則。effort が再校正されたモデルへ移るときは、省略（継承）も実質的な変更になる。支援層は frontmatter で `effort` を明示し、継承先（Desktop の xhigh）に左右されないようにする。
+**手順上の注記**: `/upgrade-project` は手動起動専用なので、SKILL.md と standards.md の手順を手で実行した。`git fetch origin` は個人設定の deny `Bash(git fetch *)` で止まる（一時的な拒否ではなく毎回止まる）ため、リモートとの差分は確認できていない（着手時の `git status` は clean で、手元の origin/main とは一致）。同じく個人設定の deny `Bash(git push *)` が posse の ask より先に効くため、Claude は承認があっても push できない。push はユーザーが端末で行う（今回は 19:20 に `b04f935` まで push 済み）。
+
+**持ち越し**:
+- 本番との比較（§5 の残り）: ユーザーが端末で `curl -s https://posseacademy.github.io/posse-dance-academy/new-app/app.html | grep '?v='` を実行して確かめる
+- 個人設定の deny `Bash(curl *)` と `/verify`（本番 curl）をどう両立させるか（ユーザー判断）
+- Desktop の Skill ツール経路で frontmatter の `model`・`effort` が効かない件は、統括へ申し送った（REPORT_09）。支援層を実際に Sonnet で動かす経路（`context: fork`／サブエージェント化など）は未検討
+- 2026-09-24 からの持ち越し（その回の REPORT にだけ残っていたもの）: ①`effortLevel: high` を medium で試すかの再検討 ②`attendance-snapshot` を routines に登録するときは `Clude開発/works/opus55-rollout/README.md`「無人経路の途中停止への対策（共通の条件）」で設計する
+
+**Pattern**: failure → lesson — **設定を書いたことと、それが効いていることは別**。モデル切替の実効性は、transcript の応答側（assistant 行の `message.model`・`effort`）で確かめる。起動時のメタデータ（`toolUseResult.model`）は要求値にすぎず、それを「Sonnet 5.5 が実行した」と読み違えて記録した。もう1つ、**拒否の原因は推測せず、個人設定を含む deny で確かめる** — curl の拒否を `allowed_domains` のせいだと誤診したが、実際は個人設定の恒久 deny だった。なお「effort の名前が同じでもモデルが変われば中身が変わる（省略＝継承も実質的な変更になる）」は、effort を明示した理由として引き続き有効。
+
+**訂正（同日・レビュー後）**: 初版（`077ff91`・`b04f935`。push 済み）の誤りを、ユーザーの依頼で行ったレビュー（5観点・反証検証つき）で検出し、本節の Reason・検証・注記・Pattern を直した — ①起動メタデータを「Sonnet 5.5 が実行した」と読み違えた ②curl・fetch の拒否を「このセッションの権限」と書き、個人設定の deny という原因を書いていなかった ③P10④ を見落としていた ④9/24 の教訓との衝突を、ユーザーではなく Claude が判断したことを明記していなかった。あわせて CLAUDE.md の L168（実効性の注記）と「権限モードのトラブルシューティング」（L186・L188）、auto-memory の前提も直した。
 
 ---
 
