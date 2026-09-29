@@ -297,7 +297,7 @@
 
 **Impact**: `.claude/skills/{verify,versions}/SKILL.md`, `CLAUDE.md`（3ファイル・+7 -5）, 本ファイル, auto-memory 2ファイル（git 管理外）。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。`settings.json` も不変（allow 23 / deny 21 / ask 13・`effortLevel` high）。
 
-**検証**: 指示書 §5 の grep 2本（`claude-sonnet-5([^-]|$)`・`claude-sonnet-5-5-5`）はともに0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも不変、model 行は 8行（opus-5-5 ×6 / sonnet-5-5 ×2）。無人経路なし（Desktop の定期タスク8件に posse のものは無く、routines 0件）。P2〜P4・P6〜P10 は充足済みのため変更なし。
+**検証**: 指示書 §5 の grep 2本（`claude-sonnet-5([^-]|$)`・`claude-sonnet-5-5-5`）はともに0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも不変、model 行は 8行（opus-5-5 ×6 / sonnet-5-5 ×2）。無人経路なし（Desktop の定期タスク8件に posse のものは無く、routines 0件）。P2〜P4・P6〜P10 は充足済みのため変更なし。切替後の `/verify` は、スキルの手順（curl・grep）を `claude-sonnet-5-5` が実行したことをセッションの記録で確認した（エンジン 2.1.284 で Sonnet 5.5 が動く）。ローカル側は `style.css?v=25`・`app.js?v=122` で CLAUDE.md の記載と一致。ただし本番の取得（curl）はこのセッションの権限で2回とも拒否され、**本番との比較は未完了**（ユーザーが `/verify` を打って確かめる持ち越し）。
 
 **手順上の注記**: `/upgrade-project` は手動起動専用なので、SKILL.md と standards.md の手順を手で実行した。`git fetch origin` は今回も権限で止まり、リモートとの差分は確認できていない（`git status` は clean で、手元の origin/main とは一致）。
 
