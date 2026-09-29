@@ -277,6 +277,34 @@
 
 ---
 
+## 2026-09-29: 支援層を Claude Sonnet 5.5 へ追従（verify / versions の model と effort）
+
+**ユーザー意図 (User Intent)**: 「`Clude開発/works/sonnet55-rollout/00_汎用指示書.md` を読んで、このプロジェクトの Claude Sonnet 5.5 移行（支援層）を実行してください」。汎用指示書が作業フォルダから部署を判定し（posse → `09_posse.md`）、支援層（運ぶ仕事）を Sonnet 5.5（2026-09-28 リリース）へ揃える。統括の HANDOFF が記す社長指示は「ソネットも含め、現在の最新の情報にすべてアップデートします」（2026-09-29）。判断が分かれた3件はユーザーが推奨案を選択した — ①設定2行と CLAUDE.md 本文2行に、任意の見出しと自部署のメモリも含めて「全部実行」②`verify`・`versions` に `effort: medium` を明示 ③P1 の別件2つは「記録のみ」。
+
+**Decision**:
+1. モデルIDを2行置換: `skills/verify/SKILL.md:4`・`skills/versions/SKILL.md:4` → `claude-sonnet-5-5`。
+2. 同じ2本の frontmatter に `effort: medium` を追加。
+3. CLAUDE.md の現行方針を3行更新: 割当表の見出し（L90）と保護ロールの一文（L168）を `claude-sonnet-5-5` へ、節見出し（L86）に「・2026-09-29 Sonnet 5.5 追従」を足した。
+4. auto-memory（`feedback_use_opus_for_subagents.md`・`MEMORY.md`。git 管理外）の「運ぶ=sonnet-5」を更新。
+5. P1 の別件2つは直さず、記録に留める（下記）。
+
+**Reason**:
+- CLI ゲート: Sonnet 5.5 は Claude Code v2.1.284 以上が必須。端末（`~/.npm-global/bin/claude`）・`/usr/local/bin/claude`・Desktop エンジンはいずれも 2.1.284 で、このセッションの記録も全件 2.1.284。VS Code 拡張は 2.1.220 のままだが、posse は 9/24 から `settings.json` の `claude-opus-5-5` によって 2.1.280 以上が要るので、今回の切替で状況は変わらない。他の利用者は 9/24 の記録どおり本人のみ。
+- effort を medium にした: Sonnet 5.5 では effort の値が再校正され、frontmatter で省くとセッションの effort を継承する（Desktop の既定は xhigh）。xhigh / max では、終わったあとに自分でレビューを重ね、レビュアーのサブエージェントまで起動することがある（公式）。2本とも `/loop 5m /verify` などで繰り返し走る、手順の決まった確認なので medium。`low` にしないのは、Sonnet 5.5 が low では実際のチェックを走らせずに「完了」と言うことがあるため（公式）で、この2本は確認そのものが役目。
+- 9/24 の教訓「モデルと effort は同時に変えない」とは衝突しないと判断した。effort を省略（継承）のまま残しても中身は変わる — 名前が同じでも Sonnet 5 と Sonnet 5.5 では思考量が違い、継承先の xhigh は上記の挙動が公式に書かれている段階だから。2本の出力は本番とローカルの `?v=N` の比較で、結果を直接確かめられる。9/24 に維持を決めた `effortLevel: high` は創る層の設定で、今回は触っていない。
+- 検索優先文・スコープ文は入れない: 2本とも調査・ファクトチェック系ではなく（ローカルと本番の `?v=N` の比較）、ファイルも書かない（`versions` は「自動更新はしない」）。
+- P1 の別件（`/upgrade-project platform` の検査で検出・記録のみ）: ①VidIQ の書き込み系（`vidiq_update_video`・`vidiq_update_video_thumbnail`・`vidiq_instagram_publish_reel`・`vidiq_video_upload`）が deny にも ask にも無い。基準に入ったのは 9/25 で、posse の 9/24 の検査より後。②個人設定（`~/.claude/settings.json`）の allow に `Bash(git *)` があり、`git -C <パス> push --force` の形だと posse の deny `Bash(git push --force *)` にも ask `Bash(git push *)` にも当たらず、確認なしで通る。どちらも根本の置き場所は個人設定で、統括 README の「社長判断の候補3」（2026-09-26 時点で未実施）に載っている。posse の project 設定で個別に塞ぐより、個人設定で全部署まとめて塞ぐのが筋。
+
+**Impact**: `.claude/skills/{verify,versions}/SKILL.md`, `CLAUDE.md`（3ファイル・+7 -5）, 本ファイル, auto-memory 2ファイル（git 管理外）。**アプリコード（`new-app/`）は不変**のためキャッシュバスティングの更新は不要。`settings.json` も不変（allow 23 / deny 21 / ask 13・`effortLevel` high）。
+
+**検証**: 指示書 §5 の grep 2本（`claude-sonnet-5([^-]|$)`・`claude-sonnet-5-5-5`）はともに0件。ベースラインとの突き合わせで `PROACTIVELY` 2箇所（`agents/code-reviewer.md:3` / `CLAUDE.md:100`）・`@agent-code-reviewer` 5件・裸の `@code-reviewer` 0件はいずれも不変、model 行は 8行（opus-5-5 ×6 / sonnet-5-5 ×2）。無人経路なし（Desktop の定期タスク8件に posse のものは無く、routines 0件）。P2〜P4・P6〜P10 は充足済みのため変更なし。
+
+**手順上の注記**: `/upgrade-project` は手動起動専用なので、SKILL.md と standards.md の手順を手で実行した。`git fetch origin` は今回も権限で止まり、リモートとの差分は確認できていない（`git status` は clean で、手元の origin/main とは一致）。
+
+**Pattern**: success — **effort の名前が同じでも、モデルが変われば中身が変わる**。「モデルと effort を同時に変えない」（9/24）は、同じ名前が同じ思考量を指すときの原則。effort が再校正されたモデルへ移るときは、省略（継承）も実質的な変更になる。支援層は frontmatter で `effort` を明示し、継承先（Desktop の xhigh）に左右されないようにする。
+
+---
+
 ## 追記時の注意
 
 - 日付は **絶対日付**（YYYY-MM-DD）で記録する。「先週」「昨日」のような相対表現は使わない。
